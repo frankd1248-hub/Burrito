@@ -1,0 +1,9 @@
+// Hello, world!
+// error (assign to const)
+
+const message = "Hello, world!";
+print(message);
+
+message = "Hello";
+
+print(message);

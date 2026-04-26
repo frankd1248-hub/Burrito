@@ -1,0 +1,567 @@
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include "common.h"
+#include "compiler.h"
+#include "debug.h"
+#include "object.h"
+#include "memory.h"
+#include "vm.h"
+
+#include "./natives/natives.h"
+
+VM vm;
+
+static void resetStack() {
+    vm.stackTop = vm.stack;
+    vm.frameCount = 0;
+}
+
+static void runtimeError(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputs("\n", stderr);
+
+    for (int i = vm.frameCount - 1; i >= 0; i--) {
+        CallFrame* frame = &vm.frames[i];
+        ObjFunction* function = frame->function;
+        size_t instruction = frame->ip - function->chunk.code - 1;
+        fprintf(stderr, "[line %d] in ", getLine(&function->chunk, instruction));
+        if (function->name == NULL) {
+            fprintf(stderr, "script\n");
+        } else {
+            fprintf(stderr, "%s()\n", function->name->chars);
+        }
+    }
+
+    resetStack();
+}
+
+void defineNative(const char* name, ObjNative* native) {
+    push(OBJ_VAL(copyString(name, strlen(name))));
+    push(OBJ_VAL(native));
+    tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+    tableSet(&vm.consts, AS_STRING(vm.stack[0]), BOOL_VAL(true));
+    pop();
+    pop();
+}
+
+void defineModule(const char* name, ObjModule* module) {
+    push(OBJ_VAL(copyString(name, strlen(name))));
+    push(OBJ_VAL(module));
+    tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+    tableSet(&vm.consts, AS_STRING(vm.stack[0]), BOOL_VAL(true));
+    pop();
+    pop();
+}
+
+void initVM() {
+    resetStack();
+    vm.objects = NULL;
+
+    initTable(&vm.globals);
+    initTable(&vm.consts);
+    initTable(&vm.strings);
+
+    defineAllNatives();
+}
+
+void freeVM() {
+    freeTable(&vm.globals);
+    freeTable(&vm.consts);
+    freeTable(&vm.strings);
+    freeObjects();
+}
+
+void push(Value value) {
+    if (vm.stackTop == vm.stack + STACK_MAX) {
+        runtimeError("Stack overflow!");
+        exit(1);
+    }
+
+    *vm.stackTop = value;
+    vm.stackTop++;
+}
+
+Value pop() {
+    vm.stackTop--;
+    return *vm.stackTop;
+}
+
+static Value peek(int distance) {
+    return vm.stackTop[-1 - distance];
+}
+
+static bool call(ObjFunction* function, int argCount) {
+    if (argCount != function->arity) {
+        runtimeError("Expected %d arguments but got %d.", function->arity, argCount);
+        return false;
+    }
+
+    if (vm.frameCount == FRAMES_MAX) {
+        runtimeError("Call stack overflow.");
+    }
+
+    CallFrame* frame = &vm.frames[vm.frameCount++];
+    frame->function = function;
+    frame->ip = function->chunk.code;
+    frame->slots = vm.stackTop - argCount - 1;
+    return true;
+}
+
+static bool callValue(Value callee, int argCount) {
+    if (IS_OBJ(callee)) {
+        switch (OBJ_TYPE(callee)) {
+            case OBJ_FUNCTION:
+                return call(AS_FUNCTION(callee), argCount);
+            case OBJ_NATIVE: {
+                Value result;
+                NativeFn native = AS_NATIVE(callee);
+                if (native(argCount, vm.stackTop - argCount, &result)) {
+                    vm.stackTop -= argCount + 1;
+                    push(result);
+                    return true;
+                } else {
+                    
+                    runtimeError(AS_STRING(result)->chars);
+                    return false;
+                }
+            }
+            default:
+                break;
+        }
+    }
+    runtimeError("Can only call functions and classes.");
+    return false;
+}
+
+static bool isFalsey(Value value) {
+    return IS_NULL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+}
+
+static void concatenate() {
+    ObjString* b = AS_STRING(pop());
+    ObjString* a = AS_STRING(pop());
+
+    int length = a->length + b->length;
+    char* chars = ALLOCATE(char, length + 1);
+    memcpy(chars, a->chars, a->length);
+    memcpy(chars + a->length, b->chars, b->length);
+    chars[length] = '\0';
+
+    ObjString* result = takeString(chars, length);
+    push(OBJ_VAL(result));
+}
+
+static InterpretResult run() {
+    CallFrame* frame = &vm.frames[vm.frameCount - 1];
+    register uint8_t* ip = frame->ip;
+
+#define READ_BYTE() (*ip++)
+#define READ_SHORT() (ip += 2, (uint16_t) ((ip[-2] << 8) | ip[-1]))
+#define READ_LONG() (ip += 3, (uint32_t) ((ip[-3] << 16) | (ip[-2] << 8) | ip[-1]))
+#define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
+#define READ_CONSTANT_LONG() (frame->function->chunk.constants.values[READ_BYTE() | (READ_BYTE() << 8) | (READ_BYTE() << 16)])
+#define READ_STRING() AS_STRING(READ_CONSTANT())
+#define READ_STRING_LONG() AS_STRING(READ_CONSTANT_LONG())
+#define BINARY_OP(valueType, op) \
+    do { \
+        if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
+            frame->ip = ip; \
+            runtimeError("Operands must be numbers."); \
+            return INTERPRET_RUNTIME_ERROR; \
+        } \
+        double b = AS_NUMBER(pop()); \
+        double a = AS_NUMBER(pop()); \
+        push(valueType(a op b)); \
+    } while (false)
+
+    for (;;) {
+
+#ifdef DEBUG_TRACE_STACK
+        printf("          ");
+        for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
+            printf("[ ");
+            printValue(*slot);
+            printf(" ]");
+        }
+        printf("\n");
+#endif
+            
+#ifdef DEBUG_TRACE_EXECUTION
+        dissassembleInstruction(
+            &frame->function->chunk,
+            (int) (frame->ip - frame->function->chunk.code)
+        );
+#endif
+
+        uint8_t instruction;
+        switch (instruction = READ_BYTE()) {
+            case OP_CONSTANT: {
+                Value constant = READ_CONSTANT();
+                push(constant);
+                break;
+            }
+            case OP_CONSTANT_LONG: {
+                Value constant = READ_CONSTANT_LONG();
+                push(constant);
+                break;
+            }
+            case OP_NULL:     push(NULL_VAL); break;
+            case OP_TRUE:     push(BOOL_VAL(true)); break;
+            case OP_FALSE:    push(BOOL_VAL(false)); break;
+            case OP_POP:      pop(); break;
+            case OP_GET_LOCAL: {
+                uint8_t slot = READ_BYTE();
+                push(frame->slots[slot]);
+                break;
+            }
+            case OP_GET_LOCAL_LONG: {
+                int slot = READ_LONG();
+                push(frame->slots[slot]);
+                break;
+            }
+            case OP_SET_LOCAL: {
+                uint8_t slot = READ_BYTE();
+                frame->slots[slot] = peek(0);
+                break;
+            }
+            case OP_SET_LOCAL_LONG: {
+                int slot = READ_LONG();
+                frame->slots[slot] = peek(0);
+                break;
+            }
+            case OP_GET_GLOBAL: {
+                ObjString* name = READ_STRING();
+                Value value;
+                if (!tableGet(&vm.globals, name, &value)) {
+                    frame->ip = ip;
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(value);
+                break;
+            }
+            case OP_GET_GLOBAL_LONG: {
+                ObjString* name = READ_STRING_LONG();
+                Value value;
+                if (!tableGet(&vm.globals, name, &value)) {
+                    frame->ip = ip;
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(value);
+                break;
+            }
+            case OP_DEFINE_GLOBAL: {
+                ObjString* name = READ_STRING();
+                tableSet(&vm.globals, name, peek(0));
+                pop();
+                break;
+            }
+            case OP_DEFINE_GLOBAL_LONG: {
+                ObjString* name = READ_STRING_LONG();
+                tableSet(&vm.globals, name, peek(0));
+                pop();
+                break;
+            }
+            case OP_SET_GLOBAL: {
+                ObjString* name = READ_STRING();
+
+                Value isConst;
+                if (tableGet(&vm.consts, name, &isConst)) {
+                    frame->ip = ip;
+                    runtimeError("Attempting to assign to constant '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                Value dummy;
+                if (!tableGet(&vm.globals, name, &dummy)) {
+                    frame->ip = ip;
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                tableSet(&vm.globals, name, peek(0));
+                break;
+            } case OP_SET_GLOBAL_LONG: {
+                ObjString* name = READ_STRING_LONG();
+
+                Value isConst;
+                if (tableGet(&vm.consts, name, &isConst)) {
+                    frame->ip = ip;
+                    runtimeError("Attempting to assign to constant '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                Value dummy;
+                if (!tableGet(&vm.globals, name, &dummy)) {
+                    frame->ip = ip;
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                tableSet(&vm.globals, name, peek(0));
+                break;
+            } case OP_DEFINE_CONST: {
+                ObjString* name = READ_STRING();
+                tableSet(&vm.globals, name, peek(0));
+                tableSet(&vm.consts, name, BOOL_VAL(true));
+                pop();
+                break;
+            } case OP_DEFINE_CONST_LONG: {
+                ObjString* name = READ_STRING_LONG();
+                tableSet(&vm.globals, name, peek(0));
+                tableSet(&vm.consts, name, BOOL_VAL(true));
+                pop();
+                break;
+            }
+            case OP_GET_PROPERTY: {
+
+                if (IS_MODULE(peek(0))) {
+                    ObjModule* module = AS_MODULE(peek(0));
+                
+                    ObjString* name = READ_STRING();
+                    Value value;
+
+                    if (!tableGet(&module->table, name, &value)) {
+                        frame->ip = ip;
+                        runtimeError("Undefined property '%s'.", name->chars);
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+
+                    pop();
+                    push(value);
+                    break;
+                } else {
+                    frame->ip = ip;
+                    runtimeError("Only modules have properties.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
+            case OP_GET_PROPERTY_LONG: {
+
+                if (IS_MODULE(peek(0))) {
+                    ObjModule* module = AS_MODULE(peek(0));
+                
+                    ObjString* name = READ_STRING_LONG();
+                    Value value;
+
+                    if (!tableGet(&module->table, name, &value)) {
+                        frame->ip = ip;
+                        runtimeError("Undefined property '%s'.", name->chars);
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+
+                    pop();
+                    push(value);
+                    break;
+                } else {
+                    frame->ip = ip;
+                    runtimeError("Only modules have properties.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
+            case OP_GET_INDEX: {
+                Value indexVal = pop();
+                Value strVal = pop();
+
+                if (!IS_STRING(strVal) || !IS_NUMBER(indexVal)) {
+                    frame->ip = ip;
+                    runtimeError("Indexing requires string and number.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjString* str = AS_STRING(strVal);
+                int index = (int)AS_NUMBER(indexVal);
+
+                if (index < 0 || index >= str->length) {
+                    frame->ip = ip;
+                    runtimeError("String index out of bounds.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                char ch = str->chars[index];
+
+                char buffer[2] = { ch, '\0' };
+                push(OBJ_VAL(copyString(buffer, 1)));
+
+                break;
+            }
+            case OP_EQUAL: {
+                Value b = pop();
+                Value a = pop();
+                push(BOOL_VAL(valuesEqual(a, b)));
+                break;
+            }
+            case OP_GREATER:  BINARY_OP(BOOL_VAL, >); break;
+            case OP_LESS:     BINARY_OP(BOOL_VAL, <); break;
+            case OP_ADD: {
+                if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+                    concatenate();
+                } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+                    double b = AS_NUMBER(pop());
+                    double a = AS_NUMBER(pop());
+                    push(NUMBER_VAL(a + b));
+                } else {
+                    frame->ip = ip;
+                    runtimeError("Operands to addition must be two numbers or two strings.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
+            case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -); break;
+            case OP_MULTIPLY: BINARY_OP(NUMBER_VAL, *); break;
+            case OP_DIVIDE:   BINARY_OP(NUMBER_VAL, /); break;
+            case OP_NOT:
+                push(BOOL_VAL(isFalsey(pop())));
+                break;
+            case OP_NEGATE: {
+                if (!IS_NUMBER(peek(0))) {
+                    frame->ip = ip;
+                    runtimeError("Operand to unary negation must be a number.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(NUMBER_VAL(-AS_NUMBER(pop())));
+                break;
+            }            
+            case OP_PRINT: {
+                int argCount = READ_BYTE();
+
+                Value* args = vm.stackTop - argCount;
+
+                // first arg = format string
+                if (!IS_STRING(args[0])) {
+                    runtimeError("First argument to print must be a format string.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjString* format = AS_STRING(args[0]);
+                const char* chars = format->chars;
+
+                int argIndex = 1;
+
+                for (int i = 0; i < format->length; i++) {
+                    char c = chars[i];
+
+                    if (c == '%') {
+                        if (i + 1 >= format->length) {
+                            runtimeError("Incomplete format specifier.");
+                            return INTERPRET_RUNTIME_ERROR;
+                        }
+
+                        char spec = chars[++i];
+
+                        if (argIndex >= argCount) {
+                            runtimeError("Not enough arguments for format string.");
+                            return INTERPRET_RUNTIME_ERROR;
+                        }
+
+                        Value v = args[argIndex++];
+
+                        switch (spec) {
+                            case 'd':
+                                if (!IS_NUMBER(v)) {
+                                    runtimeError("%%d expects number.");
+                                    return INTERPRET_RUNTIME_ERROR;
+                                }
+                                printf("%lf", AS_NUMBER(v));
+                                break;
+
+                            case 's':
+                                if (!IS_STRING(v)) {
+                                    runtimeError("%%s expects string.");
+                                    return INTERPRET_RUNTIME_ERROR;
+                                }
+                                printObject(v);
+                                break;
+
+                            case 'o':
+                                printValue(v);
+                                break;
+
+                            default:
+                                runtimeError("Unknown format specifier '%%%c'.", spec);
+                                return INTERPRET_RUNTIME_ERROR;
+                        }
+
+                    } else {
+                        putchar(c);
+                    }
+                }
+
+                printf("\n");
+
+                vm.stackTop -= argCount;
+                break;
+            }
+            case OP_DUP: push(peek(0)); break;
+            case OP_JUMP: {
+                uint16_t offset = READ_SHORT();
+                ip += offset;
+                break;
+            }
+            case OP_JUMP_IF_FALSE: {
+                uint16_t offset = READ_SHORT();
+                if (isFalsey(peek(0))) ip += offset;
+                break;
+            }
+            case OP_LOOP: {
+                uint16_t offset = READ_SHORT();
+                ip -= offset;
+                break;
+            }
+            case OP_CALL: {
+                int argCount = READ_BYTE();
+                frame->ip = ip;
+                if (!callValue(peek(argCount), argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm.frames[vm.frameCount - 1];
+                ip = frame->ip;
+                break;
+            }
+            case OP_RETURN: {
+                Value result = pop();
+                vm.frameCount--;
+                if (vm.frameCount == 0) {
+                    pop();
+                    return INTERPRET_OK;
+                }
+
+                vm.stackTop = frame->slots;
+                push(result);
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
+        }
+    }
+
+#undef READ_BYTE
+#undef READ_SHORT
+#undef READ_LONG
+#undef READ_CONSTANT
+#undef READ_CONSTANT_LONG
+#undef READ_STRING
+#undef READ_STRING_LONG
+#undef BINARY_OP
+}
+
+InterpretResult interpret(const char* source) {
+    resetStack();
+
+    ObjFunction* function = compile(source);
+    if (function == NULL) return INTERPRET_COMPILE_ERROR;
+
+    push(OBJ_VAL(function));
+    call(function, 0);
+
+    return run();
+}

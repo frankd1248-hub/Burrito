@@ -1,0 +1,14 @@
+// null
+// true
+// 1.5555
+// Hello, world!
+
+decl empty;
+decl number = 1.5555;
+decl bool = true;
+decl string = "Hello, world!";
+
+print(empty);
+print(bool);
+print(number);
+print(string);

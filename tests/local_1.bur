@@ -1,0 +1,13 @@
+// No.
+
+{
+    decl a = "Hello!";
+    {
+        decl b = "World!";
+        {
+            decl a = "No.";
+
+            print(a);
+        }
+    }
+}

@@ -1,0 +1,5 @@
+// beignets with cafe au lait
+
+decl beverage = "café au lait";
+decl breakfast = "beignets with " + beverage;
+print(breakfast);
