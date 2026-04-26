@@ -22,6 +22,7 @@
     - [ ] (***) Modules / natives
     - [ ] (*) Escape characters
     - [ ] (**) Native formatted prints
+    - [ ] (*) String indexing
 
 Note: *'s mark amount of effort estimated for task.
 
