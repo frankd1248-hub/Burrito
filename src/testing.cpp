@@ -110,7 +110,8 @@ int main(int argc, char** argv) {
 
             int pos;
             if ((pos = input.find('-')) == string::npos) {
-                fprintf(stderr, "Invalid range: %s", input.c_str());
+                fprintf(stderr, "Invalid range: %s\n", input.c_str());
+                return 0;
             }
 
             int start = stoi(input.substr(0, pos));

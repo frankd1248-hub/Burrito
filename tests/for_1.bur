@@ -1,5 +1,5 @@
 // Integers 1 through 10
 
 for (decl i = 1; i <= 10; i = i + 1) {
-    print(i);
+    print("%d", i);
 }

@@ -563,7 +563,7 @@ static InterpretResult run() {
                                     runtimeError("%%d expects number.");
                                     return INTERPRET_RUNTIME_ERROR;
                                 }
-                                printf("%lf", AS_NUMBER(v));
+                                printValue(v);
                                 break;
 
                             case 's':
@@ -632,6 +632,7 @@ static InterpretResult run() {
                 vm.stackTop = frame->slots;
                 push(result);
                 frame = &vm.frames[vm.frameCount - 1];
+                ip = frame->ip;
                 break;
             }
         }

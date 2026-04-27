@@ -10,7 +10,5 @@ decl radius = 5;
 decl area = PI * radius * radius;
 decl circumference = 2 * PI * radius;
 
-print("Area: ");
-print(area);
-print("Circumference: ");
-print(circumference);
+print("Area: %d", area);
+print("Circumference: %d", circumference);

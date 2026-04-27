@@ -5,6 +5,9 @@
 make:
 	gcc -O3 -march=native ./src/*.c ./src/natives/*.c -o ./dist/burrito -lm -lraylib
 
+test:
+	./dist/burritoTestSuite
+
 debug:
 	gcc -fsanitize=address -g3 -O0 ./src/*.c ./src/natives/*.c -o ./dist/burrito -lm -lraylib
 
@@ -19,6 +22,3 @@ testsuite:
 
 run:
 	./dist/burrito
-
-test:
-	./dist/burritoTestSuite

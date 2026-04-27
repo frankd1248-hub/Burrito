@@ -476,30 +476,21 @@ static void namedVariable(Token name, bool canAssign) {
 
     if (match(TOKEN_PLUS_PLUS)) {
         emitGet(arg, getOp, longOp);
-
-        emitGet(arg, getOp, longOp);
         emitConstant(NUMBER_VAL(1));
         emitByte(OP_ADD);
         emitSet(arg, setOp, longOp);
 
-        emitByte(OP_POP);
-
         return;
     } if (match(TOKEN_MINUS_MINUS)) {
-        emitGet(arg, getOp, longOp);
-
         emitGet(arg, getOp, longOp);
         emitConstant(NUMBER_VAL(1));
         emitByte(OP_SUBTRACT);
         emitSet(arg, setOp, longOp);
 
-        emitByte(OP_POP);
-
         return;
     }
 
     if (canAssign) {
-
         if (match(TOKEN_EQUAL)) {
             expression();
             emitSet(arg, setOp, longOp);
@@ -523,8 +514,9 @@ static void namedVariable(Token name, bool canAssign) {
             expression();
             emitByte(OP_DIVIDE);
             emitSet(arg, setOp, longOp);
+        } else {
+            emitGet(arg, getOp, longOp);
         }
-        emitGet(arg, getOp, longOp);
     } else {
         emitGet(arg, getOp, longOp);
     }

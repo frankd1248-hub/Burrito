@@ -5,13 +5,13 @@ decl oneHalf = math.sin(math.pi / 6);
 decl thing = math.sin(math.pi / 3);
 
 print("One half is equal to: ");
-print(oneHalf);
+print("%d", oneHalf);
 
 print("Root three over two is equal to: ");
-print(thing);
+print("%d", thing);
 
 decl end = time.clock();
 decl elapsed = end - start;
 
 print("time: ");
-print(elapsed);
+print("%d", elapsed);

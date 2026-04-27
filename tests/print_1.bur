@@ -8,7 +8,7 @@ decl number = 1.5555;
 decl bool = true;
 decl string = "Hello, world!";
 
-print(empty);
-print(bool);
-print(number);
-print(string);
+print("%o", empty);
+print("%o", bool);
+print("%d", number);
+print("%s", string);

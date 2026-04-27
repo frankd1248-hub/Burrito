@@ -1,0 +1,7 @@
+fn value(i) {
+    return 5 * i;
+}
+
+for (decl i = 0; i < 5; i++) {
+    print("%d", value(i));
+}

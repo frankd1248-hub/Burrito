@@ -10,7 +10,5 @@ decl height = 10;
 decl volume = radius * radius * PI * height;
 decl area = 2 * radius * radius * PI + 2 * PI * radius * height;
 
-print("Volume: ");
-print(volume);
-print("Surface area: ");
-print(area);
+print("Volume: %d", volume);
+print("Surface area: %d", area);

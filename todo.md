@@ -2,8 +2,9 @@
 
 ### Highest Priority
 
-1. Closures, the GC, and NaN Boxing
-2. Maybe classes & inheritance?
+1. Find out the problems between local variables and graphics
+2. Closures, the GC, and NaN Boxing
+3. Maybe classes & inheritance?
 
 ### Moderate Priority
 
@@ -19,10 +20,11 @@
     - [ ] (*) Mutation operations
     - [ ] (*) Prefix and postfix increment and decrement operations
     - [ ] (****) Functions: calls, declarations, etc.
-    - [ ] (***) Modules / natives
+    - [x] (***) Modules / natives
     - [ ] (*) Escape characters
     - [ ] (**) Native formatted prints
     - [ ] (*) String indexing
+    - [ ] (****) Arrays
 
 Note: *'s mark amount of effort estimated for task.
 
