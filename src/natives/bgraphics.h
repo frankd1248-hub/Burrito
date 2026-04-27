@@ -2,7 +2,8 @@
 #define burrito_graphics_h
 
 #include "../object.h"
+#include "nativeFlags.h"
 
-ObjModule* buildGameModule();
+ObjModule** buildGraphicsModules();
 
 #endif

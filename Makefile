@@ -3,10 +3,10 @@
 	testsuite debug run test runsuite asm
 
 make:
-	gcc -O3 -march=native ./src/*.c ./src/natives/*.c -o ./dist/burrito -lm
+	gcc -O3 -march=native ./src/*.c ./src/natives/*.c -o ./dist/burrito -lm -lraylib
 
 debug:
-	gcc -fsanitize=address -g3 -O0 ./src/*.c ./src/natives/*.c -o ./dist/burrito -lm
+	gcc -fsanitize=address -g3 -O0 ./src/*.c ./src/natives/*.c -o ./dist/burrito -lm -lraylib
 
 asm_:
 	for file in src/*.c; do \

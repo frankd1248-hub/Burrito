@@ -60,6 +60,32 @@ static bool cosineNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool arcsineNative(int argCount, Value* args, Value* result) {
+    if (argCount != 1) {
+        *result = OBJ_VAL(copyString("asin() expects one argument.", 27));
+        return false;
+    }
+
+    if (!checkNumberArguments("asin", args, result, 1))
+        return false;
+
+    *result = NUMBER_VAL(asin(args[0].as.number));
+    return true;
+}
+
+static bool arccosineNative(int argCount, Value* args, Value* result) {
+    if (argCount != 1) {
+        *result = OBJ_VAL(copyString("acos() expects one argument.", 27));
+        return false;
+    }
+
+    if (!checkNumberArguments("acos", args, result, 1))
+        return false;
+
+    *result = NUMBER_VAL(acos(args[0].as.number));
+    return true;
+}
+
 ObjModule* buildMathModule() {
     ObjModule* module = newModule();
 
@@ -69,6 +95,8 @@ ObjModule* buildMathModule() {
     tableSet(&module->table, copyString("power", 5), OBJ_VAL(newNative(powerNative)));
     tableSet(&module->table, copyString("sin", 3), OBJ_VAL(newNative(sineNative)));
     tableSet(&module->table, copyString("cos", 3), OBJ_VAL(newNative(cosineNative)));
+    tableSet(&module->table, copyString("asin", 3), OBJ_VAL(newNative(arcsineNative)));
+    tableSet(&module->table, copyString("acos", 3), OBJ_VAL(newNative(arccosineNative)));
 
     return module;
 }

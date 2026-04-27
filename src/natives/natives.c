@@ -6,6 +6,7 @@
 #include "btime.h"
 #include "bmath.h"
 #include "bio.h"
+#include "bgraphics.h"
 
 static bool exitNative(int argCount, Value* args, Value* result) {
     exit(args[0].as.number);
@@ -15,6 +16,11 @@ void defineAllNatives() {
     defineModule("time", buildTimeModule());
     defineModule("math", buildMathModule());
     defineModule("io", buildIOModule());
+
+    ObjModule** gmodules = buildGraphicsModules();
+
+    defineModule("game", gmodules[1]);
+    defineModule("graphics", gmodules[0]);
 
     defineNative("exit", newNative(exitNative));
 }

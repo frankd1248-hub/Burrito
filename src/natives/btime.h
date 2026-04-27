@@ -10,6 +10,7 @@
 #endif
 
 #include "../object.h"
+#include "nativeFlags.h"
 
 ObjModule* buildTimeModule();
 

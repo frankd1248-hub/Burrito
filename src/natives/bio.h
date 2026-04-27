@@ -2,6 +2,7 @@
 #define burrito_io_h
 
 #include "../object.h"
+#include "nativeFlags.h"
 
 ObjModule* buildIOModule();
 

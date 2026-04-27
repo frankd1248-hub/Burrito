@@ -1,0 +1,81 @@
+decl width = 1000;
+decl height = 768;
+
+graphics.init(width, height, "Pong");
+graphics.targetFPS(60);
+
+decl paddleWidth = 25;
+decl paddleHeight = 128;
+decl paddleSpeed = 400;
+
+decl ballSize = 20;
+decl ballX = width / 2;
+decl ballY = height / 2;
+decl ballVX = 250;
+decl ballVY = 180;
+
+decl leftY = height / 2 - paddleHeight / 2;
+decl rightY = height / 2 - paddleHeight / 2;
+
+decl dt;
+
+while (!graphics.windowShouldClose()) {
+
+    dt = graphics.getDeltaTime();
+
+    if (graphics.isKeyDown(game.KEY_W)) {
+        leftY = leftY - paddleSpeed * dt;
+    }
+    if (graphics.isKeyDown(game.KEY_S)) {
+        leftY = leftY + paddleSpeed * dt;
+    }
+
+    if (graphics.isKeyDown(game.KEY_UP)) {
+        rightY = rightY - paddleSpeed * dt;
+    }
+    if (graphics.isKeyDown(game.KEY_DOWN)) {
+        rightY = rightY + paddleSpeed * dt;
+    }
+
+    if (leftY < 0) leftY = 0;
+    if (leftY > height - paddleHeight) leftY = height - paddleHeight;
+
+    if (rightY < 0) rightY = 0;
+    if (rightY > height - paddleHeight) rightY = height - paddleHeight;
+
+    ballX = ballX + ballVX * dt;
+    ballY = ballY + ballVY * dt;
+
+    if (ballY < 0 or ballY > height) {
+        ballVY = -ballVY;
+    }
+
+    if (ballX < 20 and
+        ballY > leftY and
+        ballY < leftY + paddleHeight) {
+        ballVX = -ballVX;
+        ballX = 20;
+    }
+
+    if (ballX > width - 20 and
+        ballY > rightY and
+        ballY < rightY + paddleHeight) {
+        ballVX = -ballVX;
+        ballX = width - 20;
+    }
+
+    if (ballX < 0 or ballX > width) {
+        ballX = width / 2;
+        ballY = height / 2;
+    }
+
+    graphics.beginDraw();
+    graphics.clearColor(20, 20, 20);
+
+    graphics.drawRect(255, 255, 255, 10, leftY, paddleWidth, paddleHeight);
+    graphics.drawRect(255, 255, 255, width - 30, rightY, paddleWidth, paddleHeight);
+
+    graphics.drawCircle(255, 255, 255, ballX, ballY, ballSize / 2);
+
+    graphics.endDraw();
+}
