@@ -8,10 +8,12 @@ static bool clockNative(int argCount, Value* args, Value* result) {
 }
 
 static bool sleepNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
     if (argCount != 1 || !IS_NUMBER(args[0])) {
         *result = OBJ_VAL(copyString("sleep() expects 1 number argument.", 34));
         return false;
     }
+#endif
 
     double seconds = AS_NUMBER(args[0]);
     SLEEP(seconds * 1000000);

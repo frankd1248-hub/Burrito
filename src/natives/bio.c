@@ -6,10 +6,12 @@
 #include "../vm.h"
 
 static bool getNumberNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
     if (argCount != 0) {
         *result = OBJ_VAL(copyString("getNumber() does not expect arguments.", 38));
         return false;
     }
+#endif
 
     double d;
     if (scanf("%lf", &d) != 1) {
@@ -25,10 +27,12 @@ static bool getNumberNative(int argCount, Value* args, Value* result) {
 }
 
 static bool getStringNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
     if (argCount != 0) {
         *result = OBJ_VAL(copyString("getString() does not expect arguments.", 38));
         return false;
     }
+#endif
 
     char* buf = malloc(sizeof(char) * 256);
     if (scanf("%s", buf) != 1) {

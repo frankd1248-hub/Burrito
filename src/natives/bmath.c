@@ -7,6 +7,7 @@
 /**
  * Successful check returns true.
  */
+#ifdef STRICT_NATIVES
 static bool checkNumberArguments(char* name, Value* args, Value* result, int count) {
     for (int i = 0; i < count; i++) {
         if (!IS_NUMBER(args[i])) {
@@ -20,21 +21,25 @@ static bool checkNumberArguments(char* name, Value* args, Value* result, int cou
 
     return true;
 }
+#endif
 
 static bool powerNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
     if (argCount != 2) {
-        *result = OBJ_VAL(copyString("power() expects two arguments.", 30));
+        *result = OBJ_VAL(copyString("power() expects two number arguments.", 30));
         return false;
     }
 
     if (!checkNumberArguments("power", args, result, 2))
         return false;
+#endif
 
     *result = NUMBER_VAL(pow(args[0].as.number, args[1].as.number));
     return true;
 }
 
 static bool sineNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
     if (argCount != 1) {
         *result = OBJ_VAL(copyString("sin() expects one argument.", 27));
         return false;
@@ -42,12 +47,14 @@ static bool sineNative(int argCount, Value* args, Value* result) {
 
     if (!checkNumberArguments("sin", args, result, 1))
         return false;
+#endif
 
     *result = NUMBER_VAL(sin(args[0].as.number));
     return true;
 }
 
 static bool cosineNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
     if (argCount != 1) {
         *result = OBJ_VAL(copyString("cos() expects one argument.", 27));
         return false;
@@ -55,12 +62,14 @@ static bool cosineNative(int argCount, Value* args, Value* result) {
 
     if (!checkNumberArguments("cos", args, result, 1))
         return false;
+#endif
 
     *result = NUMBER_VAL(cos(args[0].as.number));
     return true;
 }
 
 static bool arcsineNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
     if (argCount != 1) {
         *result = OBJ_VAL(copyString("asin() expects one argument.", 27));
         return false;
@@ -68,12 +77,14 @@ static bool arcsineNative(int argCount, Value* args, Value* result) {
 
     if (!checkNumberArguments("asin", args, result, 1))
         return false;
+#endif
 
     *result = NUMBER_VAL(asin(args[0].as.number));
     return true;
 }
 
 static bool arccosineNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
     if (argCount != 1) {
         *result = OBJ_VAL(copyString("acos() expects one argument.", 27));
         return false;
@@ -81,6 +92,7 @@ static bool arccosineNative(int argCount, Value* args, Value* result) {
 
     if (!checkNumberArguments("acos", args, result, 1))
         return false;
+#endif
 
     *result = NUMBER_VAL(acos(args[0].as.number));
     return true;
