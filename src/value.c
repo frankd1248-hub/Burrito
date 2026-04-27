@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "object.h"
 #include "memory.h"
@@ -27,11 +28,22 @@ void freeValueArray(ValueArray* array) {
     initValueArray(array);
 }
 
+static void printNumber(Value value) {
+    double val = AS_NUMBER(value);
+    if (fabs(val - round(val)) < 0.00001) {
+        printf("%ld", (long) round(val));
+    } else {
+        printf("%lf", val);
+    }
+
+    return;
+}
+
 void printValue(Value value) {
     switch(value.type) {
         case VAL_BOOL:   printf(AS_BOOL(value) ? "true" : "false"); break;
         case VAL_NULL:   printf("null"); break;
-        case VAL_NUMBER: printf("%.4lf", AS_NUMBER(value)); break;
+        case VAL_NUMBER: printNumber(value); break;
         case VAL_OBJ:    printObject(value); break;
         case VAL_EMPTY:  break;
     }

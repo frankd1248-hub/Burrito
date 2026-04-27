@@ -8,11 +8,13 @@
 
 #define OBJ_TYPE(value)      (AS_OBJ(value)->type)
 
+#define IS_ARRAY(value)      isObjType(value, OBJ_ARRAY)
 #define IS_FUNCTION(value)   isObjType(value, OBJ_FUNCTION)
 #define IS_MODULE(value)     isObjType(value, OBJ_MODULE)
 #define IS_NATIVE(value)     isObjType(value, OBJ_NATIVE)
 #define IS_STRING(value)     isObjType(value, OBJ_STRING)
 
+#define AS_ARRAY(value)      ((ObjArray*) AS_OBJ(value))
 #define AS_FUNCTION(value)   ((ObjFunction*) AS_OBJ(value))
 #define AS_MODULE(value)     ((ObjModule*) AS_OBJ(value))
 #define AS_NATIVE(value)     (((ObjNative*) AS_OBJ(value))->function)
@@ -20,6 +22,7 @@
 #define AS_CSTRING(value)    (((ObjString*) AS_OBJ(value))->chars)
 
 typedef enum { 
+    OBJ_ARRAY,
     OBJ_FUNCTION,
     OBJ_MODULE,
     OBJ_NATIVE,
@@ -30,6 +33,12 @@ struct Obj {
     ObjType type;
     struct Obj* next;
 };
+
+typedef struct {
+    Obj obj;
+    int size;
+    Value* values;
+} ObjArray;
 
 typedef struct {
     Obj obj;
@@ -57,6 +66,7 @@ struct ObjString {
     uint32_t hash;
 };
 
+ObjArray* newArray(int size);
 ObjFunction* newFunction();
 ObjModule* newModule();
 ObjNative* newNative(NativeFn function);

@@ -112,7 +112,8 @@ while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE)) {
 
     graphics.drawRect(150, 150, 150, width / 2 - 5, 0, 10, height);
 
-    graphics.drawText("Left score: ")
+    graphics.drawText("Left score: " + cast.ntos(leftScore), 255, 255, 255, 10, 10, 16);
+    graphics.drawText("Right score: " + cast.ntos(rightScore), 255, 255, 255, width - 150, 10, 16);
 
     graphics.drawCircle(255, 255, 255, ballX, ballY, ballSize / 2);
 

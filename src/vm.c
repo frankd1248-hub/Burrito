@@ -371,28 +371,115 @@ static InterpretResult run() {
             }
             case OP_GET_INDEX: {
                 Value indexVal = pop();
-                Value strVal = pop();
+                Value val = pop();
 
-                if (!IS_STRING(strVal) || !IS_NUMBER(indexVal)) {
+                if ((!IS_STRING(val) && !IS_ARRAY(val)) || !IS_NUMBER(indexVal)) {
                     frame->ip = ip;
-                    runtimeError("Indexing requires string and number.");
+                    runtimeError("Indexing requires string or array and number.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
-                ObjString* str = AS_STRING(strVal);
-                int index = (int)AS_NUMBER(indexVal);
+                if (IS_STRING(val)) {
+                    ObjString* str = AS_STRING(val);
+                    int index = (int)AS_NUMBER(indexVal);
 
-                if (index < 0 || index >= str->length) {
+                    if (index < 0 || index >= str->length) {
+                        frame->ip = ip;
+                        runtimeError("String index out of bounds.");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+
+                    char ch = str->chars[index];
+
+                    char buffer[2] = { ch, '\0' };
+                    push(OBJ_VAL(copyString(buffer, 1)));
+                } else {
+                    ObjArray* arr = AS_ARRAY(val);
+                    int index = (int) AS_NUMBER(indexVal);
+
+                    if (index < 0 || index >= arr->size) {
+                        frame->ip = ip;
+                        runtimeError("Array index out of bounds.");
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+
+                    push(arr->values[index]);
+                }
+
+                break;
+            }
+            case OP_SET_INDEX: {
+                Value value = pop();
+                Value index = pop();
+                Value array = pop();
+
+                if (!IS_NUMBER(index) || !IS_ARRAY(array)) {
                     frame->ip = ip;
-                    runtimeError("String index out of bounds.");
+                    runtimeError("Setting index requires an array and a number.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
-                char ch = str->chars[index];
+                ObjArray* arr = AS_ARRAY(array);
+                int idx = (int) AS_NUMBER(index);
 
-                char buffer[2] = { ch, '\0' };
-                push(OBJ_VAL(copyString(buffer, 1)));
+                if (idx < 0 || idx >= arr->size) {
+                    frame->ip = ip;
+                    runtimeError("Array index out of range.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
 
+                arr->values[idx] = value;
+
+                push(value);
+            }
+            case OP_ARRAY_NEW: {
+                Value sizeVal = pop();
+
+                if (!IS_NUMBER(sizeVal)) {
+                    frame->ip = ip;
+                    runtimeError("Array size must be a number.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                int size = (int)AS_NUMBER(sizeVal);
+
+                if (size < 0) {
+                    frame->ip = ip;
+                    runtimeError("Array size must be non-negative.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjArray* arr = newArray(size);
+
+                for (int i = 0; i < size; i++) {
+                    arr->values[i] = NULL_VAL;
+                }
+
+                push(OBJ_VAL(arr));
+                break;
+            }
+            case OP_ARRAY_INIT: {
+                int count = READ_BYTE();
+
+                ObjArray* array = newArray(count);
+
+                for (int i = count - 1; i >= 0; i--) {
+                    array->values[i] = pop();
+                }
+
+                push(OBJ_VAL(array));
+                break;
+            }
+            case OP_ARRAY_INIT_LONG: {
+                int count = READ_LONG();
+
+                ObjArray* array = newArray(count);
+
+                for (int i = count - 1; i >= 0; i--) {
+                    array->values[i] = pop();
+                }
+
+                push(OBJ_VAL(array));
                 break;
             }
             case OP_EQUAL: {
@@ -439,6 +526,7 @@ static InterpretResult run() {
 
                 // first arg = format string
                 if (!IS_STRING(args[0])) {
+                    frame->ip = ip;
                     runtimeError("First argument to print must be a format string.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -453,6 +541,7 @@ static InterpretResult run() {
 
                     if (c == '%') {
                         if (i + 1 >= format->length) {
+                            frame->ip = ip;
                             runtimeError("Incomplete format specifier.");
                             return INTERPRET_RUNTIME_ERROR;
                         }
@@ -460,6 +549,7 @@ static InterpretResult run() {
                         char spec = chars[++i];
 
                         if (argIndex >= argCount) {
+                            frame->ip = ip;
                             runtimeError("Not enough arguments for format string.");
                             return INTERPRET_RUNTIME_ERROR;
                         }
@@ -469,6 +559,7 @@ static InterpretResult run() {
                         switch (spec) {
                             case 'd':
                                 if (!IS_NUMBER(v)) {
+                                    frame->ip = ip;
                                     runtimeError("%%d expects number.");
                                     return INTERPRET_RUNTIME_ERROR;
                                 }
@@ -477,6 +568,7 @@ static InterpretResult run() {
 
                             case 's':
                                 if (!IS_STRING(v)) {
+                                    frame->ip = ip;
                                     runtimeError("%%s expects string.");
                                     return INTERPRET_RUNTIME_ERROR;
                                 }
@@ -488,6 +580,7 @@ static InterpretResult run() {
                                 break;
 
                             default:
+                                frame->ip = ip;
                                 runtimeError("Unknown format specifier '%%%c'.", spec);
                                 return INTERPRET_RUNTIME_ERROR;
                         }

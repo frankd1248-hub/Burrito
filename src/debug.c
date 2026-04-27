@@ -105,6 +105,16 @@ int dissassembleInstruction(Chunk* chunk, int offset) {
             return constantInstruction("OP_GET_PROPERTY", chunk, offset);
         case OP_GET_PROPERTY_LONG:
             return longConstantInstruction("OP_GET_PROPERTY_LONG", chunk, offset);
+        case OP_GET_INDEX:
+            return constantInstruction("OP_GET_INDEX", chunk, offset);
+        case OP_SET_INDEX:
+            return constantInstruction("OP_SET_INDEX", chunk, offset);
+        case OP_ARRAY_INIT:
+            return constantInstruction("OP_ARRAY_INIT", chunk, offset);
+        case OP_ARRAY_INIT_LONG:
+            return constantInstruction("OP_ARRAY_INIT_LONG", chunk, offset);
+        case OP_ARRAY_NEW:
+            return simpleInstruction("OP_ARRAY_NEW", offset);
         case OP_EQUAL:
             return simpleInstruction("OP_EQUAL", offset);
         case OP_GREATER:

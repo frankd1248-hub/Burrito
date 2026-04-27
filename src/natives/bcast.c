@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "bcast.h"
 
@@ -19,8 +20,12 @@ static bool ntosNative(int argCount, Value* args, Value* result) {
         *result = OBJ_VAL(copyString("Internal failure", 16));
         return false;
     }
-
-    snprintf(str, size + 1, "%.4lf", val);
+    
+    if (fabs(round(val) - val) < 0.00001) {
+        snprintf(str, size + 1, "%ld", (long) round(val));
+    } else {
+        snprintf(str, size + 1, "%.4lf", val);
+    }
     *result = OBJ_VAL(copyString(str, size));
     free(str);
     return true;

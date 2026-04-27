@@ -18,6 +18,16 @@ static Obj* allocateObject(size_t size, ObjType type) {
     return object;
 }
 
+ObjArray* newArray(int size) {
+    ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY);
+    array->values = ALLOCATE(Value, size);
+    for (int i = 0; i < size; i++) {
+        array->values[i] = NULL_VAL;
+    }
+    array->size = size;
+    return array;
+}
+
 ObjFunction* newFunction() {
     ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
     function->arity = 0;
@@ -79,6 +89,16 @@ ObjString* copyString(const char* chars, int length) {
     return allocateString(heapChars, length, hash);
 }
 
+static void printArray(ObjArray* array) {
+    printf("{ ");
+    for (int i = 0; i < array->size - 1; i++) {
+        printValue(array->values[i]);
+        printf(", ");
+    }
+    printValue(array->values[array->size - 1]);
+    printf(" }");
+}
+
 static void printFunction(ObjFunction* function) {
     if (function->name == NULL) {
         printf("<script>");
@@ -109,6 +129,9 @@ static void printString(ObjString* string) {
 
 void printObject(Value value) {
     switch (OBJ_TYPE(value)) {
+        case OBJ_ARRAY:
+            printArray(AS_ARRAY(value));
+            break;
         case OBJ_FUNCTION:
             printFunction(AS_FUNCTION(value));
             break;

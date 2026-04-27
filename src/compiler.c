@@ -241,6 +241,8 @@ static void endScope() {
     }
 }
 
+static void emitSet(int, uint8_t, bool);
+
 static void expression();
 static void statement();
 static void declaration();
@@ -248,6 +250,28 @@ static uint8_t argumentList();
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 static int resolveLocal(Compiler* compiler, Token* name);
+
+static void arrLit(bool canAssign) {
+    int count = 0;
+
+    if (!check(TOKEN_RIGHT_BRACE)) {
+        do {
+            expression();
+            if (count == 0xffffff) {
+                errorAtCurrent("Cannot have more than 16777215 elements in initializer list.");
+            }
+            count++;
+        } while (match(TOKEN_COMMA));
+    }
+
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after array initializer.");
+
+    if (count <= 255) {
+        emitSet(count, OP_ARRAY_INIT, false);
+    } else {
+        emitSet(count, OP_ARRAY_INIT_LONG, true);
+    }
+}
 
 static void binary(bool canAssign) {
     TokenType operatorType = parser.previous.type;
@@ -296,7 +320,12 @@ static void index_(bool canAssign) {
     expression();
     consume(TOKEN_RIGHT_BRACKET, "Expect ']' after index");
 
-    emitByte(OP_GET_INDEX);
+    if (canAssign && match(TOKEN_EQUAL)) {
+        expression();   // value to assign
+        emitByte(OP_SET_INDEX);
+    } else {
+        emitByte(OP_GET_INDEX);
+    }
 }
 
 static void literal(bool canAssign) {
@@ -523,7 +552,7 @@ ParseRule rules[] = {
     [TOKEN_LEFT_BRACKET]  = {NULL,     index_,  PREC_CALL},
     [TOKEN_RIGHT_BRACKET] = {NULL,     NULL,    PREC_NONE},
     [TOKEN_LEFT_BRACE]    = {NULL,     NULL,    PREC_NONE},
-    [TOKEN_RIGHT_BRACE]   = {NULL,     NULL,    PREC_NONE},
+    [TOKEN_RIGHT_BRACE]   = {arrLit,   NULL,    PREC_NONE},
     [TOKEN_COLON]         = {NULL,     NULL,    PREC_NONE},
     [TOKEN_COMMA]         = {NULL,     NULL,    PREC_NONE},
     [TOKEN_DOT]           = {NULL,     dot,     PREC_CALL},
@@ -770,12 +799,45 @@ static void fnDeclaration() {
 }
 
 static void varDeclaration() {
+    int arraySize = -1;
+    bool hasArraySize = false;
+
     int global = parseVariable("Expect variable name.");
 
+    if (match(TOKEN_LEFT_BRACKET)) {
+        expression();  
+        hasArraySize = true;
+
+        consume(TOKEN_RIGHT_BRACKET, "Expect ']' after size.");
+    }
+
     if (match(TOKEN_EQUAL)) {
-        expression();
+        if (match(TOKEN_LEFT_BRACE)) {
+
+            int count = 0;
+            do {
+                expression();
+                if (count == 0xffffff) {
+                    errorAtCurrent("Cannot have more than 16777215 array elements.");
+                }
+                count++;
+            } while (match(TOKEN_COMMA));
+            consume(TOKEN_RIGHT_BRACE, "Expect '}' after initializer list.");
+
+            if (count <= 255) {
+                emitSet(count, OP_ARRAY_INIT, false);
+            } else {
+                emitSet(count, OP_ARRAY_INIT_LONG, true);
+            }
+        } else {
+            expression();
+        }
     } else {
-        emitByte(OP_NULL);
+        if (hasArraySize) {
+            emitByte(OP_ARRAY_NEW);
+        } else {
+            emitByte(OP_NULL);
+        }
     }
     consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
 
