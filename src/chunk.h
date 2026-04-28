@@ -27,6 +27,8 @@ typedef enum {
     OP_GET_PROPERTY_LONG,
     OP_GET_INDEX,
     OP_SET_INDEX,
+    OP_GET_UPVALUE,
+    OP_SET_UPVALUE,
     OP_ARRAY_INIT,
     OP_ARRAY_INIT_LONG,
     OP_ARRAY_NEW,
@@ -45,6 +47,8 @@ typedef enum {
     OP_JUMP_IF_FALSE,
     OP_LOOP,
     OP_CALL,
+    OP_CLOSURE,
+    OP_CLOSE_UPVALUE,
     OP_RETURN,
 } OpCode;
 

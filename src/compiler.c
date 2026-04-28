@@ -46,7 +46,13 @@ typedef struct {
 typedef struct {
     Token name;
     int depth;
+    bool isCaptured;
 } Local;
+
+typedef struct {
+    uint8_t index;
+    bool isLocal;
+} Upvalue;
 
 typedef enum {
     TYPE_FUNCTION,
@@ -68,6 +74,7 @@ typedef struct Compiler {
 
     Local locals[LOCAL_COUNT];
     int localCount;
+    Upvalue upvalues[UINT8_COUNT];
     int scopeDepth;
 } Compiler;
 
@@ -207,6 +214,7 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
 
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
+    local->isCaptured = false;
     local->name.start = "";
     local->name.length = 0;
 }
@@ -236,7 +244,11 @@ static void endScope() {
     current->scopeDepth--;
 
     while (current->localCount > 0 && current->locals[current->localCount - 1].depth > current->scopeDepth) {
-        emitByte(OP_POP);
+        if (current->locals[current->localCount - 1].isCaptured) {
+            emitByte(OP_CLOSE_UPVALUE);
+        } else {
+            emitByte(OP_POP);
+        }
         current->localCount--;
     }
 }
@@ -250,6 +262,7 @@ static uint8_t argumentList();
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 static int resolveLocal(Compiler* compiler, Token* name);
+static int resolveUpvalue(Compiler* compiler, Token* name);
 
 static void arrLit(bool canAssign) {
     int count = 0;
@@ -421,6 +434,9 @@ static int resolveVariable(Token name, uint8_t* getOp, uint8_t* setOp, bool* lon
             *setOp = OP_SET_LOCAL_LONG;
             *longOp = true;
         }
+    } else if ((arg = resolveUpvalue(current, &name)) != -1) {
+        *getOp = OP_GET_UPVALUE;
+        *setOp = OP_SET_UPVALUE;
     } else {
         arg = identifierConstant(&name);
         if (arg <= UINT8_MAX) {
@@ -472,7 +488,6 @@ static void namedVariable(Token name, bool canAssign) {
     bool longOp;
 
     int arg = resolveVariable(name, &getOp, &setOp, &longOp);
-
 
     if (match(TOKEN_PLUS_PLUS)) {
         emitGet(arg, getOp, longOp);
@@ -640,6 +655,43 @@ static int resolveLocal(Compiler* compiler, Token* name) {
     return -1;
 }
 
+static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal) {
+    int upvalueCount = compiler->function->upvalueCount;
+
+    for (int i = 0; i < upvalueCount; i++) {
+        Upvalue* upvalue = &compiler->upvalues[i];
+        if (upvalue->index == index && upvalue->isLocal == isLocal) {
+            return i;
+        }
+    }
+
+    if (upvalueCount == UINT8_COUNT) {
+        error("Too many closure variables in function.");
+        return 0;
+    }
+
+    compiler->upvalues[upvalueCount].isLocal = isLocal;
+    compiler->upvalues[upvalueCount].index = index;
+    return compiler->function->upvalueCount++;
+}
+
+static int resolveUpvalue(Compiler* compiler, Token* name) {
+    if (compiler->enclosing == NULL) return -1;
+
+    int local = resolveLocal(compiler->enclosing, name);
+    if (local != -1 && local < 256) {
+        compiler->enclosing->locals[local].isCaptured = true;
+        return addUpvalue(compiler, (uint8_t) local, true);
+    }
+
+    int upvalue = resolveUpvalue(compiler->enclosing, name);
+    if (upvalue != -1) {
+        return addUpvalue(compiler, (uint8_t) upvalue, false);
+    }
+
+    return -1;
+}
+
 static void addLocal(Token name) {
     if (current->localCount >= LOCAL_COUNT) {
         error("Too many local variables currently in scope.");
@@ -649,6 +701,7 @@ static void addLocal(Token name) {
     Local* local = &current->locals[current->localCount++];
     local->name = name;
     local->depth = -1;
+    local->isCaptured = false;
 }
 
 static void declareVariable() {
@@ -777,8 +830,17 @@ static void function(FunctionType type){
     block();
 
     ObjFunction* function = endCompiler();
+    int index = makeConstant(OBJ_VAL(function));
+    if (index <= 255) {
+        emitWord(OP_CLOSURE, (uint8_t) index);
+    }
+
+    for (int i = 0; i < function->upvalueCount; i++) {
+        emitByte(compiler->upvalues[i].isLocal ? 1 : 0);
+        emitByte(compiler->upvalues[i].index);
+    }
+
     free(compiler);
-    emitConstant(OBJ_VAL(function));
 }
 
 static void fnDeclaration() {
