@@ -226,10 +226,15 @@ static ObjFunction* endCompiler() {
 
 #ifdef DEBUG_PRINT_CODE
     if (!parser.hadError) {
+        FILE* f = fopen("output.text", "a");
         dissassembleChunk(
             currentChunk(), 
-            function->name != NULL ? function->name->chars : "<script>"
+            function->name != NULL ? function->name->chars : "<script>",
+            f
         );
+        fprintf(f, "\n\n");
+        fflush(f);
+        fclose(f);
     }
 #endif
 
@@ -281,9 +286,14 @@ static void arrLit(bool canAssign) {
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after array initializer.");
 
     if (count <= 255) {
-        emitSet(count, OP_ARRAY_INIT, false);
+        emitWord(OP_ARRAY_INIT, (uint8_t) count);
     } else {
-        emitSet(count, OP_ARRAY_INIT_LONG, true);
+        emitDoubleWord(
+            OP_ARRAY_INIT_LONG,
+            (uint8_t)(count & 0xff),
+            (uint8_t)((count >> 8) & 0xff),
+            (uint8_t)((count >> 16) & 0xff)
+        );
     }
 }
 
@@ -866,28 +876,8 @@ static void varDeclaration() {
     }
 
     if (match(TOKEN_EQUAL)) {
-        if (match(TOKEN_LEFT_BRACE)) {
-            if (hasArraySize) emitByte(OP_POP);  // discard size, list defines count
-
-            int count = 0;
-            do {
-                expression();
-                if (count == 0xffffff) {
-                    errorAtCurrent("Cannot have more than 16777215 array elements.");
-                }
-                count++;
-            } while (match(TOKEN_COMMA));
-            consume(TOKEN_RIGHT_BRACE, "Expect '}' after initializer list.");
-
-            if (count <= 255) {
-                emitSet(count, OP_ARRAY_INIT, false);
-            } else {
-                emitSet(count, OP_ARRAY_INIT_LONG, true);
-            }
-        } else {
-            if (hasArraySize) emitByte(OP_POP);  // discard size, scalar follows
-            expression();
-        }
+        if (hasArraySize) emitByte(OP_POP);
+        expression();
     } else {
         if (hasArraySize) {
             emitByte(OP_ARRAY_NEW);  // size already on stack, ARRAY_NEW consumes it

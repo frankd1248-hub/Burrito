@@ -3,8 +3,6 @@
 //   Written in Burrito
 // =============================================
 
-// --- Constants ---
-
 const SCREEN_W    = 800;
 const SCREEN_H    = 600;
 const FPS         = 60;
@@ -15,7 +13,7 @@ const PLAYER_SPD  = 300;
 
 const BULLET_W    = 4;
 const BULLET_H    = 14;
-const BULLET_SPD  = 500;
+const BULLET_SPD  = 700;
 
 const INVADER_W   = 32;
 const INVADER_H   = 20;
@@ -31,12 +29,12 @@ const INVADER_SHOOT_CHANCE = 0.0015;
 
 const BOMB_W     = 4;
 const BOMB_H     = 14;
-const BOMB_SPD   = 220;
+const BOMB_SPD   = 200;
 
 const BARRIER_COUNT  = 4;
 const BARRIER_W      = 64;
 const BARRIER_H      = 40;
-const BARRIER_HP     = 8;
+const BARRIER_HP     = 15;
 const BARRIER_Y      = 460;
 
 const TOTAL_INVADERS = 55;  // 11 * 5
@@ -79,7 +77,7 @@ decl invCount   = TOTAL_INVADERS;
 const MAX_BOMBS = 8;
 decl bombX    = {0, 0, 0, 0, 0, 0, 0, 0};
 decl bombY    = {0, 0, 0, 0, 0, 0, 0, 0};
-decl bombActive = {false, false, false, false, false, false, false, false};
+decl bombActive[8] = {false, false, false, false, false, false, false, false};
 
 // Barriers - HP per barrier
 decl barrierHP = {BARRIER_HP, BARRIER_HP, BARRIER_HP, BARRIER_HP};
@@ -141,7 +139,7 @@ fn rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
 fn spawnBomb(col, row) {
     for (decl i = 0; i < MAX_BOMBS; i++) {
         if (!bombActive[i]) {
-            bombX[i] = invaderX(col) + INVADER_W / 2 - BOMB_W / 2;
+            bombX[i] = invaderX(col) + INVADER_W / 2 - BOMB_W / 2; // ********
             bombY[i] = invaderY(row) + INVADER_H;
             bombActive[i] = true;
             break;

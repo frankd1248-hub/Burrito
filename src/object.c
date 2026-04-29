@@ -123,63 +123,90 @@ ObjUpvalue* newUpvalue(Value* slot) {
     return upvalue;
 }
 
-static void printArray(ObjArray* array) {
-    printf("{ ");
+static void printArray(ObjArray* array, FILE* f) {
+    if (f == NULL) printf("{ ");
+    else fprintf(f, "{ ");
     for (int i = 0; i < array->size - 1; i++) {
-        printValue(array->values[i]);
-        printf(", ");
+        printValue(array->values[i], f);
+        if (f == NULL) printf(", ");
+        else fprintf(f, ", ");
     }
-    printValue(array->values[array->size - 1]);
-    printf(" }");
+    printValue(array->values[array->size - 1], f);
+    if (f == NULL) printf(" }");
+    else fprintf(f, " }");
 }
 
-static void printFunction(ObjFunction* function) {
+static void printFunction(ObjFunction* function, FILE* f) {
     if (function->name == NULL) {
-        printf("<script>");
+        if (f == NULL) printf("<script>");
+        else fprintf(f, "<script>");
         return;
     }
-    printf("<fn %s>", function->name->chars);
+    if (f == NULL) printf("<fn %s>", function->name->chars);
+    else fprintf(f, "<fn %s>", function->name->chars);
 }
 
-static void printString(ObjString* string) {
-    for (int i = 0; i < string->length; i++) {
-        if (string->chars[i] == '\\') {
-            if (i == string->length - 1) {
-                putchar('\\');
-                continue;
-            }
+static void printString(ObjString* string, FILE* f) {
+    if (f == NULL) {
+        for (int i = 0; i < string->length; i++) {
+            if (string->chars[i] == '\\') {
+                if (i == string->length - 1) {
+                    putchar('\\');
+                    continue;
+                }
 
-            switch (string->chars[++i]) {
-                case 'n':  putchar('\n'); break;
-                case 't':  putchar('\t'); break;
-                case '"':  putchar('"');  break;
-                case '\\': putchar('\\'); break;
+                switch (string->chars[++i]) {
+                    case 'n':  putchar('\n'); break;
+                    case 't':  putchar('\t'); break;
+                    case '"':  putchar('"');  break;
+                    case '\\': putchar('\\'); break;
+                }
+            } else {
+                putchar(string->chars[i]);
             }
-        } else {
-            putchar(string->chars[i]);
+        }
+    } else {
+        for (int i = 0; i < string->length; i++) {
+            if (string->chars[i] == '\\') {
+                if (i == string->length - 1) {
+                    fputc('\\', f);
+                    continue;
+                }
+
+                switch (string->chars[++i]) {
+                    case 'n':  fputc('\n', f); break;
+                    case 't':  fputc('\t', f); break;
+                    case '"':  fputc('"', f);  break;
+                    case '\\': fputc('\\', f); break;
+                }
+            } else {
+                fputc(string->chars[i], f);
+            }
         }
     }
 }
 
-void printObject(Value value) {
+void printObject(Value value, FILE* f) {
     switch (OBJ_TYPE(value)) {
         case OBJ_ARRAY:
-            printArray(AS_ARRAY(value));
+            printArray(AS_ARRAY(value), f);
             break;
         case OBJ_CLOSURE:
-            printFunction(AS_CLOSURE(value)->function);
+            printFunction(AS_CLOSURE(value)->function, f);
             break;
         case OBJ_FUNCTION:
-            printFunction(AS_FUNCTION(value));
+            printFunction(AS_FUNCTION(value), f);
             break;
         case OBJ_NATIVE:
-            printf("<native fn>");
+            if (f == NULL) printf("<native fn>");
+            else fprintf(f, "<native fn>");
             break;
         case OBJ_STRING:
-            printString(AS_STRING(value));
+            printString(AS_STRING(value), f);
             break;
         case OBJ_UPVALUE:
-            printf("upvalue");
+            if (f == NULL) printf("upvalue");
+            else fprintf(f, "upvalue");
             break;
     }
 }

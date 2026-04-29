@@ -18,7 +18,7 @@ void defineAllNatives() {
     defineModule("cast", buildCastModule());
     defineModule("io", buildIOModule());
     defineModule("math", buildMathModule());
-    defineModule("string", buildStringModule());
+    defineModule("str", buildStringModule());
     defineModule("time", buildTimeModule());
 
     ObjModule** gmodules = buildGraphicsModules();

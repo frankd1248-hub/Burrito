@@ -28,24 +28,42 @@ void freeValueArray(ValueArray* array) {
     initValueArray(array);
 }
 
-static void printNumber(Value value) {
+static void printNumber(Value value, FILE* f) {
     double val = AS_NUMBER(value);
-    if (fabs(val - round(val)) < 0.00001) {
-        printf("%ld", (long) round(val));
+    if (f == NULL) {
+        if (fabs(val - round(val)) < 0.00001) {
+            printf("%ld", (long) round(val));
+        } else {
+            printf("%lf", val);
+        }
     } else {
-        printf("%lf", val);
+        if (fabs(val - round(val)) < 0.00001) {
+            fprintf(f, "%ld", (long) round(val));
+        } else {
+            fprintf(f, "%lf", val);
+        }
     }
 
     return;
 }
 
-void printValue(Value value) {
-    switch(value.type) {
-        case VAL_BOOL:   printf(AS_BOOL(value) ? "true" : "false"); break;
-        case VAL_NULL:   printf("null"); break;
-        case VAL_NUMBER: printNumber(value); break;
-        case VAL_OBJ:    printObject(value); break;
-        case VAL_EMPTY:  break;
+void printValue(Value value, FILE* f) {
+    if (f == NULL) {
+        switch(value.type) {
+            case VAL_BOOL:   printf(AS_BOOL(value) ? "true" : "false"); break;
+            case VAL_NULL:   printf("null"); break;
+            case VAL_NUMBER: printNumber(value, f); break;
+            case VAL_OBJ:    printObject(value, f); break;
+            case VAL_EMPTY:  break;
+        }
+    } else {
+        switch(value.type) {
+            case VAL_BOOL:   fprintf(f, AS_BOOL(value) ? "true" : "false"); break;
+            case VAL_NULL:   fprintf(f, "null"); break;
+            case VAL_NUMBER: printNumber(value, f); break;
+            case VAL_OBJ:    printObject(value, f); break;
+            case VAL_EMPTY:  break;
+        }
     }
 }
 

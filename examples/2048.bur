@@ -1,0 +1,301 @@
+// =============================================
+//   2048
+//   Written in Burrito
+// =============================================
+
+const WINDOW_WIDTH = 800;
+const WINDOW_HEIGHT = 600;
+
+const GRID_X = 150;
+const GRID_Y = 70;
+const CELL_SIDE = 125;
+
+const COOLDOWN = 0.15;
+
+decl inCooldown = false;
+decl cooldownTimer = 0;
+
+decl score = 0;
+
+decl grid[16] = {
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0
+};
+
+fn getAt(x, y) {
+    return grid[y * 4 + x];
+}
+
+fn setAt(x, y, val) {
+    grid[y * 4 + x] = val;
+}
+
+fn getColor(val) {
+    if (val == 2) return {238, 228, 218};
+    if (val == 4) return {237, 224, 200};
+    if (val == 8) return {242, 177, 121};
+    if (val == 16) return {245, 149, 99};
+    if (val == 32) return {246, 124, 95};
+    if (val == 64) return {246, 94, 59};
+    if (val == 128) return {237, 207, 114};
+    if (val == 256) return {237, 204, 97};
+    if (val == 512) return {237, 200, 80};
+    if (val == 1024) return {237, 197, 63};
+    if (val == 2048) return {237, 194, 46};
+
+    decl level = math.log2(val);
+    decl t = (level - 11) / 5;
+
+    if (t > 1) t = 1;
+
+    decl r = 237 - 80 * t;
+    decl g = 194 - 60 * t;
+    decl b = 46 - 46 * t;
+
+    return {r, g, b};
+}
+
+fn drawGrid() {
+    for (decl i = 0; i <= 4; i++) {
+        graphics.drawRect(187, 173, 160, GRID_X + CELL_SIDE * i - 5, GRID_Y - 5, 10, 510);
+        graphics.drawRect(187, 173, 160, GRID_X - 5, GRID_Y + CELL_SIDE * i - 5, 510, 10);
+    }
+
+    for (decl x = 0; x < 4; x++) {
+        for (decl y = 0; y < 4; y++) {
+            if (getAt(x, y) != 0) {
+                decl color = getColor(getAt(x, y));
+                graphics.drawRect(
+                    color[0], color[1], color[2],
+                    GRID_X + CELL_SIDE * x + 5,
+                    GRID_Y + CELL_SIDE * y + 5,
+                    CELL_SIDE - 10,
+                    CELL_SIDE - 10
+                );
+                decl length = str.len(cast.ntos(getAt(x, y)));
+                graphics.drawText(
+                    cast.ntos(getAt(x, y)),
+                    0, 0, 0, 
+                    GRID_X + CELL_SIDE * x + CELL_SIDE / 2 - length * 11, 
+                    GRID_Y + CELL_SIDE * y + CELL_SIDE / 2 - 20,
+                    52
+                );
+            }
+        }
+    }
+}
+
+fn generate() {
+    decl flag = false;
+    for (decl x = 0; x < 4; x++) {
+        for (decl y = 0; y < 4; y++) {
+            if (getAt(x, y) == 0) flag = true;
+        }
+    }
+    if (!flag) return;
+
+    decl x = 0;
+    decl y = 0;
+
+    while (getAt(x, y) != 0) {
+        x = math.floor(math.randRange(0, 4));
+        y = math.floor(math.randRange(0, 4));
+    }
+
+    if (math.round(math.rand()) == 1) {
+        setAt(x, y, 2);
+    } else {
+        setAt(x, y, 4);
+    }
+
+}
+
+fn moveLeft() {
+    decl flag = true;
+    while (flag) {
+        flag = false;
+        for (decl y = 0; y < 4; y++) {
+            for (decl x = 1; x < 4; x++) {
+                if (getAt(x, y) == 0) continue;
+                if (getAt(x-1, y) == 0) {
+                    setAt(x-1, y, getAt(x, y));
+                    setAt(x, y, 0);
+                    flag = true;
+                } else if (getAt(x-1, y) == getAt(x, y)) {
+                    setAt(x-1, y, getAt(x-1, y) * 2);
+                    score += getAt(x-1, y);
+                    setAt(x, y, 0);
+                    flag = true;
+                }
+            }
+        }
+    }
+    return flag;
+}
+
+fn moveRight() {
+    decl flag = true;
+    decl result = false;
+    while (flag) {
+        flag = false;
+        for (decl y = 0; y < 4; y++) {
+            for (decl x = 0; x < 3; x++) {
+                if (getAt(x, y) == 0) continue;
+                if (getAt(x+1, y) == 0) {
+                    setAt(x+1, y, getAt(x, y));
+                    setAt(x, y, 0);
+                    flag = true;
+                    result = true;
+                } else if (getAt(x+1, y) == getAt(x, y)) {
+                    setAt(x+1, y, getAt(x+1, y) * 2);
+                    score += getAt(x+1, y);
+                    setAt(x, y, 0);
+                    flag = true;
+                    result = true;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+fn moveUp() {
+    decl flag = true;
+    decl result = false;
+    while (flag) {
+        flag = false;
+        for (decl x = 0; x < 4; x++) {
+            for (decl y = 1; y < 4; y++) {
+                if (getAt(x, y) == 0) continue;
+                if (getAt(x, y-1) == 0) {
+                    setAt(x, y-1, getAt(x, y));
+                    setAt(x, y, 0);
+                    flag = true;
+                    result = true;
+                } else if (getAt(x, y-1) == getAt(x, y)) {
+                    setAt(x, y-1, getAt(x, y-1) * 2);
+                    score += getAt(x, y-1);
+                    setAt(x, y, 0);
+                    flag = true;
+                    result = true;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+fn moveDown() {
+    decl flag = true;
+    decl result = false;
+    while (flag) {
+        flag = false;
+        for (decl x = 0; x < 4; x++) {
+            for (decl y = 0; y < 3; y++) {
+                if (getAt(x, y) == 0) continue;
+                if (getAt(x, y+1) == 0) {
+                    setAt(x, y+1, getAt(x, y));
+                    setAt(x, y, 0);
+                    flag = true;
+                    result = true;
+                } else if (getAt(x, y+1) == getAt(x, y)) {
+                    setAt(x, y+1, getAt(x, y+1) * 2);
+                    score += getAt(x, y+1);
+                    setAt(x, y, 0);
+                    flag = true;
+                    result = true;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+fn lose() {
+    for (decl y = 0; y < 4; y++) {
+        for (decl x = 0; x < 4; x++) {
+            if (getAt(x, y) == 0) return false;
+        }
+    }
+
+    for (decl y = 0; y < 4; y++) {
+        for (decl x = 0; x < 3; x++) {
+            if (getAt(x, y) == getAt(x + 1, y)) return false;
+        }
+    }
+
+    for (decl x = 0; x < 4; x++) {
+        for (decl y = 0; y < 3; y++) {
+            if (getAt(x, y) == getAt(x, y + 1)) return false;
+        }
+    }
+
+    return true;
+}
+
+fn startCooldown() {
+    inCooldown = true;
+    cooldownTimer = COOLDOWN;
+}
+
+graphics.init(WINDOW_WIDTH, WINDOW_HEIGHT, "2048");
+graphics.targetFPS(60);
+generate();
+generate();
+
+while(!graphics.windowShouldClose()) {
+    if (lose()) {
+        time.sleep(1);
+        break;
+    }
+
+    decl dt = graphics.getDeltaTime();
+
+    decl moved = false;
+
+    if (!inCooldown) {
+        if (graphics.isKeyDown(game.KEY_W)) {
+            moved = moveUp();
+            startCooldown();
+        } else if (graphics.isKeyDown(game.KEY_A)) {
+            moved = moveLeft();
+            startCooldown();
+        } else if (graphics.isKeyDown(game.KEY_S)) {
+            moved = moveDown(); 
+            startCooldown();
+        } else if (graphics.isKeyDown(game.KEY_D)) {
+            moved = moveRight();
+            startCooldown();
+        }
+    }
+
+    if (moved) {
+        generate();
+    }
+
+    cooldownTimer -= dt;
+    if (cooldownTimer <= 0) {
+        inCooldown = false;
+    }
+
+    graphics.beginDraw();
+    graphics.clearColor(250, 248, 239);
+    graphics.drawText("Score: " + cast.ntos(score), 0, 0, 0, 10, 10, 40);
+    drawGrid();
+    graphics.endDraw();
+}
+
+if (!lose())
+    graphics.closeWindow();
+
+while (!graphics.windowShouldClose()) {
+    graphics.beginDraw();
+    graphics.clearColor(250, 248, 239);
+    graphics.drawText("GAME OVER", 204, 0, 0, 200, 200, 72);
+    graphics.drawText("Score: " + cast.ntos(score), 0, 0, 0, 200, 265, 40);
+    graphics.endDraw();
+}
+ 
+// End screen

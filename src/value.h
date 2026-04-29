@@ -1,6 +1,8 @@
 #ifndef burrito_value_h
 #define burrito_value_h
 
+#include <stdio.h>
+
 #include "common.h"
 
 typedef struct Obj Obj;
@@ -49,6 +51,6 @@ bool valuesEqual(Value a, Value b);
 void initValueArray(ValueArray* array);
 void writeValueArray(ValueArray* array, Value value);
 void freeValueArray(ValueArray* array);
-void printValue(Value value);
+void printValue(Value value, FILE* f);
 
 #endif

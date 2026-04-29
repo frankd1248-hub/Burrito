@@ -1,3 +1,8 @@
+// =============================================
+//   Pong, Atari-style
+//   Written in Burrito
+// =============================================
+
 decl width = 1000;
 decl height = 768;
 
@@ -8,7 +13,7 @@ decl paddleWidth = 20;
 decl paddleHeight = 128;
 decl paddleSpeed = 600;
 
-decl ballSize = 20;
+decl ballRadius = 10;
 decl ballX = width / 2;
 decl ballY = height / 2;
 decl ballVX = 250;
@@ -52,16 +57,17 @@ while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE)) {
     ballX = ballX + ballVX * dt;
     ballY = ballY + ballVY * dt;
 
-    if (ballY < 0 or ballY > height) {
+    if (ballY - ballRadius < 0 or ballY + ballRadius > height) {
+        if (ballY - ballRadius < 0) ballY = ballRadius;
+        if (ballY + ballRadius > height) ballY = height - ballRadius;
         ballVY = -ballVY;
     }
 
-    if (ballX < 30 and
+    if (ballX - ballRadius < 30 and
         ballY > leftY and
         ballY < leftY + paddleHeight) {
 
-        ballVX = -ballVX;
-        ballX = 30;
+        ballX = 30 + ballRadius;
 
         angle = ((ballY - (leftY + paddleHeight / 2)) / paddleHeight) * math.pi / 3;
 
@@ -71,12 +77,11 @@ while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE)) {
         ballSpeed *= 1.07;
     }
 
-    if (ballX > width - 30 and
+    if (ballX + ballRadius > width - 30 and
         ballY > rightY and
         ballY < rightY + paddleHeight) {
 
-        ballVX = -ballVX;
-        ballX = width - 30;
+        ballX = width - 30 - ballRadius;
 
         angle = ((ballY - (rightY + paddleHeight / 2)) / paddleHeight) * math.pi / 3;
 
@@ -90,18 +95,20 @@ while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE)) {
         rightScore++;
         ballX = width / 2;
         ballY = height / 2;
-        ballVX = 250;
-        ballVY = 180;
         ballSpeed = 350;
+        decl angle = math.randRange(-math.pi / 3, math.pi / 3);
+        ballVX = ballSpeed * math.cos(angle);
+        ballVY = ballSpeed * math.sin(angle);
     }
 
     if (ballX > width) {
         leftScore++;
         ballX = width / 2;
         ballY = height / 2;
-        ballVX = 250;
-        ballVY = 180;
         ballSpeed = 350;
+        decl angle = math.randRange(math.pi / 3, 5 * math.pi / 3);
+        ballVX = ballSpeed * math.cos(angle);
+        ballVY = ballSpeed * math.sin(angle);
     }
 
     graphics.beginDraw();
@@ -115,7 +122,7 @@ while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE)) {
     graphics.drawText("Left score: " + cast.ntos(leftScore), 255, 255, 255, 10, 10, 16);
     graphics.drawText("Right score: " + cast.ntos(rightScore), 255, 255, 255, width - 150, 10, 16);
 
-    graphics.drawCircle(255, 255, 255, ballX, ballY, ballSize / 2);
+    graphics.drawCircle(255, 255, 255, ballX, ballY, ballRadius);
 
     graphics.endDraw();
 }

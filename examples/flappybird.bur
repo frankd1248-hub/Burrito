@@ -1,0 +1,339 @@
+// =============================================
+//   Flappy Bird
+//   Written in Burrito
+// =============================================
+
+// --- Constants ---
+
+const SCREEN_W      = 800;
+const SCREEN_H      = 500;
+const FPS           = 60;
+
+const GRAVITY       = 950.0;
+const FLAP_VY       = -375.0;
+const TERMINAL_VY   = 600.0;
+
+const PIPE_SPEED    = 210.0;
+const PIPE_GAP      = 148.0;
+const PIPE_W        = 68;
+const PIPE_CAP_W    = 76;
+const PIPE_CAP_H    = 16;
+const PIPE_INTERVAL = 1.75;
+const MAX_PIPES     = 4;
+
+const BIRD_X        = 130;
+const BIRD_W        = 34;
+const BIRD_H        = 24;
+
+const GROUND_Y      = 430;
+const GROUND_H      = 70;
+
+// --- Init ---
+
+graphics.init(SCREEN_W, SCREEN_H, "Flappy Bird");
+graphics.targetFPS(FPS);
+
+// --- State ---
+
+decl birdY      = SCREEN_H / 2 - BIRD_H / 2;
+decl birdVY     = 0.0;
+decl alive      = true;
+decl started    = false;
+decl score      = 0;
+decl best       = 0;
+
+decl spacePrev  = false;
+
+decl pipeX      = {0.0, 0.0, 0.0, 0.0};
+decl pipeGapY   = {200.0, 200.0, 200.0, 200.0};
+decl pipeActive = {false, false, false, false};
+decl pipeScored = {false, false, false, false};
+decl pipeTimer  = PIPE_INTERVAL;   // spawn first pipe immediately
+
+// Animation
+decl wingAngle  = 0.0;
+decl deathTimer = 0.0;
+
+// --- Helpers ---
+
+fn spawnPipe() {
+    for (decl i = 0; i < MAX_PIPES; i++) {
+        if (!pipeActive[i]) {
+            pipeX[i]      = SCREEN_W + PIPE_W;
+            // Pseudorandom gap centre: clamp between 100 and GROUND_Y - 100
+            decl seed = time.clock() * 17.3 + i * 6.1;
+            pipeGapY[i]   = 130 + (math.sin(seed) * 0.5 + 0.5) * (GROUND_Y - 260);
+            pipeActive[i] = true;
+            pipeScored[i] = false;
+            break;
+        }
+    }
+}
+
+fn rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+    return ax < bx + bw and
+           ax + aw > bx and
+           ay < by + bh and
+           ay + ah > by;
+}
+
+fn resetGame() {
+    if (score > best) best = score;
+    birdY      = SCREEN_H / 2 - BIRD_H / 2;
+    birdVY     = 0.0;
+    alive      = true;
+    started    = false;
+    score      = 0;
+    pipeTimer  = PIPE_INTERVAL;
+    deathTimer = 0.0;
+    for (decl i = 0; i < MAX_PIPES; i++) {
+        pipeActive[i] = false;
+        pipeScored[i] = false;
+    }
+}
+
+// --- Main loop ---
+
+decl dt = 0.0;
+
+while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE)) {
+
+    dt = graphics.getDeltaTime();
+    if (dt > 0.05) dt = 0.05;
+
+    decl spaceNow   = graphics.isKeyDown(game.KEY_SPACE) or
+                      graphics.isKeyDown(game.KEY_UP);
+    decl justFlap   = spaceNow and !spacePrev;
+    spacePrev       = spaceNow;
+
+    // ---- UPDATE ----
+
+    wingAngle = wingAngle + dt * 8.0;
+
+    if (alive) {
+        if (!started) {
+            // Waiting to start — gentle bob
+            birdY = SCREEN_H / 2 - BIRD_H / 2 + math.sin(time.clock() * 3.0) * 6;
+            if (justFlap) {
+                started = true;
+                birdVY  = FLAP_VY;
+                birdY   = SCREEN_H / 2 - BIRD_H / 2;
+            }
+        } else {
+            // Flap
+            if (justFlap) {
+                birdVY = FLAP_VY;
+            }
+
+            // Physics
+            birdVY += GRAVITY * dt;
+            if (birdVY > TERMINAL_VY) birdVY = TERMINAL_VY;
+            birdY  += birdVY * dt;
+
+            // Ceiling
+            if (birdY < 0) {
+                birdY  = 0;
+                birdVY = 0;
+            }
+
+            // Spawn pipes
+            pipeTimer += dt;
+            if (pipeTimer >= PIPE_INTERVAL) {
+                pipeTimer = 0.0;
+                spawnPipe();
+            }
+
+            // Update pipes
+            for (decl i = 0; i < MAX_PIPES; i++) {
+                if (pipeActive[i]) {
+                    pipeX[i] = pipeX[i] -  PIPE_SPEED * dt;
+
+                    // Despawn off-screen
+                    if (pipeX[i] + PIPE_W < 0) {
+                        pipeActive[i] = false;
+                    }
+
+                    // Score when bird clears the pipe
+                    if (!pipeScored[i] and pipeX[i] + PIPE_W < BIRD_X) {
+                        pipeScored[i] = true;
+                        score++;
+                    }
+
+                    // Collision: top pipe body
+                    decl topH = pipeGapY[i] - PIPE_GAP / 2;
+                    if (rectsOverlap(BIRD_X + 3, birdY + 3, BIRD_W - 6, BIRD_H - 6,
+                                     pipeX[i], 0, PIPE_W, topH)) {
+                        alive = false;
+                    }
+
+                    // Collision: top cap
+                    if (rectsOverlap(BIRD_X + 3, birdY + 3, BIRD_W - 6, BIRD_H - 6,
+                                     pipeX[i] - 4, topH - PIPE_CAP_H,
+                                     PIPE_CAP_W, PIPE_CAP_H)) {
+                        alive = false;
+                    }
+
+                    // Collision: bottom pipe body
+                    decl botY = pipeGapY[i] + PIPE_GAP / 2;
+                    decl botH = GROUND_Y - botY;
+                    if (rectsOverlap(BIRD_X + 3, birdY + 3, BIRD_W - 6, BIRD_H - 6,
+                                     pipeX[i], botY, PIPE_W, botH)) {
+                        alive = false;
+                    }
+
+                    // Collision: bottom cap
+                    if (rectsOverlap(BIRD_X + 3, birdY + 3, BIRD_W - 6, BIRD_H - 6,
+                                     pipeX[i] - 4, botY, PIPE_CAP_W, PIPE_CAP_H)) {
+                        alive = false;
+                    }
+                }
+            }
+
+            // Ground collision
+            if (birdY + BIRD_H >= GROUND_Y) {
+                birdY  = GROUND_Y - BIRD_H;
+                birdVY = 0;
+                alive  = false;
+            }
+        }
+
+    } else {
+        // Dead — let the bird settle on the ground with bounce
+        deathTimer += dt;
+        if (birdY + BIRD_H < GROUND_Y) {
+            birdVY += GRAVITY * dt;
+            birdY  += birdVY * dt;
+        }
+        if (birdY + BIRD_H >= GROUND_Y) {
+            birdY  = GROUND_Y - BIRD_H;
+            birdVY = 0;
+        }
+        if (deathTimer > 1.0 and justFlap) {
+            resetGame();
+        }
+    }
+
+    // ---- DRAW ----
+
+    graphics.beginDraw();
+
+    // Sky
+    graphics.clearColor(112, 196, 206);
+
+    // Background hills (decorative)
+    graphics.drawRect(106, 190, 100, 0,   360, 220, 70);
+    graphics.drawRect(106, 190, 100, 180, 370, 180, 60);
+    graphics.drawRect(106, 190, 100, 460, 355, 280, 75);
+    graphics.drawRect(106, 190, 100, 600, 365, 200, 65);
+
+    // Pipes
+    for (decl i = 0; i < MAX_PIPES; i++) {
+        if (pipeActive[i]) {
+            decl px   = pipeX[i];
+            decl topH = pipeGapY[i] - PIPE_GAP / 2;
+            decl botY = pipeGapY[i] + PIPE_GAP / 2;
+            decl botH = GROUND_Y - botY;
+
+            // Top pipe body
+            graphics.drawRect(84,  168, 60, px, 0, PIPE_W, topH);
+            // Top pipe highlight
+            graphics.drawRect(120, 200, 90, px + 5, 0, 10, topH);
+            // Top pipe cap
+            graphics.drawRect(84,  168, 60, px - 4, topH - PIPE_CAP_H, PIPE_CAP_W, PIPE_CAP_H);
+            graphics.drawRect(120, 200, 90, px,     topH - PIPE_CAP_H, 10, PIPE_CAP_H);
+
+            // Bottom pipe body
+            graphics.drawRect(84,  168, 60, px, botY, PIPE_W, botH);
+            // Bottom pipe highlight
+            graphics.drawRect(120, 200, 90, px + 5, botY, 10, botH);
+            // Bottom pipe cap
+            graphics.drawRect(84,  168, 60, px - 4, botY, PIPE_CAP_W, PIPE_CAP_H);
+            graphics.drawRect(120, 200, 90, px,     botY, 10, PIPE_CAP_H);
+        }
+    }
+
+    // Ground
+    graphics.drawRect(220, 180, 90,  0, GROUND_Y,      SCREEN_W, 18);
+    graphics.drawRect(160, 120, 50,  0, GROUND_Y + 18, SCREEN_W, GROUND_H - 18);
+
+    // Ground detail stripes
+    decl stripeX = 0;
+    while (stripeX < SCREEN_W) {
+        graphics.drawRect(140, 100, 40, stripeX, GROUND_Y + 20, 30, 8);
+        stripeX += 80;
+    }
+
+    // Bird
+    decl bx = BIRD_X;
+    decl by = birdY;
+
+    // Tilt: nose up when going up, nose down when falling
+    decl tiltColor_r = 255;
+    decl tiltColor_g = 215;
+    if (!alive) {
+        tiltColor_r = 255;
+        tiltColor_g = 100;
+    }
+
+    // Body
+    graphics.drawRect(tiltColor_r, tiltColor_g, 0,   bx,          by,      BIRD_W,     BIRD_H);
+    // Wing (flapping: offset using sine)
+    decl wingY = by + 12 + math.sin(wingAngle) * 5;
+    if (!alive) wingY = by + 16;
+    graphics.drawRect(tiltColor_r, tiltColor_g - 30, 0, bx + 4, wingY, 16, 8);
+    // Belly highlight
+    graphics.drawRect(255, 245, 150,                 bx + 2,      by + 12, BIRD_W - 8, BIRD_H - 14);
+    // Eye white
+    graphics.drawCircle(255, 255, 255,               bx + BIRD_W - 8, by + 7, 5);
+    // Pupil
+    graphics.drawCircle(30,  30,  30,                bx + BIRD_W - 7, by + 8, 2);
+    // Beak
+    graphics.drawRect(255, 140, 0,                   bx + BIRD_W - 1, by + 10, 10, 6);
+    graphics.drawRect(255, 140, 0,                   bx + BIRD_W - 1, by + 16, 8,  4);
+
+    // Score (while playing)
+    if (started and alive) {
+        // Drop shadow
+        graphics.drawText(cast.ntos(score), 0,   0,   0,   SCREEN_W / 2 - 17, 33, 40);
+        graphics.drawText(cast.ntos(score), 255, 255, 255, SCREEN_W / 2 - 20, 30, 40);
+    }
+
+    // Title screen
+    if (!started and alive) {
+        graphics.drawRect(0, 0, 0,       SCREEN_W / 2 - 175, 155, 350, 115);
+        graphics.drawRect(30, 30, 30,    SCREEN_W / 2 - 173, 157, 346, 111);
+        graphics.drawText("FLAPPY BIRD",    255, 220, 50,
+                          SCREEN_W / 2 - 155, 165, 38);
+        graphics.drawText("SPACE / UP to flap", 200, 230, 255,
+                          SCREEN_W / 2 - 148, 215, 22);
+        if (best > 0) {
+            graphics.drawText("Best: " + cast.ntos(best), 255, 220, 100,
+                              SCREEN_W / 2 - 60, 248, 20);
+        }
+    }
+
+    // Game over screen
+    if (!alive) {
+        decl panelX = SCREEN_W / 2 - 175;
+        decl panelY = SCREEN_H / 2 - 90;
+
+        graphics.drawRect(0,  0,  0,   panelX,     panelY,     350, 160);
+        graphics.drawRect(40, 40, 40,  panelX + 2, panelY + 2, 346, 156);
+
+        graphics.drawText("GAME OVER",  255, 80,  80,
+                          SCREEN_W / 2 - 105, panelY + 14,  36);
+        graphics.drawText("Score: " + cast.ntos(score), 255, 255, 255,
+                          SCREEN_W / 2 - 65,  panelY + 64,  26);
+        graphics.drawText("Best:  " + cast.ntos(best),  255, 220, 100,
+                          SCREEN_W / 2 - 65,  panelY + 96,  26);
+
+        if (deathTimer > 1.0) {
+            graphics.drawText("SPACE to restart", 180, 220, 255,
+                              SCREEN_W / 2 - 108, panelY + 132, 20);
+        }
+    }
+
+    graphics.endDraw();
+}
+
+graphics.closeWindow();

@@ -208,7 +208,7 @@ static InterpretResult run() {
 #define READ_SHORT() (ip += 2, (uint16_t) ((ip[-2] << 8) | ip[-1]))
 #define READ_LONG() (ip += 3, (uint32_t) ((ip[-3] << 16) | (ip[-2] << 8) | ip[-1]))
 #define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
-#define READ_CONSTANT_LONG() (frame->closure->function->chunk.constants.values[READ_BYTE() | (READ_BYTE() << 8) | (READ_BYTE() << 16)])
+#define READ_CONSTANT_LONG() (ip += 3, frame->closure->function->chunk.constants.values[ip[-3] | (ip[-2] << 8) | (ip[-1] << 16)])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define READ_STRING_LONG() AS_STRING(READ_CONSTANT_LONG())
 #define BINARY_OP(valueType, op) \
@@ -229,7 +229,7 @@ static InterpretResult run() {
         printf("          ");
         for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
             printf("[ ");
-            printValue(*slot);
+            printValue(*slot, NULL);
             printf(" ]");
         }
         printf("\n");
@@ -238,7 +238,8 @@ static InterpretResult run() {
 #ifdef DEBUG_TRACE_EXECUTION
         dissassembleInstruction(
             &frame->closure->function->chunk,
-            (int) (frame->ip - frame->closure->function->chunk.code)
+            (int) (frame->ip - frame->closure->function->chunk.code),
+            NULL
         );
 #endif
 
@@ -477,6 +478,7 @@ static InterpretResult run() {
                 arr->values[idx] = value;
 
                 push(value);
+                break;
             }
             case OP_GET_UPVALUE: {
                 uint8_t slot = READ_BYTE();
@@ -486,6 +488,7 @@ static InterpretResult run() {
             case OP_SET_UPVALUE: {
                 uint8_t slot = READ_BYTE();
                 *frame->closure->upvalues[slot]->location = peek(0);
+                break;
             }
             case OP_ARRAY_NEW: {
                 Value sizeVal = pop();
@@ -517,26 +520,26 @@ static InterpretResult run() {
                 int count = READ_BYTE();
 
                 ObjArray* array = newArray(count);
-                push(OBJ_VAL(array));
 
                 for (int i = count - 1; i >= 0; i--) {
-                    array->values[i] = vm.stackTop[-2-i];
+                    array->values[count - i - 1] = vm.stackTop[-1-i];
                 }
 
                 vm.stackTop -= count;
+                push(OBJ_VAL(array));
                 break;
             }
             case OP_ARRAY_INIT_LONG: {
                 int count = READ_LONG();
 
                 ObjArray* array = newArray(count);
-                push(OBJ_VAL(array));
 
                 for (int i = count - 1; i >= 0; i--) {
-                    array->values[i] = vm.stackTop[-2-i];
+                    array->values[count - i - 1] = vm.stackTop[-1-i];
                 }
 
                 vm.stackTop -= count;
+                push(OBJ_VAL(array));
                 break;
             }
             case OP_EQUAL: {
@@ -620,7 +623,7 @@ static InterpretResult run() {
                                     runtimeError("%%d expects number.");
                                     return INTERPRET_RUNTIME_ERROR;
                                 }
-                                printValue(v);
+                                printValue(v, NULL);
                                 break;
 
                             case 's':
@@ -629,11 +632,11 @@ static InterpretResult run() {
                                     runtimeError("%%s expects string.");
                                     return INTERPRET_RUNTIME_ERROR;
                                 }
-                                printObject(v);
+                                printObject(v, NULL);
                                 break;
 
                             case 'o':
-                                printValue(v);
+                                printValue(v, NULL);
                                 break;
 
                             default:
