@@ -8,6 +8,11 @@ static bool clockNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool timeNative(int argCount, Value* args, Value* result) {
+    *result = NUMBER_VAL((double) ((long) time(NULL)));
+    return true;
+}
+
 static bool sleepNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
     if (argCount != 1 || !IS_NUMBER(args[0])) {

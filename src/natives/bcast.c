@@ -52,12 +52,42 @@ static bool stonNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool typeOfNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1) {
+        *result = OBJ_VAL(copyString("typeOf() only takes one argument.", 33));
+        return false;
+    }
+#endif
+
+    switch (args[0].type) {
+        case VAL_BOOL:   *result = OBJ_VAL(copyString("bool", 4)); break;
+        case VAL_NULL:   *result = OBJ_VAL(copyString("null", 4)); break;
+        case VAL_NUMBER: *result = OBJ_VAL(copyString("number", 6)); break;
+        case VAL_OBJ: {
+            switch (AS_OBJ(args[0])->type) {
+                case OBJ_ARRAY:    *result = OBJ_VAL(copyString("Array", 5)); break;
+                case OBJ_CLOSURE:  *result = OBJ_VAL(copyString("Closure", 7)); break;
+                case OBJ_FUNCTION: *result = OBJ_VAL(copyString("Function", 2)); break;
+                case OBJ_MODULE:   *result = OBJ_VAL(copyString("Module", 6)); break;
+                case OBJ_NATIVE:   *result = OBJ_VAL(copyString("Native", 6)); break;
+                case OBJ_STRING:   *result = OBJ_VAL(copyString("String", 6)); break;
+                case OBJ_UPVALUE:  *result = OBJ_VAL(copyString("Upvalue", 7)); break;
+            }
+            break;
+        }
+    }
+
+    return true;
+}
+
 ObjModule* buildCastModule() {
     ObjModule* module = newModule();
     push(OBJ_VAL(module));
 
     tableSet(&module->table, copyString("ntos", 4), OBJ_VAL(newNative(ntosNative)));
     tableSet(&module->table, copyString("ston", 4), OBJ_VAL(newNative(stonNative)));
+    tableSet(&module->table, copyString("typeOf", 6), OBJ_VAL(newNative(typeOfNative)));
 
     pop();
     return module;

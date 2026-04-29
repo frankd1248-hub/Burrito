@@ -6,88 +6,87 @@ Here's a comprehensive list organized by module, with a focus on what would make
 ---
 
 ## `bio` (I/O)
-- `readLine()` — read a line from stdin
-- `readFile(path)` — read entire file as string
-- `writeFile(path, content)` — write string to file
-- `appendFile(path, content)` — append to file
-- `fileExists(path)` — returns bool
-- `deleteFile(path)` — delete a file
-- `readDir(path)` — returns array of filenames in directory
-- `makeDir(path)` — create directory
+- [ ] `readLine()` — read a line from stdin
+- [ ] `readFile(path)` — read entire file as string
+- [ ] `writeFile(path, content)` — write string to file
+- [ ] `appendFile(path, content)` — append to file
+- [ ] `fileExists(path)` — returns bool
+- [ ] `deleteFile(path)` — delete a file
+- [ ] `readDir(path)` — returns array of filenames in directory
+- [ ] `makeDir(path)` — create directory
 
 ---
 
 ## `bstring` (Strings)
-- `length(s)` — string length
-- `split(s, delim)` — returns array of substrings
-- `join(arr, delim)` — joins array into string
-- `trim(s)` — strip whitespace from both ends
-- `trimLeft(s)` / `trimRight(s)`
-- `toUpper(s)` / `toLower(s)`
-- `startsWith(s, prefix)` / `endsWith(s, suffix)`
-- `contains(s, sub)` — returns bool
-- `replace(s, from, to)` — replace first occurrence
-- `replaceAll(s, from, to)`
-- `indexOf(s, sub)` — returns index or -1
-- `substring(s, start, end)`
-- `charAt(s, i)` — returns character at index
-- `repeat(s, n)` — repeat string n times
-- `parseInt(s)` / `parseFloat(s)` — string to number
-- `toString(x)` — number/bool to string
+- [ ] `length(s)` — string length
+- [ ] `split(s, delim)` — returns array of substrings
+- [ ] `join(arr, delim)` — joins array into string
+- [ ] `trim(s)` — strip whitespace from both ends
+- [ ] `trimLeft(s)` / `trimRight(s)`
+- [ ] `toUpper(s)` / `toLower(s)`
+- [ ] `startsWith(s, prefix)` / `endsWith(s, suffix)`
+- [ ] `contains(s, sub)` — returns bool
+- [ ] `replace(s, from, to)` — replace first occurrence
+- [ ] `replaceAll(s, from, to)`
+- [ ] `indexOf(s, sub)` — returns index or -1
+- [ ] `substring(s, start, end)`
+- [ ] `charAt(s, i)` — returns character at index
+- [ ] `repeat(s, n)` — repeat string n times
+- [ ] `parseInt(s)` / `parseFloat(s)` — string to number
+- [ ] `toString(x)` — number/bool to string
 
 ---
 
 ## `bmath` (Math)
-- `floor(x)` / `ceil(x)` / `round(x)`
-- `abs(x)`
-- `sqrt(x)` / `cbrt(x)`
-- `pow(x, y)`
-- `log(x)` / `log2(x)` / `log10(x)`
-- `sin(x)` / `cos(x)` / `tan(x)`
-- `asin(x)` / `acos(x)` / `atan(x)` / `atan2(y, x)`
-- `min(a, b)` / `max(a, b)`
-- `clamp(x, lo, hi)`
-- `sign(x)` — returns -1, 0, or 1
-- `random()` — float in [0, 1)
-- `randomInt(lo, hi)` — integer in [lo, hi]
-- `PI` / `E` / `INF` / `NAN` — constants
+- [ ] `floor(x)` / `ceil(x)` / `round(x)`
+- [ ] `abs(x)`
+- [ ] `sqrt(x)` / `cbrt(x)`
+- [ ] `pow(x, y)`
+- [ ] `log(x)` / `log2(x)` / `log10(x)`
+- [ ] `sin(x)` / `cos(x)` / `tan(x)`
+- [ ] `asin(x)` / `acos(x)` / `atan(x)` / `atan2(y, x)`
+- [ ] `min(a, b)` / `max(a, b)`
+- [ ] `clamp(x, lo, hi)`
+- [ ] `sign(x)` — returns -1, 0, or 1
+- [ ] `random()` — float in [0, 1)
+- [ ] `randomInt(lo, hi)` — integer in [lo, hi]
+- [ ] `PI` / `E` / `INF` / `NAN` — constants
 
 ---
 
 ## `barray` (Arrays)
-- `length(arr)`
-- `push(arr, val)` / `pop(arr)`
-- `shift(arr)` / `unshift(arr, val)` — front operations
-- `insert(arr, i, val)` / `remove(arr, i)`
-- `slice(arr, start, end)`
-- `concat(arr1, arr2)`
-- `reverse(arr)`
-- `sort(arr)` / `sortBy(arr, fn)` — comparator-based sort
-- `find(arr, fn)` — first matching element
-- `filter(arr, fn)` — returns new filtered array
-- `map(arr, fn)` — returns new mapped array
-- `reduce(arr, fn, init)`
-- `forEach(arr, fn)`
-- `contains(arr, val)` — returns bool
-- `indexOf(arr, val)`
-- `fill(arr, val)` — fill all slots with value
-- `copy(arr)` — shallow copy
+- [ ] `length(arr)`
+- [ ] `push(arr, val)` / `pop(arr)`
+- [ ] `shift(arr)` / `unshift(arr, val)` — front operations
+- [ ] `insert(arr, i, val)` / `remove(arr, i)`
+- [ ] `slice(arr, start, end)`
+- [ ] `concat(arr1, arr2)`
+- [ ] `reverse(arr)`
+- [ ] `sort(arr)` / `sortBy(arr, fn)` — comparator-based sort
+- [ ] `find(arr, fn)` — first matching element
+- [ ] `filter(arr, fn)` — returns new filtered array
+- [ ] `map(arr, fn)` — returns new mapped array
+- [ ] `reduce(arr, fn, init)`
+- [ ] `forEach(arr, fn)`
+- [ ] `contains(arr, val)` — returns bool
+- [ ] `indexOf(arr, val)`
+- [ ] `fill(arr, val)` — fill all slots with value
+- [ ] `copy(arr)` — shallow copy
 
 ---
 
 ## `bcast` (Type Casting / Reflection)
-- `isNumber(x)` / `isString(x)` / `isBool(x)` / `isNull(x)` / `isArray(x)` / `isFunction(x)`
-- `typeOf(x)` — returns string name of type
-- `toNumber(x)` / `toBool(x)` / `toString(x)`
+- [x] `typeOf(x)` — returns string name of type
+- [ ] `toNumber(x)` / `toBool(x)` / `toString(x)`
 
 ---
 
 ## `btime` (Time)
-- `clock()` — seconds since program start (already common)
-- `time()` — Unix timestamp in seconds
-- `timeMs()` — Unix timestamp in milliseconds
-- `sleep(ms)` — pause execution
-- `formatTime(timestamp, fmt)` — format a timestamp as string
+- [x] `clock()` — seconds since program start (already common)
+- [x] `time()` — Unix timestamp in seconds
+- [ ] `timeMs()` — Unix timestamp in milliseconds
+- [x] `sleep(ms)` — pause execution
+- [ ] `formatTime(timestamp, fmt)` — format a timestamp as string
 
 ---
 
