@@ -14,6 +14,7 @@ static bool gInitNative(int argCount, Value* args, Value* result) {
     }
 #endif
 
+    SetTraceLogLevel(LOG_NONE);
     InitWindow((int) AS_NUMBER(args[0]), (int) AS_NUMBER(args[1]), AS_CSTRING(args[2]));
     *result = BOOL_VAL(true);
     return true;
