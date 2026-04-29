@@ -49,6 +49,7 @@ void initVM();
 void freeVM();
 InterpretResult interpret(const char* source);
 void push(Value value);
+Value peek(int distance);
 Value pop();
 
 #endif

@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "bcast.h"
+#include "../vm.h"
 
 static bool ntosNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
@@ -21,12 +22,13 @@ static bool ntosNative(int argCount, Value* args, Value* result) {
         return false;
     }
     
+    int written;
     if (fabs(round(val) - val) < 0.00001) {
-        snprintf(str, size + 1, "%ld", (long) round(val));
+        written = snprintf(str, size + 1, "%ld", (long)round(val));
     } else {
-        snprintf(str, size + 1, "%.4lf", val);
+        written = snprintf(str, size + 1, "%.4lf", val);
     }
-    *result = OBJ_VAL(copyString(str, size));
+    *result = OBJ_VAL(copyString(str, written));
     free(str);
     return true;
 }
@@ -52,9 +54,11 @@ static bool stonNative(int argCount, Value* args, Value* result) {
 
 ObjModule* buildCastModule() {
     ObjModule* module = newModule();
+    push(OBJ_VAL(module));
 
     tableSet(&module->table, copyString("ntos", 4), OBJ_VAL(newNative(ntosNative)));
     tableSet(&module->table, copyString("ston", 4), OBJ_VAL(newNative(stonNative)));
 
+    pop();
     return module;
 }

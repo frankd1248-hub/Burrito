@@ -3,6 +3,7 @@
 
 #include "bstring.h"
 #include "../memory.h"
+#include "../vm.h"
 
 static bool sStartsWithNative(int, Value*, Value*);
 static bool sEndsWithNative(int, Value*, Value*);
@@ -36,8 +37,8 @@ static bool sSubstrNative(int argCount, Value* args, Value* result) {
     int length = endIndex - beginIndex;
     char* string = AS_CSTRING(args[0]);
 
-    if (beginIndex < 0 || endIndex > strlen(string)) {
-        *result = OBJ_VAL(copyString("Invalid string index(ces) in substr()", 25));
+    if (beginIndex < 0 || endIndex > strlen(string) || beginIndex > endIndex) {
+        *result = OBJ_VAL(copyString("Invalid string index(ces) in substr()", 37));
         return false;
     }
 
@@ -86,6 +87,11 @@ static bool sSplitNative(int argCount, Value* args, Value* result) {
     int   needleLen = strlen(needle);
     char* end      = haystack + strlen(haystack);
 
+    if (needleLen == 0) {
+        *result = OBJ_VAL(copyString("Cannot split by empty string in split().", 40));
+        return false;
+    }
+
     int capacity = 8;
     int count    = 0;
     char**  array   = ALLOCATE(char*, capacity);
@@ -129,11 +135,13 @@ static bool sSplitNative(int argCount, Value* args, Value* result) {
     count++;
 
     ObjArray* arr = newArray(count);
+    push(OBJ_VAL(arr));
     for (int i = 0; i < count; i++) {
         arr->values[i] = OBJ_VAL(copyString(array[i], lengths[i]));
     }
 
-    *result = OBJ_VAL(arr);
+    *result = peek(0);
+    pop();
 
     FREE_ARRAY(char*,  array,   capacity);
     FREE_ARRAY(int,    lengths, capacity);
@@ -161,7 +169,7 @@ static bool sJoinNative(int argCount, Value* args, Value* result) {
         length += AS_STRING(array->values[i])->length;
     }
 
-    char* res = malloc(sizeof(char) * length);
+    char* res = calloc(length + 1, sizeof(char));
     if (res == NULL) {
         *result = OBJ_VAL(copyString("join() ran out of memory.", 25));
         return false;
@@ -189,22 +197,18 @@ static bool sTrimNative(int argCount, Value* args, Value* result) {
 
     int start = 0, end = length;
 
+    bool foundStart = false;
     for (int i = 0; i < length; i++) {
-        if (string[i] == ' ' || string[i] == '\t' || 
-            string[i] == '\n' || string[i] == '\r') {
-            continue;
-        }
-        start = i;
-        break;
+        if (string[i] == ' ' || string[i] == '\n' ||
+            string[i] == '\n' || string[i] == '\r') continue;
+        start = i; foundStart = true; break;
     }
+    if (!foundStart) { *result = OBJ_VAL(copyString("", 0)); return true; }
 
-    for (int i = length - 1; i > start; i--) {
-        if (string[i] == ' ' || string[i] == '\t' || 
-            string[i] == '\n' || string[i] == '\r') {
-            continue;
-        }
-        end = i+1;
-        break;
+    for (int i = length - 1; i >= start; i--) {
+        if (string[i] == ' ' || string[i] == '\n' ||
+            string[i] == '\n' || string[i] == '\r') continue;
+        end = i + 1; break;
     }
 
     int len = end - start;
@@ -214,7 +218,7 @@ static bool sTrimNative(int argCount, Value* args, Value* result) {
         return false;
     }
 
-    strncpy(res, string, len);
+    strncpy(res, string + start, len);
     *result = OBJ_VAL(copyString(res, len));
     free(res);
     return true;
@@ -266,6 +270,23 @@ static bool sLowerNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
+    tableSet(&module->table, copyString(name, length), OBJ_VAL(newNative(fn)));
+}
+
 ObjModule* buildStringModule() {
-    
+    ObjModule* module = newModule();
+    push(OBJ_VAL(module));
+
+    addNative(module, "len", 3, sLengthNative);
+    addNative(module, "substr", 6, sSubstrNative);
+    addNative(module, "find", 4, sFindNative);
+    addNative(module, "split", 5, sSplitNative);
+    addNative(module, "join", 4, sJoinNative);
+    addNative(module, "trim", 4, sTrimNative);
+    addNative(module, "upper", 5, sUpperNative);
+    addNative(module, "lower", 5, sLowerNative);
+
+    pop();
+    return module;
 }

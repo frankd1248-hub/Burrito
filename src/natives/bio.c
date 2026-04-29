@@ -50,9 +50,11 @@ static bool getStringNative(int argCount, Value* args, Value* result) {
 
 ObjModule* buildIOModule() {
     ObjModule* module = newModule();
+    push(OBJ_VAL(module));
 
     tableSet(&module->table, copyString("getNumber", 9), OBJ_VAL(newNative(getNumberNative)));
     tableSet(&module->table, copyString("getString", 9), OBJ_VAL(newNative(getStringNative)));
 
+    pop();
     return module;
 }

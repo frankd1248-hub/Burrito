@@ -1,6 +1,7 @@
 #include <time.h>
 
 #include "btime.h"
+#include "../vm.h"
 
 static bool clockNative(int argCount, Value* args, Value* result) {
     *result = NUMBER_VAL((double) clock() / CLOCKS_PER_SEC);
@@ -22,18 +23,11 @@ static bool sleepNative(int argCount, Value* args, Value* result) {
 
 ObjModule* buildTimeModule() {
     ObjModule* module = newModule();
+    push(OBJ_VAL(module));
 
-    tableSet(
-        &module->table, 
-        copyString("clock", 5), 
-        OBJ_VAL(newNative(clockNative))
-    );
+    tableSet(&module->table, copyString("clock", 5), OBJ_VAL(newNative(clockNative)));
+    tableSet(&module->table, copyString("sleep", 5), OBJ_VAL(newNative(sleepNative)));
 
-    tableSet(
-        &module->table,
-        copyString("sleep", 5),
-        OBJ_VAL(newNative(sleepNative))
-    );
-
+    pop();
     return module;
 }

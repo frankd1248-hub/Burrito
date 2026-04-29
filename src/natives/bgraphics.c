@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "bgraphics.h"
+#include "../vm.h"
 
 static bool gInitNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
@@ -191,6 +192,7 @@ ObjModule** buildGraphicsModules() {
     ObjModule** modules = malloc(sizeof(ObjModule*) * 2);
 
     ObjModule* grmodule = newModule();
+    push(OBJ_VAL(grmodule));
 
     addNative(grmodule, "init", 4, gInitNative);
     addNative(grmodule, "closeWindow", 11, gCloseWindowNative);
@@ -208,11 +210,14 @@ ObjModule** buildGraphicsModules() {
     modules[0] = grmodule;
 
     ObjModule* gamodule = newModule();
+    push(OBJ_VAL(gamodule));
 
     addKeys(gamodule);
 
     modules[1] = gamodule;
 
+    pop();
+    pop();
     return modules;
 }
 

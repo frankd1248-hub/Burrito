@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "bmath.h"
+#include "../vm.h"
 
 /**
  * Successful check returns true.
@@ -11,7 +12,7 @@
 static bool checkNumberArguments(char* name, Value* args, Value* result, int count) {
     for (int i = 0; i < count; i++) {
         if (!IS_NUMBER(args[i])) {
-            char* errorMessage = malloc(sizeof(char) * (30 + strlen(name)));
+            char* errorMessage = calloc(30 + strlen(name), sizeof(char));;
             strcat(errorMessage, name);
             strcat(errorMessage, "() expects number parameters.");
             *result = OBJ_VAL(copyString(errorMessage, strlen(errorMessage)));
@@ -100,6 +101,7 @@ static bool arccosineNative(int argCount, Value* args, Value* result) {
 
 ObjModule* buildMathModule() {
     ObjModule* module = newModule();
+    push(OBJ_VAL(module));
 
     tableSet(&module->table, copyString("pi", 2), NUMBER_VAL(3.14159265358979323846));
     tableSet(&module->table, copyString("e", 1), NUMBER_VAL(2.7182818284590452354));
@@ -110,5 +112,6 @@ ObjModule* buildMathModule() {
     tableSet(&module->table, copyString("asin", 3), OBJ_VAL(newNative(arcsineNative)));
     tableSet(&module->table, copyString("acos", 3), OBJ_VAL(newNative(arccosineNative)));
 
+    pop();
     return module;
 }

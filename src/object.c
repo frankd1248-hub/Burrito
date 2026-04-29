@@ -26,24 +26,28 @@ static Obj* allocateObject(size_t size, ObjType type) {
 
 ObjArray* newArray(int size) {
     ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY);
+    array->values = NULL;   // sentinel
+    array->size = 0;
     array->values = ALLOCATE(Value, size);
+    array->size = size;
     for (int i = 0; i < size; i++) {
         array->values[i] = NULL_VAL;
     }
-    array->size = size;
     return array;
 }
 
 ObjClosure* newClosure(ObjFunction* function) {
-    ObjUpvalue** upvalues = ALLOCATE(ObjUpvalue*, function->upvalueCount);
-    for (int i = 0; i < function->upvalueCount; i++) {
-        upvalues[i] = NULL;
-    }
-
     ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+
     closure->function = function;
-    closure->upvalues = upvalues;
     closure->upvalueCount = function->upvalueCount;
+    closure->upvalues = NULL;   // safe sentinel in case next alloc triggers GC
+
+    ObjUpvalue** upvalues = ALLOCATE(ObjUpvalue*, function->upvalueCount);
+    for (int i = 0; i < function->upvalueCount; i++) 
+        upvalues[i] = NULL;
+    closure->upvalues = upvalues;
+
     return closure;
 }
 

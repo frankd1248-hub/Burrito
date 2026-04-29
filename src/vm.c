@@ -100,7 +100,7 @@ Value pop() {
     return *vm.stackTop;
 }
 
-static Value peek(int distance) {
+Value peek(int distance) {
     return vm.stackTop[-1 - distance];
 }
 
@@ -412,8 +412,8 @@ static InterpretResult run() {
                 break;
             }
             case OP_GET_INDEX: {
-                Value indexVal = pop();
-                Value val = pop();
+                Value indexVal = peek(0);
+                Value val = peek(1);
 
                 if ((!IS_STRING(val) && !IS_ARRAY(val)) || !IS_NUMBER(indexVal)) {
                     frame->ip = ip;
@@ -434,6 +434,8 @@ static InterpretResult run() {
                     char ch = str->chars[index];
 
                     char buffer[2] = { ch, '\0' };
+                    pop();
+                    pop();
                     push(OBJ_VAL(copyString(buffer, 1)));
                 } else {
                     ObjArray* arr = AS_ARRAY(val);
@@ -445,6 +447,8 @@ static InterpretResult run() {
                         return INTERPRET_RUNTIME_ERROR;
                     }
 
+                    pop();
+                    pop();
                     push(arr->values[index]);
                 }
 
@@ -473,6 +477,11 @@ static InterpretResult run() {
                 arr->values[idx] = value;
 
                 push(value);
+            }
+            case OP_GET_UPVALUE: {
+                uint8_t slot = READ_BYTE();
+                push(*frame->closure->upvalues[slot]->location);
+                break;
             }
             case OP_SET_UPVALUE: {
                 uint8_t slot = READ_BYTE();
@@ -508,24 +517,26 @@ static InterpretResult run() {
                 int count = READ_BYTE();
 
                 ObjArray* array = newArray(count);
+                push(OBJ_VAL(array));
 
                 for (int i = count - 1; i >= 0; i--) {
-                    array->values[i] = pop();
+                    array->values[i] = vm.stackTop[-2-i];
                 }
 
-                push(OBJ_VAL(array));
+                vm.stackTop -= count;
                 break;
             }
             case OP_ARRAY_INIT_LONG: {
                 int count = READ_LONG();
 
                 ObjArray* array = newArray(count);
+                push(OBJ_VAL(array));
 
                 for (int i = count - 1; i >= 0; i--) {
-                    array->values[i] = pop();
+                    array->values[i] = vm.stackTop[-2-i];
                 }
 
-                push(OBJ_VAL(array));
+                vm.stackTop -= count;
                 break;
             }
             case OP_EQUAL: {
