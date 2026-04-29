@@ -18,19 +18,19 @@ Here's a comprehensive list organized by module, with a focus on what would make
 ---
 
 ## `bstring` (Strings)
-- [ ] `length(s)` — string length
-- [ ] `split(s, delim)` — returns array of substrings
-- [ ] `join(arr, delim)` — joins array into string
-- [ ] `trim(s)` — strip whitespace from both ends
+- [x] `length(s)` — string length
+- [x] `split(s, delim)` — returns array of substrings
+- [x] `join(arr, delim)` — joins array into string
+- [x] `trim(s)` — strip whitespace from both ends
 - [ ] `trimLeft(s)` / `trimRight(s)`
-- [ ] `toUpper(s)` / `toLower(s)`
+- [x] `toUpper(s)` / `toLower(s)`
 - [ ] `startsWith(s, prefix)` / `endsWith(s, suffix)`
 - [ ] `contains(s, sub)` — returns bool
 - [ ] `replace(s, from, to)` — replace first occurrence
 - [ ] `replaceAll(s, from, to)`
-- [ ] `indexOf(s, sub)` — returns index or -1
-- [ ] `substring(s, start, end)`
-- [ ] `charAt(s, i)` — returns character at index
+- [x] `indexOf(s, sub)` — returns index or -1
+- [x] `substring(s, start, end)`
+- [x] `charAt(s, i)` — returns character at index
 - [ ] `repeat(s, n)` — repeat string n times
 - [ ] `parseInt(s)` / `parseFloat(s)` — string to number
 - [ ] `toString(x)` — number/bool to string
@@ -38,19 +38,19 @@ Here's a comprehensive list organized by module, with a focus on what would make
 ---
 
 ## `bmath` (Math)
-- [ ] `floor(x)` / `ceil(x)` / `round(x)`
+- [x] `floor(x)` / `ceil(x)` / `round(x)`
 - [ ] `abs(x)`
-- [ ] `sqrt(x)` / `cbrt(x)`
-- [ ] `pow(x, y)`
-- [ ] `log(x)` / `log2(x)` / `log10(x)`
-- [ ] `sin(x)` / `cos(x)` / `tan(x)`
-- [ ] `asin(x)` / `acos(x)` / `atan(x)` / `atan2(y, x)`
+- [x] `sqrt(x)` / `cbrt(x)`
+- [x] `pow(x, y)`
+- [x] `log(x)` / `log2(x)` / `log10(x)`
+- [x] `sin(x)` / `cos(x)` / `tan(x)`
+- [x] `asin(x)` / `acos(x)` / `atan(x)` / `atan2(y, x)`
 - [ ] `min(a, b)` / `max(a, b)`
 - [ ] `clamp(x, lo, hi)`
 - [ ] `sign(x)` — returns -1, 0, or 1
-- [ ] `random()` — float in [0, 1)
-- [ ] `randomInt(lo, hi)` — integer in [lo, hi]
-- [ ] `PI` / `E` / `INF` / `NAN` — constants
+- [x] `random()` — float in [0, 1)
+- [x] `randomInt(lo, hi)` — integer in [lo, hi]
+- [x] `PI` / `E` / `INF` / `NAN` — constants
 
 ---
 

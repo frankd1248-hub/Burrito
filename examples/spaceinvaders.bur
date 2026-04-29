@@ -1,0 +1,501 @@
+// =============================================
+//   Space Invaders
+//   Written in Burrito
+// =============================================
+
+// --- Constants ---
+
+const SCREEN_W    = 800;
+const SCREEN_H    = 600;
+const FPS         = 60;
+
+const PLAYER_W    = 40;
+const PLAYER_H    = 20;
+const PLAYER_SPD  = 300;
+
+const BULLET_W    = 4;
+const BULLET_H    = 14;
+const BULLET_SPD  = 500;
+
+const INVADER_W   = 32;
+const INVADER_H   = 20;
+const INVADER_COLS = 11;
+const INVADER_ROWS = 5;
+const INVADER_PAD_X = 16;
+const INVADER_PAD_Y = 12;
+const INVADER_OFFSET_X = 64;
+const INVADER_OFFSET_Y = 60;
+const INVADER_STEP_X  = 12;
+const INVADER_STEP_DOWN = 20;
+const INVADER_SHOOT_CHANCE = 0.0015;
+
+const BOMB_W     = 4;
+const BOMB_H     = 14;
+const BOMB_SPD   = 220;
+
+const BARRIER_COUNT  = 4;
+const BARRIER_W      = 64;
+const BARRIER_H      = 40;
+const BARRIER_HP     = 8;
+const BARRIER_Y      = 460;
+
+const TOTAL_INVADERS = 55;  // 11 * 5
+
+// --- State ---
+
+graphics.init(SCREEN_W, SCREEN_H, "Space Invaders");
+graphics.targetFPS(FPS);
+
+// Player
+decl playerX = SCREEN_W / 2 - PLAYER_W / 2;
+decl playerY = SCREEN_H - 60;
+decl playerAlive = true;
+
+// Player bullet (one at a time)
+decl bulletX    = 0;
+decl bulletY    = 0;
+decl bulletActive = false;
+
+// Invader grid - alive flags (flat array, row-major: row*INVADER_COLS + col)
+decl invAlive = {
+    true, true, true, true, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true,
+    true, true, true, true, true, true, true, true, true, true, true
+};
+
+// Invader grid origin (top-left of grid)
+decl gridX = INVADER_OFFSET_X;
+decl gridY = INVADER_OFFSET_Y;
+
+// Invader movement
+decl invDirX    = 1;      // 1 = right, -1 = left
+decl invTimer   = 0.0;    // time accumulator for stepping
+decl invPeriod  = 0.8;    // seconds between steps (gets faster)
+decl invCount   = TOTAL_INVADERS;
+
+// Enemy bombs (up to 8 simultaneous)
+const MAX_BOMBS = 8;
+decl bombX    = {0, 0, 0, 0, 0, 0, 0, 0};
+decl bombY    = {0, 0, 0, 0, 0, 0, 0, 0};
+decl bombActive = {false, false, false, false, false, false, false, false};
+
+// Barriers - HP per barrier
+decl barrierHP = {BARRIER_HP, BARRIER_HP, BARRIER_HP, BARRIER_HP};
+
+// Score / lives
+decl score  = 0;
+decl lives  = 3;
+decl gameOver  = false;
+decl victory   = false;
+
+// Respawn timer after player dies
+decl respawnTimer = 0.0;
+const RESPAWN_DELAY = 2.0;
+
+// UFO (mystery ship across the top)
+decl ufoX      = -60;
+decl ufoAlive  = false;
+decl ufoTimer  = 0.0;
+const UFO_PERIOD = 20.0;
+const UFO_SPD    = 140;
+const UFO_W      = 48;
+const UFO_H      = 18;
+const UFO_SCORE  = 100;
+
+// --- Helper functions ---
+
+fn barrierX(i) {
+    decl spacing = SCREEN_W / (BARRIER_COUNT + 1);
+    return spacing * (i + 1) - BARRIER_W / 2;
+}
+
+fn invaderX(col) {
+    return gridX + col * (INVADER_W + INVADER_PAD_X);
+}
+
+fn invaderY(row) {
+    return gridY + row * (INVADER_H + INVADER_PAD_Y);
+}
+
+fn invaderIndex(row, col) {
+    return row * INVADER_COLS + col;
+}
+
+fn scoreForRow(row) {
+    // Bottom rows worth less, top rows worth more
+    if (row == 0) return 30;
+    if (row == 1) return 20;
+    if (row == 2) return 20;
+    return 10;
+}
+
+fn rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+    return ax < bx + bw and
+           ax + aw > bx and
+           ay < by + bh and
+           ay + ah > by;
+}
+
+fn spawnBomb(col, row) {
+    for (decl i = 0; i < MAX_BOMBS; i++) {
+        if (!bombActive[i]) {
+            bombX[i] = invaderX(col) + INVADER_W / 2 - BOMB_W / 2;
+            bombY[i] = invaderY(row) + INVADER_H;
+            bombActive[i] = true;
+            break;
+        }
+    }
+}
+
+// Find the bottom-most alive invader in a given column for shooting
+fn bottomInvaderInCol(col) {
+    decl found = -1;
+    for (decl row = INVADER_ROWS - 1; row >= 0; row--) {
+        if (invAlive[invaderIndex(row, col)]) {
+            found = row;
+            break;
+        }
+    }
+    return found;
+}
+
+fn leftmostAliveCol() {
+    for (decl col = 0; col < INVADER_COLS; col++) {
+        for (decl row = 0; row < INVADER_ROWS; row++) {
+            if (invAlive[invaderIndex(row, col)]) {
+                return col;
+            }
+        }
+    }
+    return 0;
+}
+
+fn rightmostAliveCol() {
+    for (decl col = INVADER_COLS - 1; col >= 0; col--) {
+        for (decl row = 0; row < INVADER_ROWS; row++) {
+            if (invAlive[invaderIndex(row, col)]) {
+                return col;
+            }
+        }
+    }
+    return INVADER_COLS - 1;
+}
+
+fn lowestAliveRow() {
+    for (decl row = INVADER_ROWS - 1; row >= 0; row--) {
+        for (decl col = 0; col < INVADER_COLS; col++) {
+            if (invAlive[invaderIndex(row, col)]) {
+                return row;
+            }
+        }
+    }
+    return 0;
+}
+
+// --- Main loop ---
+
+decl dt = 0.0;
+
+while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE) and !gameOver and !victory) {
+
+    dt = graphics.getDeltaTime();
+
+    // ---- UPDATE ----
+
+    // Player movement
+    if (playerAlive) {
+        if (graphics.isKeyDown(game.KEY_LEFT)) {
+            playerX -= PLAYER_SPD * dt;
+        }
+        if (graphics.isKeyDown(game.KEY_RIGHT)) {
+            playerX += PLAYER_SPD * dt;
+        }
+        if (playerX < 0) playerX = 0;
+        if (playerX > SCREEN_W - PLAYER_W) playerX = SCREEN_W - PLAYER_W;
+    }
+
+    // Respawn cooldown
+    if (!playerAlive) {
+        respawnTimer -= dt;
+        if (respawnTimer <= 0.0) {
+            playerAlive = true;
+            playerX = SCREEN_W / 2 - PLAYER_W / 2;
+        }
+    }
+
+    // Fire bullet
+    if (playerAlive and !bulletActive and graphics.isKeyDown(game.KEY_SPACE)) {
+        bulletX = playerX + PLAYER_W / 2 - BULLET_W / 2;
+        bulletY = playerY;
+        bulletActive = true;
+    }
+
+    // Move bullet
+    if (bulletActive) {
+        bulletY -= BULLET_SPD * dt;
+        if (bulletY < -BULLET_H) {
+            bulletActive = false;
+        }
+    }
+
+    // Bullet vs UFO
+    if (bulletActive and ufoAlive) {
+        if (rectsOverlap(bulletX, bulletY, BULLET_W, BULLET_H,
+                         ufoX, 20, UFO_W, UFO_H)) {
+            bulletActive = false;
+            ufoAlive = false;
+            score += UFO_SCORE;
+        }
+    }
+
+    // Bullet vs invaders
+    if (bulletActive) {
+        for (decl row = 0; row < INVADER_ROWS; row++) {
+            for (decl col = 0; col < INVADER_COLS; col++) {
+                decl idx = invaderIndex(row, col);
+                if (invAlive[idx]) {
+                    decl ix = invaderX(col);
+                    decl iy = invaderY(row);
+                    if (rectsOverlap(bulletX, bulletY, BULLET_W, BULLET_H,
+                                     ix, iy, INVADER_W, INVADER_H)) {
+                        invAlive[idx] = false;
+                        bulletActive = false;
+                        score += scoreForRow(row);
+                        invCount--;
+                        if (invCount <= 0) {
+                            victory = true;
+                        }
+                        // Speed up as fewer invaders remain
+                        invPeriod = 0.1 + 0.7 * (invCount / TOTAL_INVADERS);
+                    }
+                }
+            }
+        }
+    }
+
+    // Bullet vs barriers
+    if (bulletActive) {
+        for (decl i = 0; i < BARRIER_COUNT; i++) {
+            if (barrierHP[i] > 0) {
+                decl bx = barrierX(i);
+                if (rectsOverlap(bulletX, bulletY, BULLET_W, BULLET_H,
+                                 bx, BARRIER_Y, BARRIER_W, BARRIER_H)) {
+                    bulletActive = false;
+                    barrierHP[i] = barrierHP[i] - 1;
+                }
+            }
+        }
+    }
+
+    // Move invaders (step-based)
+    invTimer += dt;
+    if (invTimer >= invPeriod) {
+        invTimer = 0.0;
+
+        decl leftCol  = leftmostAliveCol();
+        decl rightCol = rightmostAliveCol();
+        decl leftEdge  = invaderX(leftCol);
+        decl rightEdge = invaderX(rightCol) + INVADER_W;
+
+        decl stepDown = false;
+        if (invDirX == 1 and rightEdge + INVADER_STEP_X >= SCREEN_W - 10) {
+            invDirX = -1;
+            stepDown = true;
+        }
+        if (invDirX == -1 and leftEdge - INVADER_STEP_X <= 10) {
+            invDirX = 1;
+            stepDown = true;
+        }
+
+        if (stepDown) {
+            gridY += INVADER_STEP_DOWN;
+
+            // Check if invaders have reached the player row
+            decl lowestY = invaderY(lowestAliveRow()) + INVADER_H;
+            if (lowestY >= BARRIER_Y) {
+                gameOver = true;
+            }
+        } else {
+            gridX += INVADER_STEP_X * invDirX;
+        }
+
+        // Random invader shooting
+        for (decl col = 0; col < INVADER_COLS; col++) {
+            decl shootRow = bottomInvaderInCol(col);
+            if (shootRow >= 0) {
+                decl roll = math.sin(time.clock() * 1234.5 + col * 17.3);
+                // Map sin output (-1..1) to (0..1) and compare to chance
+                roll = (roll + 1.0) / 2.0;
+                if (roll < INVADER_SHOOT_CHANCE * invCount) {
+                    spawnBomb(col, shootRow);
+                }
+            }
+        }
+    }
+
+    // Move bombs
+    for (decl i = 0; i < MAX_BOMBS; i++) {
+        if (bombActive[i]) {
+            bombY[i] = bombY[i] + BOMB_SPD * dt;
+
+            // Off screen
+            if (bombY[i] > SCREEN_H) {
+                bombActive[i] = false;
+            }
+
+            // Bomb vs barriers
+            for (decl b = 0; b < BARRIER_COUNT; b++) {
+                if (barrierHP[b] > 0) {
+                    decl bx = barrierX(b);
+                    if (rectsOverlap(bombX[i], bombY[i], BOMB_W, BOMB_H,
+                                     bx, BARRIER_Y, BARRIER_W, BARRIER_H)) {
+                        bombActive[i] = false;
+                        barrierHP[b] = barrierHP[b] - 1;
+                    }
+                }
+            }
+
+            // Bomb vs player
+            if (playerAlive and bombActive[i]) {
+                if (rectsOverlap(bombX[i], bombY[i], BOMB_W, BOMB_H,
+                                 playerX, playerY, PLAYER_W, PLAYER_H)) {
+                    bombActive[i] = false;
+                    playerAlive = false;
+                    respawnTimer = RESPAWN_DELAY;
+                    lives--;
+                    if (lives <= 0) {
+                        gameOver = true;
+                    }
+                }
+            }
+        }
+    }
+
+    // UFO
+    ufoTimer += dt;
+    if (!ufoAlive and ufoTimer >= UFO_PERIOD) {
+        ufoTimer = 0.0;
+        ufoAlive = true;
+        ufoX = -UFO_W;
+    }
+    if (ufoAlive) {
+        ufoX += UFO_SPD * dt;
+        if (ufoX > SCREEN_W + UFO_W) {
+            ufoAlive = false;
+        }
+    }
+
+    // ---- DRAW ----
+
+    graphics.beginDraw();
+    graphics.clearColor(0, 0, 0);
+
+    // HUD
+    graphics.drawText("SCORE: " + cast.ntos(score), 255, 255, 255, 10, 10, 18);
+    graphics.drawText("LIVES: " + cast.ntos(lives), 255, 255, 255, SCREEN_W - 110, 10, 18);
+
+    // Ground line
+    graphics.drawRect(80, 80, 80, 0, SCREEN_H - 20, SCREEN_W, 2);
+
+    // Player (draw as a simple ship shape using three rects)
+    if (playerAlive) {
+        // Body
+        graphics.drawRect(0, 255, 0, playerX + 4, playerY + 8, PLAYER_W - 8, PLAYER_H - 8);
+        // Cannon
+        graphics.drawRect(0, 255, 0, playerX + PLAYER_W / 2 - 3, playerY, 6, 10);
+        // Wings
+        graphics.drawRect(0, 255, 0, playerX, playerY + 10, PLAYER_W, PLAYER_H - 10);
+    }
+
+    // Player bullet
+    if (bulletActive) {
+        graphics.drawRect(255, 255, 0, bulletX, bulletY, BULLET_W, BULLET_H);
+    }
+
+    // Invaders
+    for (decl row = 0; row < INVADER_ROWS; row++) {
+        for (decl col = 0; col < INVADER_COLS; col++) {
+            if (invAlive[invaderIndex(row, col)]) {
+                decl ix = invaderX(col);
+                decl iy = invaderY(row);
+
+                if (row == 0) {
+                    // Top row: Y-shape (worth 30)
+                    graphics.drawRect(255, 100, 100, ix + 4,  iy,      8, 6);
+                    graphics.drawRect(255, 100, 100, ix + 20, iy,      8, 6);
+                    graphics.drawRect(255, 100, 100, ix + 10, iy + 6,  12, 6);
+                    graphics.drawRect(255, 100, 100, ix + 12, iy + 12, 8, 8);
+                    graphics.drawRect(255, 100, 100, ix,      iy + 14, 8, 6);
+                    graphics.drawRect(255, 100, 100, ix + 24, iy + 14, 8, 6);
+                } else {
+                    if (row < 3) {
+                        // Middle rows: crab shape (worth 20)
+                        graphics.drawRect(200, 200, 255, ix + 8,  iy,      16, 6);
+                        graphics.drawRect(200, 200, 255, ix + 4,  iy + 6,  24, 6);
+                        graphics.drawRect(200, 200, 255, ix,      iy + 12, 32, 6);
+                        graphics.drawRect(200, 200, 255, ix + 4,  iy + 14, 8, 6);
+                        graphics.drawRect(200, 200, 255, ix + 20, iy + 14, 8, 6);
+                    } else {
+                        // Bottom rows: squid shape (worth 10)
+                        graphics.drawRect(100, 255, 100, ix + 10, iy,      12, 8);
+                        graphics.drawRect(100, 255, 100, ix + 4,  iy + 8,  24, 6);
+                        graphics.drawRect(100, 255, 100, ix,      iy + 14, 10, 6);
+                        graphics.drawRect(100, 255, 100, ix + 22, iy + 14, 10, 6);
+                    }
+                }
+            }
+        }
+    }
+
+    // Enemy bombs
+    for (decl i = 0; i < MAX_BOMBS; i++) {
+        if (bombActive[i]) {
+            graphics.drawRect(255, 80, 80, bombX[i], bombY[i], BOMB_W, BOMB_H);
+        }
+    }
+
+    // Barriers
+    for (decl i = 0; i < BARRIER_COUNT; i++) {
+        if (barrierHP[i] > 0) {
+            decl bx = barrierX(i);
+            // Fade colour based on HP: full HP = green, low = yellow
+            decl green = 80 + 175 * barrierHP[i] / BARRIER_HP;
+            decl red = 255 - green;
+            graphics.drawRect(red, green, 0, bx, BARRIER_Y, BARRIER_W, BARRIER_H);
+        }
+    }
+
+    // UFO
+    if (ufoAlive) {
+        graphics.drawRect(255, 0, 200, ufoX, 20, UFO_W, UFO_H);
+        graphics.drawCircle(255, 100, 200, ufoX + UFO_W / 2, 20, 9);
+        graphics.drawText("?", 255, 255, 255, ufoX + 18, 22, 14);
+    }
+
+    graphics.endDraw();
+}
+
+// ---- END SCREEN ----
+
+while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE)) {
+
+    graphics.beginDraw();
+    graphics.clearColor(0, 0, 0);
+
+    if (victory) {
+        graphics.drawText("YOU WIN!", 0, 255, 0, SCREEN_W / 2 - 80, SCREEN_H / 2 - 40, 40);
+    } else {
+        graphics.drawText("GAME OVER", 255, 40, 40, SCREEN_W / 2 - 100, SCREEN_H / 2 - 40, 40);
+    }
+
+    graphics.drawText("FINAL SCORE: " + cast.ntos(score), 255, 255, 255,
+                      SCREEN_W / 2 - 110, SCREEN_H / 2 + 20, 24);
+    graphics.drawText("Press ESC to quit", 150, 150, 150,
+                      SCREEN_W / 2 - 100, SCREEN_H / 2 + 70, 18);
+
+    graphics.endDraw();
+}
+
+graphics.closeWindow();

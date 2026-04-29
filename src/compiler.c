@@ -559,8 +559,8 @@ ParseRule rules[] = {
     [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,    PREC_NONE},
     [TOKEN_LEFT_BRACKET]  = {NULL,     index_,  PREC_CALL},
     [TOKEN_RIGHT_BRACKET] = {NULL,     NULL,    PREC_NONE},
-    [TOKEN_LEFT_BRACE]    = {NULL,     NULL,    PREC_NONE},
-    [TOKEN_RIGHT_BRACE]   = {arrLit,   NULL,    PREC_NONE},
+    [TOKEN_LEFT_BRACE]    = {arrLit,   NULL,    PREC_NONE},
+    [TOKEN_RIGHT_BRACE]   = {NULL,     NULL,    PREC_NONE},
     [TOKEN_COLON]         = {NULL,     NULL,    PREC_NONE},
     [TOKEN_COMMA]         = {NULL,     NULL,    PREC_NONE},
     [TOKEN_DOT]           = {NULL,     dot,     PREC_CALL},
@@ -860,14 +860,14 @@ static void varDeclaration() {
     int global = parseVariable("Expect variable name.");
 
     if (match(TOKEN_LEFT_BRACKET)) {
-        expression();  
+        expression();        // parse the size — this is what was missing
         hasArraySize = true;
-
         consume(TOKEN_RIGHT_BRACKET, "Expect ']' after size.");
     }
 
     if (match(TOKEN_EQUAL)) {
         if (match(TOKEN_LEFT_BRACE)) {
+            if (hasArraySize) emitByte(OP_POP);  // discard size, list defines count
 
             int count = 0;
             do {
@@ -885,11 +885,12 @@ static void varDeclaration() {
                 emitSet(count, OP_ARRAY_INIT_LONG, true);
             }
         } else {
+            if (hasArraySize) emitByte(OP_POP);  // discard size, scalar follows
             expression();
         }
     } else {
         if (hasArraySize) {
-            emitByte(OP_ARRAY_NEW);
+            emitByte(OP_ARRAY_NEW);  // size already on stack, ARRAY_NEW consumes it
         } else {
             emitByte(OP_NULL);
         }
