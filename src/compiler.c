@@ -79,6 +79,24 @@ typedef struct Compiler {
     int scopeDepth;
 } Compiler;
 
+#ifdef CONSTANT_OPTIMIZATIONS
+
+/**
+ * For constant folding and propagation
+ */
+typedef struct {
+    bool  isConst;
+    Value value;
+    int   chunkSizeBefore;   // chunk->count before this expr was emitted
+    int   constPoolBefore;   // chunk->constants.count before this expr
+} ExprResult;
+
+static ExprResult lastExpr;
+
+static Table compileTimeConsts; // For constant propagation
+
+#endif
+
 Parser parser;
 Compiler* current = NULL;
 Chunk* compilingChunk;
@@ -300,7 +318,68 @@ static void arrLit(bool canAssign) {
 static void binary(bool canAssign) {
     TokenType operatorType = parser.previous.type;
     ParseRule* rule = getRule(operatorType);
-    parsePrecedence((Precedence) (rule->precedence + 1));
+
+#ifdef CONSTANT_OPTIMIZATIONS
+    ExprResult left = lastExpr;
+    lastExpr.isConst = false;
+#endif
+
+    parsePrecedence((Precedence)(rule->precedence + 1));
+
+#ifdef CONSTANT_OPTIMIZATIONS
+    ExprResult right = lastExpr;
+
+    if (left.isConst && right.isConst &&
+        IS_NUMBER(left.value) && IS_NUMBER(right.value)) {
+
+        double a = AS_NUMBER(left.value);
+        double b = AS_NUMBER(right.value);
+        bool fold = true;
+        bool isBool = false;
+        double numResult = 0;
+        bool boolResult = false;
+
+        switch (operatorType) {
+            case TOKEN_PLUS:          numResult = a + b; break;
+            case TOKEN_MINUS:         numResult = a - b; break;
+            case TOKEN_STAR:          numResult = a * b; break;
+            case TOKEN_SLASH:
+                if (b == 0.0) { fold = false; break; }
+                numResult = a / b; break;
+            case TOKEN_GREATER:       isBool = true; boolResult = a > b;  break;
+            case TOKEN_LESS:          isBool = true; boolResult = a < b;  break;
+            case TOKEN_EQUAL_EQUAL:   isBool = true; boolResult = a == b; break;
+            case TOKEN_BANG_EQUAL:    isBool = true; boolResult = a != b; break;
+            case TOKEN_GREATER_EQUAL: isBool = true; boolResult = a >= b; break;
+            case TOKEN_LESS_EQUAL:    isBool = true; boolResult = a <= b; break;
+            default: fold = false; break;
+        }
+
+        if (fold) {
+            // Retract both operands' bytecode and constant pool entries
+            currentChunk()->count          = left.chunkSizeBefore;
+            currentChunk()->constants.count = left.constPoolBefore;
+
+            if (isBool) {
+                lastExpr.chunkSizeBefore  = currentChunk()->count;
+                lastExpr.constPoolBefore  = currentChunk()->constants.count;
+                emitByte(boolResult ? OP_TRUE : OP_FALSE);
+                lastExpr.isConst = true;
+                lastExpr.value   = BOOL_VAL(boolResult);
+            } else {
+                Value folded = NUMBER_VAL(numResult);
+                lastExpr.chunkSizeBefore  = currentChunk()->count;
+                lastExpr.constPoolBefore  = currentChunk()->constants.count;
+                emitConstant(folded);
+                lastExpr.isConst = true;
+                lastExpr.value   = folded;
+            }
+            return;
+        }
+    }
+
+    lastExpr.isConst = false;
+#endif
 
     switch (operatorType) {
         case TOKEN_BANG_EQUAL:    emitWord(OP_EQUAL, OP_NOT); break;
@@ -368,6 +447,14 @@ static void grouping(bool canAssign) {
 
 static void number(bool canAssign) {
     double value = strtod(parser.previous.start, NULL);
+
+#ifdef CONSTANT_OPTIMIZATIONS
+    lastExpr.chunkSizeBefore = currentChunk()->count;
+    lastExpr.constPoolBefore = currentChunk()->constants.count;
+    lastExpr.isConst = true;
+    lastExpr.value   = NUMBER_VAL(value);
+#endif
+
     emitConstant(NUMBER_VAL(value));
 }
 
@@ -497,8 +584,26 @@ static void preDec(bool canAssign) {
 static void namedVariable(Token name, bool canAssign) {
     uint8_t getOp, setOp;
     bool longOp;
-
     int arg = resolveVariable(name, &getOp, &setOp, &longOp);
+
+#ifdef CONSTANT_OPTIMIZATIONS
+    // --- const propagation ---
+    if ((getOp == OP_GET_GLOBAL || getOp == OP_GET_GLOBAL_LONG) && !canAssign) {
+        ObjString* nameStr = copyString(name.start, name.length);
+        Value constVal;
+        if (tableGet(&compileTimeConsts, nameStr, &constVal)) {
+            lastExpr.chunkSizeBefore  = currentChunk()->count;
+            lastExpr.constPoolBefore  = currentChunk()->constants.count;
+            emitConstant(constVal);
+            lastExpr.isConst = true;
+            lastExpr.value   = constVal;
+            return;
+        }
+    }
+    // --- end propagation ---
+
+    lastExpr.isConst = false;
+#endif
 
     if (match(TOKEN_PLUS_PLUS)) {
         emitGet(arg, getOp, longOp);
@@ -555,10 +660,31 @@ static void variable(bool canAssign) {
 static void unary(bool canAssign) {
     TokenType operatorType = parser.previous.type;
 
+#ifdef CONSTANT_OPTIMIZATIONS
+    lastExpr.isConst = false;
+#endif
+
     parsePrecedence(PREC_UNARY);
 
-    switch(operatorType) {
-        case TOKEN_BANG:  emitByte(OP_NOT); break;
+#ifdef CONSTANT_OPTIMIZATIONS
+    if (operatorType == TOKEN_MINUS &&
+        lastExpr.isConst && IS_NUMBER(lastExpr.value)) {
+        currentChunk()->count           = lastExpr.chunkSizeBefore;
+        currentChunk()->constants.count = lastExpr.constPoolBefore;
+        Value folded = NUMBER_VAL(-AS_NUMBER(lastExpr.value));
+        lastExpr.chunkSizeBefore  = currentChunk()->count;
+        lastExpr.constPoolBefore  = currentChunk()->constants.count;
+        emitConstant(folded);
+        lastExpr.isConst = true;
+        lastExpr.value   = folded;
+        return;
+    }
+
+    lastExpr.isConst = false;
+#endif
+
+    switch (operatorType) {
+        case TOKEN_BANG:  emitByte(OP_NOT);    break;
         case TOKEN_MINUS: emitByte(OP_NEGATE); break;
         default: return;
     }
@@ -897,11 +1023,28 @@ static void constDefinition() {
 
     int global = parseVariable("Expect variable name.");
 
+#ifdef CONSTANT_OPTIMIZATIONS
+    Token nameTok = parser.previous; // capture here — consume() below will overwrite previous
+#endif
+
     consume(TOKEN_EQUAL, "Constants must be defined at declaration.");
+#ifdef CONSTANT_OPTIMIZATIONS
+    lastExpr.isConst = false;
+#endif
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after constant declaration.");
 
-    defineConst(global);
+#ifdef CONSTANT_OPTIMIZATIONS
+    if (lastExpr.isConst) {
+        // push to keep GC-safe while copyString might allocate
+        push(lastExpr.value);
+        ObjString* nameStr = copyString(nameTok.start, nameTok.length);
+        tableSet(&compileTimeConsts, nameStr, lastExpr.value);
+        pop();
+    }
+#endif
+
+    defineConst(global); // still emit OP_DEFINE_CONST for runtime mutation checks
 }
 
 static void expressionStatement() {
@@ -1236,4 +1379,7 @@ void markCompilerRoots() {
         markObject((Obj*) compiler->function);
         compiler = compiler->enclosing;
     }
+#ifdef CONSTANT_OPTIMIZATIONS
+    markTable(&compileTimeConsts);
+#endif
 }
