@@ -13,6 +13,7 @@
 // #define DEBUG_LOG_GC
 
 #define CONSTANT_OPTIMIZATIONS
+#define NAN_BOXING
 
 #define UINT8_COUNT (UINT8_MAX + 1)
 #define ARB_COUNT (0x4000)          // Arbitrary limit so that the VM does not collapse the universe with its memory needs

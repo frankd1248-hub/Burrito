@@ -30,44 +30,43 @@ void freeValueArray(ValueArray* array) {
 
 static void printNumber(Value value, FILE* f) {
     double val = AS_NUMBER(value);
-    if (f == NULL) {
-        if (fabs(val - round(val)) < 0.00001) {
-            printf("%ld", (long) round(val));
-        } else {
-            printf("%lf", val);
-        }
+    if (f == NULL) f = stdout;
+    if (fabs(val - round(val)) < 0.00001) {
+        fprintf(f, "%ld", (long) round(val));
     } else {
-        if (fabs(val - round(val)) < 0.00001) {
-            fprintf(f, "%ld", (long) round(val));
-        } else {
-            fprintf(f, "%lf", val);
-        }
+        fprintf(f, "%lf", val);
     }
-
     return;
 }
 
 void printValue(Value value, FILE* f) {
-    if (f == NULL) {
-        switch(value.type) {
-            case VAL_BOOL:   printf(AS_BOOL(value) ? "true" : "false"); break;
-            case VAL_NULL:   printf("null"); break;
-            case VAL_NUMBER: printNumber(value, f); break;
-            case VAL_OBJ:    printObject(value, f); break;
-            case VAL_EMPTY:  break;
-        }
-    } else {
-        switch(value.type) {
-            case VAL_BOOL:   fprintf(f, AS_BOOL(value) ? "true" : "false"); break;
-            case VAL_NULL:   fprintf(f, "null"); break;
-            case VAL_NUMBER: printNumber(value, f); break;
-            case VAL_OBJ:    printObject(value, f); break;
-            case VAL_EMPTY:  break;
-        }
+    if (f == NULL) f = stdout;
+#ifdef NAN_BOXING
+    if (IS_BOOL(value)) {
+        fprintf(f, AS_BOOL(value) ? "true" : "false");
+    } else if (IS_EMPTY(value)) {
+    } else if (IS_NULL(value)) {
+        fprintf(f, "null");
+    } else if (IS_NUMBER(value)) {
+        printNumber(value, f);
+    } else if (IS_OBJ(value)) {
+        printObject(value, f);
     }
+#else
+    switch(value.type) {
+        case VAL_BOOL:   fprintf(f, AS_BOOL(value) ? "true" : "false"); break;
+        case VAL_EMPTY:  break;
+        case VAL_NULL:   fprintf(f, "null"); break;
+        case VAL_NUMBER: printNumber(value, f); break;
+        case VAL_OBJ:    printObject(value, f); break;
+    }
+#endif
 }
 
 bool valuesEqual(Value a, Value b) {
+#ifdef NAN_BOXING
+    return a == b;
+#else
     if (a.type != b.type) return false;
     switch (a.type) {
         case VAL_BOOL:   return AS_BOOL(a) == AS_BOOL(b);
@@ -76,4 +75,5 @@ bool valuesEqual(Value a, Value b) {
         case VAL_OBJ:    return AS_OBJ(a) == AS_OBJ(b);
         default:         return false;
     }
+#endif
 }

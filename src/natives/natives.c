@@ -11,7 +11,7 @@
 #include "btime.h"
 
 static bool exitNative(int argCount, Value* args, Value* result) {
-    exit(args[0].as.number);
+    exit(AS_NUMBER(args[0]));
 }
 
 void defineAllNatives() {

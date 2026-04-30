@@ -60,6 +60,25 @@ static bool typeOfNative(int argCount, Value* args, Value* result) {
     }
 #endif
 
+#ifdef NAN_BOXING
+    if (IS_BOOL(args[0])) {
+        *result = OBJ_VAL(copyString("bool", 4));
+    } else if (IS_NULL(args[0])) {
+        *result = OBJ_VAL(copyString("null", 4));
+    } else if (IS_NUMBER(args[0])) {
+        *result = OBJ_VAL(copyString("number", 6));
+    } else if (IS_OBJ(args[0])) {
+        switch (AS_OBJ(args[0])->type) {
+            case OBJ_ARRAY:    *result = OBJ_VAL(copyString("Array", 5)); break;
+            case OBJ_CLOSURE:  *result = OBJ_VAL(copyString("Closure", 7)); break;
+            case OBJ_FUNCTION: *result = OBJ_VAL(copyString("Function", 2)); break;
+            case OBJ_MODULE:   *result = OBJ_VAL(copyString("Module", 6)); break;
+            case OBJ_NATIVE:   *result = OBJ_VAL(copyString("Native", 6)); break;
+            case OBJ_STRING:   *result = OBJ_VAL(copyString("String", 6)); break;
+            case OBJ_UPVALUE:  *result = OBJ_VAL(copyString("Upvalue", 7)); break;
+        }
+    }
+#else
     switch (args[0].type) {
         case VAL_BOOL:   *result = OBJ_VAL(copyString("bool", 4)); break;
         case VAL_NULL:   *result = OBJ_VAL(copyString("null", 4)); break;
@@ -77,6 +96,7 @@ static bool typeOfNative(int argCount, Value* args, Value* result) {
             break;
         }
     }
+#endif
 
     return true;
 }
