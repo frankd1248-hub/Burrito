@@ -2,9 +2,8 @@
 
 ### Highest Priority
 
-1. Find out the problems between local variables and graphics
-2. Closures, the GC, and NaN Boxing
-3. Maybe classes & inheritance?
+1. Document *everything*
+2. Maybe classes & inheritance?
 
 ### Moderate Priority
 
