@@ -397,7 +397,7 @@ static InterpretResult run() {
                     break;
                 } else {
                     frame->ip = ip;
-                    runtimeError("Only modules have properties.");
+                    runtimeError("Only modules and arrays have properties.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
@@ -419,9 +419,23 @@ static InterpretResult run() {
                     pop();
                     push(value);
                     break;
+                } else if (IS_ARRAY(peek(0))) {
+                    ObjArray* array = AS_ARRAY(peek(0));
+                    ObjString* name = READ_STRING_LONG();
+
+                    if (strcmp(name->chars, "length") == 0) {
+                        pop();
+                        push(NUMBER_VAL(array->size));
+                    } else {
+                        frame->ip = ip;
+                        runtimeError("Undefined property '%s'.", name->chars);
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+
+                    break;
                 } else {
                     frame->ip = ip;
-                    runtimeError("Only modules have properties.");
+                    runtimeError("Only modules and arrays have properties.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;

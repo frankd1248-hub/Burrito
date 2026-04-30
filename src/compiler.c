@@ -433,9 +433,30 @@ static void index_(bool canAssign) {
 
 static void literal(bool canAssign) {
     switch (parser.previous.type) {
-        case TOKEN_FALSE: emitByte(OP_FALSE); break;
-        case TOKEN_NULL:  emitByte(OP_NULL); break;
-        case TOKEN_TRUE:  emitByte(OP_TRUE); break;
+        case TOKEN_FALSE:
+#ifdef CONSTANT_OPTIMIZATIONS
+            lastExpr.chunkSizeBefore = currentChunk()->count;
+            lastExpr.constPoolBefore = currentChunk()->constants.count;
+            lastExpr.isConst = true;
+            lastExpr.value   = BOOL_VAL(false);
+#endif
+            emitByte(OP_FALSE);
+            break;
+        case TOKEN_TRUE:
+#ifdef CONSTANT_OPTIMIZATIONS
+            lastExpr.chunkSizeBefore = currentChunk()->count;
+            lastExpr.constPoolBefore = currentChunk()->constants.count;
+            lastExpr.isConst = true;
+            lastExpr.value   = BOOL_VAL(true);
+#endif
+            emitByte(OP_TRUE);
+            break;
+        case TOKEN_NULL:
+#ifdef CONSTANT_OPTIMIZATIONS
+            lastExpr.isConst = false;
+#endif
+            emitByte(OP_NULL);
+            break;
         default: return;
     }
 }
@@ -1359,6 +1380,7 @@ ObjFunction* compile(const char* source) {
     initScanner(source);
     Compiler* compiler = malloc(sizeof(Compiler));
     initCompiler(compiler, TYPE_SCRIPT);
+    initTable(&compileTimeConsts);
 
     parser.hadError = false;
     parser.panicMode = false;
@@ -1370,6 +1392,7 @@ ObjFunction* compile(const char* source) {
     }
 
     ObjFunction* function = endCompiler();
+    freeTable(&compileTimeConsts);
     return parser.hadError ? NULL : function;
 }
 
