@@ -30,21 +30,21 @@ decl leftScore = 0;
 decl dt;
 decl angle;
 
-while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE)) {
+while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
 
     dt = graphics.getDeltaTime();
 
-    if (graphics.isKeyDown(game.KEY_W)) {
+    if (game.isKeyDown(game.KEY_W)) {
         leftY = leftY - paddleSpeed * dt;
     }
-    if (graphics.isKeyDown(game.KEY_S)) {
+    if (game.isKeyDown(game.KEY_S)) {
         leftY = leftY + paddleSpeed * dt;
     }
 
-    if (graphics.isKeyDown(game.KEY_I)) {
+    if (game.isKeyDown(game.KEY_I)) {
         rightY = rightY - paddleSpeed * dt;
     }
-    if (graphics.isKeyDown(game.KEY_K)) {
+    if (game.isKeyDown(game.KEY_K)) {
         rightY = rightY + paddleSpeed * dt;
     }
 

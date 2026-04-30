@@ -196,7 +196,7 @@ fn lowestAliveRow() {
 
 decl dt = 0.0;
 
-while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE) and !gameOver and !victory) {
+while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !gameOver and !victory) {
 
     dt = graphics.getDeltaTime();
 
@@ -204,10 +204,10 @@ while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE) an
 
     // Player movement
     if (playerAlive) {
-        if (graphics.isKeyDown(game.KEY_LEFT)) {
+        if (game.isKeyDown(game.KEY_LEFT)) {
             playerX -= PLAYER_SPD * dt;
         }
-        if (graphics.isKeyDown(game.KEY_RIGHT)) {
+        if (game.isKeyDown(game.KEY_RIGHT)) {
             playerX += PLAYER_SPD * dt;
         }
         if (playerX < 0) playerX = 0;
@@ -224,7 +224,7 @@ while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE) an
     }
 
     // Fire bullet
-    if (playerAlive and !bulletActive and graphics.isKeyDown(game.KEY_SPACE)) {
+    if (playerAlive and !bulletActive and game.isKeyDown(game.KEY_SPACE)) {
         bulletX = playerX + PLAYER_W / 2 - BULLET_W / 2;
         bulletY = playerY;
         bulletActive = true;
@@ -477,7 +477,7 @@ while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE) an
 
 // ---- END SCREEN ----
 
-while (!graphics.windowShouldClose() and !graphics.isKeyDown(game.KEY_ESCAPE)) {
+while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
 
     graphics.beginDraw();
     graphics.clearColor(0, 0, 0);

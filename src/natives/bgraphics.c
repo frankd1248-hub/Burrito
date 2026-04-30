@@ -20,6 +20,38 @@ static bool gInitNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool gPollEventsNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 0) {
+        *result = OBJ_VAL(copyString("pollEvents() does not expect arguments.", 39));
+        return false;
+    }
+#endif
+
+    eventQueue.count = 0;
+
+    int buttons[] = { MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, MOUSE_BUTTON_MIDDLE };
+    EventType downTypes[] = { EVENT_MOUSE_DOWN, EVENT_MOUSE_DOWN, EVENT_MOUSE_DOWN };
+
+    for (int i = 0; i < 3; i++) {
+        double mx = (double)GetMouseX();
+        double my = (double)GetMouseY();
+        if (eventQueue.count < EVENT_QUEUE_MAX) {
+            if (IsMouseButtonPressed(buttons[i])) {
+                eventQueue.events[eventQueue.count++] =
+                    (InputEvent){ EVENT_MOUSE_DOWN, i, mx, my };
+            }
+            if (IsMouseButtonReleased(buttons[i])) {
+                eventQueue.events[eventQueue.count++] =
+                    (InputEvent){ EVENT_MOUSE_UP, i, mx, my };
+            }
+        }
+    }
+
+    *result = BOOL_VAL(true);
+    return true;
+}
+
 static bool gCloseWindowNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
     if (argCount != 0) {
@@ -28,6 +60,7 @@ static bool gCloseWindowNative(int argCount, Value* args, Value* result) {
     }
 #endif
 
+    freeResources();
     CloseWindow();
     *result = BOOL_VAL(true);
     return true;
@@ -110,6 +143,27 @@ static bool getDeltaTimeNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool getEventsNative(int argCount, Value* args, Value* result) {
+    ObjArray* outer = newArray(eventQueue.count);
+    push(OBJ_VAL(outer));
+
+    for (int i = 0; i < eventQueue.count; i++) {
+        InputEvent* e = &eventQueue.events[i];
+
+        ObjArray* ev = newArray(4);
+        ev->values[0] = NUMBER_VAL((double)e->type);
+        ev->values[1] = NUMBER_VAL((double)e->button);
+        ev->values[2] = NUMBER_VAL(e->x);
+        ev->values[3] = NUMBER_VAL(e->y);
+
+        outer->values[i] = OBJ_VAL(ev);
+    }
+
+    pop();
+    *result = OBJ_VAL(outer);
+    return true;
+}
+
 static bool gIsKeyDownNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
     if (argCount != 1 || !IS_NUMBER(args[0])) {
@@ -177,6 +231,22 @@ static bool gDrawCircleNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool gDrawLineNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 7 || !IS_NUMBER(args[0]) || !IS_NUMBER(args[1]) || !IS_NUMBER(args[2]) || 
+        !IS_NUMBER(args[3]) || !IS_NUMBER(args[4]) || !IS_NUMBER(args[5]) || !IS_NUMBER(args[6])) {
+        *result = OBJ_VAL(copyString("drawLine() expects seven number arguments.", 41));
+        return false;
+    }
+#endif
+
+    Color color = {(int) AS_NUMBER(args[0]), (int) AS_NUMBER(args[1]), (int) AS_NUMBER(args[2]), 255};
+    DrawLine((int) AS_NUMBER(args[3]), (int) AS_NUMBER(args[4]), 
+             (int) AS_NUMBER(args[5]), (int) AS_NUMBER(args[6]), color);
+    *result = BOOL_VAL(true);
+    return true;
+}
+
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
     tableSet(&module->table, copyString(name, length), OBJ_VAL(newNative(fn)));
 }
@@ -188,6 +258,7 @@ static void addConst(ObjModule* module, const char* name, int length, double val
 #define ADD_KEY(name) addConst(gamodule, (#name), strlen(#name), (name))
 
 static void addKeys(ObjModule*);
+static void addButtons(ObjModule*);
 
 ObjModule** buildGraphicsModules() {
     ObjModule** modules = malloc(sizeof(ObjModule*) * 2);
@@ -203,9 +274,9 @@ ObjModule** buildGraphicsModules() {
     addNative(grmodule, "clearColor", 10, gClearColorNative);
     addNative(grmodule, "targetFPS", 9, gTargetFPSNative);
     addNative(grmodule, "getDeltaTime", 12, getDeltaTimeNative);
-    addNative(grmodule, "isKeyDown", 9, gIsKeyDownNative);
     addNative(grmodule, "drawRect", 8, gDrawRectNative);
     addNative(grmodule, "drawText", 8, gDrawTextNative);
+    addNative(grmodule, "drawLine", 8, gDrawLineNative);
     addNative(grmodule, "drawCircle", 10, gDrawCircleNative);
 
     modules[0] = grmodule;
@@ -213,13 +284,25 @@ ObjModule** buildGraphicsModules() {
     ObjModule* gamodule = newModule();
     push(OBJ_VAL(gamodule));
 
+    addNative(gamodule, "pollEvents", 10, gPollEventsNative);
+    addNative(gamodule, "getEvents", 9, getEventsNative);
+    addNative(gamodule, "isKeyDown", 9, gIsKeyDownNative);
     addKeys(gamodule);
+    addButtons(gamodule);
 
     modules[1] = gamodule;
 
     pop();
     pop();
     return modules;
+}
+
+static void addButtons(ObjModule* gamodule) {
+    addConst(gamodule, "MOUSE_DOWN",   10, (double)EVENT_MOUSE_DOWN);
+    addConst(gamodule, "MOUSE_UP",     8,  (double)EVENT_MOUSE_UP);
+    addConst(gamodule, "MOUSE_LEFT",   10, 0);
+    addConst(gamodule, "MOUSE_RIGHT",  11, 1);
+    addConst(gamodule, "MOUSE_MIDDLE", 12, 2);
 }
 
 /**

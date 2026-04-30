@@ -9,6 +9,27 @@
 
 #define STACK_MAX (FRAMES_MAX * ARB_COUNT)
 
+#define EVENT_QUEUE_MAX 128
+
+typedef enum {
+    EVENT_MOUSE_DOWN,
+    EVENT_MOUSE_UP,
+} EventType;
+
+typedef struct {
+    EventType type;
+    int button;   // 0 = left, 1 = right, 2 = middle
+    double x;
+    double y;
+} InputEvent;
+
+typedef struct {
+    InputEvent events[EVENT_QUEUE_MAX];
+    int count;
+} EventQueue;
+
+extern EventQueue eventQueue;
+
 typedef struct {
     ObjClosure* closure;
     uint8_t* ip;
@@ -47,6 +68,7 @@ void defineModule(const char* name, ObjModule* module);
 
 void initVM();
 void freeVM();
+void freeResources();
 InterpretResult interpret(const char* source);
 void push(Value value);
 Value peek(int distance);

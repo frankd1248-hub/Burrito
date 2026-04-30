@@ -65,8 +65,9 @@ fn drawGrid() {
 
     for (decl x = 0; x < 4; x++) {
         for (decl y = 0; y < 4; y++) {
-            if (getAt(x, y) != 0) {
-                decl color = getColor(getAt(x, y));
+            decl val = getAt(x, y);
+            if (val != 0) {
+                decl color = getColor(val);
                 graphics.drawRect(
                     color[0], color[1], color[2],
                     GRID_X + CELL_SIDE * x + 5,
@@ -74,13 +75,14 @@ fn drawGrid() {
                     CELL_SIDE - 10,
                     CELL_SIDE - 10
                 );
-                decl length = str.len(cast.ntos(getAt(x, y)));
+                decl length = str.len(cast.ntos(val));
+                color = val < 2048 ? {0, 0, 0} : {255, 255, 255};
                 graphics.drawText(
-                    cast.ntos(getAt(x, y)),
-                    0, 0, 0, 
-                    GRID_X + CELL_SIDE * x + CELL_SIDE / 2 - length * 11, 
+                    cast.ntos(val),
+                    color[0], color[1], color[2],
+                    GRID_X + CELL_SIDE * x + CELL_SIDE / 2 - length * 6, 
                     GRID_Y + CELL_SIDE * y + CELL_SIDE / 2 - 20,
-                    52
+                    52 - length * 4
                 );
             }
         }
@@ -96,8 +98,8 @@ fn generate() {
     }
     if (!flag) return;
 
-    decl x = 0;
-    decl y = 0;
+    decl x = math.floor(math.randRange(0, 4));
+    decl y = math.floor(math.randRange(0, 4));
 
     while (getAt(x, y) != 0) {
         x = math.floor(math.randRange(0, 4));
@@ -141,7 +143,7 @@ fn moveRight() {
     while (flag) {
         flag = false;
         for (decl y = 0; y < 4; y++) {
-            for (decl x = 0; x < 3; x++) {
+            for (decl x = 2; x >= 0; x--) {
                 if (getAt(x, y) == 0) continue;
                 if (getAt(x+1, y) == 0) {
                     setAt(x+1, y, getAt(x, y));
@@ -193,7 +195,7 @@ fn moveDown() {
     while (flag) {
         flag = false;
         for (decl x = 0; x < 4; x++) {
-            for (decl y = 0; y < 3; y++) {
+            for (decl y = 2; y >= 0; y--) {
                 if (getAt(x, y) == 0) continue;
                 if (getAt(x, y+1) == 0) {
                     setAt(x, y+1, getAt(x, y));
@@ -256,16 +258,16 @@ while(!graphics.windowShouldClose()) {
     decl moved = false;
 
     if (!inCooldown) {
-        if (graphics.isKeyDown(game.KEY_W)) {
+        if (game.isKeyDown(game.KEY_W) or game.isKeyDown(game.KEY_UP)) {
             moved = moveUp();
             startCooldown();
-        } else if (graphics.isKeyDown(game.KEY_A)) {
+        } else if (game.isKeyDown(game.KEY_A) or game.isKeyDown(game.KEY_LEFT)) {
             moved = moveLeft();
             startCooldown();
-        } else if (graphics.isKeyDown(game.KEY_S)) {
+        } else if (game.isKeyDown(game.KEY_S) or game.isKeyDown(game.KEY_DOWN)) {
             moved = moveDown(); 
             startCooldown();
-        } else if (graphics.isKeyDown(game.KEY_D)) {
+        } else if (game.isKeyDown(game.KEY_D) or game.isKeyDown(game.KEY_RIGHT)) {
             moved = moveRight();
             startCooldown();
         }

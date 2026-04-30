@@ -15,6 +15,7 @@
 #define IS_FUNCTION(value)   isObjType(value, OBJ_FUNCTION)
 #define IS_MODULE(value)     isObjType(value, OBJ_MODULE)
 #define IS_NATIVE(value)     isObjType(value, OBJ_NATIVE)
+#define IS_RESOURCE(value)   isObjType(value, OBJ_RESOURCE)
 #define IS_STRING(value)     isObjType(value, OBJ_STRING)
 
 #define AS_ARRAY(value)      ((ObjArray*) AS_OBJ(value))
@@ -23,7 +24,12 @@
 #define AS_MODULE(value)     ((ObjModule*) AS_OBJ(value))
 #define AS_NATIVE(value)     (((ObjNative*) AS_OBJ(value))->function)
 #define AS_STRING(value)     ((ObjString*) AS_OBJ(value))
+#define AS_RESOURCE(value)   ((ObjResource*) AS_OBJ(value))
 #define AS_CSTRING(value)    (((ObjString*) AS_OBJ(value))->chars)
+
+#define IS_FONT(value)       isResType(value, RESOURCE_FONT)
+#define IS_IMAGE(value)      isResType(value, RESOURCE_IMAGE)
+#define IS_SOUND(value)      isResType(value, RESOURCE_SOUND)
 
 typedef enum { 
     OBJ_ARRAY,
@@ -31,6 +37,7 @@ typedef enum {
     OBJ_FUNCTION,
     OBJ_MODULE,
     OBJ_NATIVE,
+    OBJ_RESOURCE,
     OBJ_STRING,
     OBJ_UPVALUE
 } ObjType;
@@ -67,6 +74,19 @@ typedef struct {
     NativeFn function;
 } ObjNative;
 
+typedef enum {
+    RESOURCE_FONT,
+    RESOURCE_IMAGE,
+    RESOURCE_SOUND,
+} ResourceType;
+
+typedef struct {
+    Obj obj;
+    ResourceType type;
+    void* handle;
+    void (*destroy) (void*);
+} ObjResource;
+
 struct ObjString {
     Obj obj;
     int length;
@@ -100,6 +120,10 @@ void printObject(Value value, FILE* f);
 
 static inline bool isObjType(Value value, ObjType type) {
     return IS_OBJ(value) && AS_OBJ(value)->type == type;
+}
+
+static inline bool isResType(Value value, ResourceType type) {
+    return IS_OBJ(value) && IS_RESOURCE(value) && AS_RESOURCE(value)->type == type;
 }
 
 #endif

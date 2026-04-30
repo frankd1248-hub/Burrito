@@ -15,6 +15,8 @@
 
 VM vm;
 
+EventQueue eventQueue = {0};
+
 static void resetStack() {
     vm.stackTop = vm.stack;
     vm.frameCount = 0;
@@ -83,6 +85,23 @@ void freeVM() {
     freeTable(&vm.consts);
     freeTable(&vm.strings);
     freeObjects();
+}
+
+void freeResources() {
+    Obj* iter = vm.objects;
+    Obj* previous = NULL;
+    while (iter != NULL) {
+        if (IS_RESOURCE(OBJ_VAL(iter)) && AS_RESOURCE(OBJ_VAL(iter))->destroy) {
+            AS_RESOURCE(OBJ_VAL(iter))->destroy(AS_RESOURCE(OBJ_VAL(iter))->handle);
+            if (previous == NULL)
+                vm.objects = iter->next;
+            else {
+                previous->next = iter->next;
+            }
+        }
+        previous = iter;
+        iter = iter->next;
+    }
 }
 
 void push(Value value) {
