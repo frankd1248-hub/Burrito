@@ -48,12 +48,35 @@ static bool getStringNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool readLineNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 0) {
+        *result = OBJ_VAL(copyString("readLine() does not expect arguments.", 37));
+        return false;
+    }
+#endif
+
+    char* buf = malloc(sizeof(char) * 512);
+    int count = 0;
+    int c;
+
+    while ((c = getchar()) != '\n') {
+        buf[count++] = c;
+    }
+    buf[count] = '\0';
+
+    *result = OBJ_VAL(copyString(buf, count));
+    free(buf);
+    return true;
+}
+
 ObjModule* buildIOModule() {
     ObjModule* module = newModule();
     push(OBJ_VAL(module));
 
     tableSet(&module->table, copyString("getNumber", 9), OBJ_VAL(newNative(getNumberNative)));
     tableSet(&module->table, copyString("getString", 9), OBJ_VAL(newNative(getStringNative)));
+    tableSet(&module->table, copyString("readLine", 8), OBJ_VAL(newNative(readLineNative)));
 
     pop();
     return module;

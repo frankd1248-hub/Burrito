@@ -6,7 +6,7 @@ Here's a comprehensive list organized by module, with a focus on what would make
 ---
 
 ## `bio` (I/O)
-- [ ] `readLine()` — read a line from stdin
+- [x] `readLine()` — read a line from stdin
 - [ ] `readFile(path)` — read entire file as string
 - [ ] `writeFile(path, content)` — write string to file
 - [ ] `appendFile(path, content)` — append to file

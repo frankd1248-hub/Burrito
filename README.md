@@ -3,9 +3,13 @@
 A high-level, dynamically typed programming language written with C.
 This was based off of most of the features from Robert Nystrom's Lox, with my own QoL ones sprinkled in.
 
-Namely, break&continue, switch, ternary operator, mutation, inc/decrementation, modules to go with natives, string indexing, native printf-style printing, runtime escape characters, and arrays.
+Namely, break&continue, switch, ternary operator, mutation, inc/decrementation, modules to go with natives, string indexing, native printf-style printing, runtime escape characters, runtime reflection natives, and arrays.
 
 Constant folding and constant propagation also included.
+
+I raised the limit on globals to 16777216, and the limit on locals to 16384.
+
+I also wrote some software to help me test the language.
 
 Did I mention fast graphics with Raylib?
 
