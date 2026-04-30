@@ -48,8 +48,8 @@ static void runtimeError(const char* format, ...) {
 void defineNative(const char* name, ObjNative* native) {
     push(OBJ_VAL(copyString(name, strlen(name))));
     push(OBJ_VAL(native));
-    tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
-    tableSet(&vm.consts, AS_STRING(vm.stack[0]), BOOL_VAL(true));
+    tableSet(&vm.globals, AS_STRING(peek(1)), peek(0));
+    tableSet(&vm.consts, AS_STRING(peek(1)), BOOL_VAL(true));
     pop();
     pop();
 }
@@ -57,8 +57,8 @@ void defineNative(const char* name, ObjNative* native) {
 void defineModule(const char* name, ObjModule* module) {
     push(OBJ_VAL(copyString(name, strlen(name))));
     push(OBJ_VAL(module));
-    tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
-    tableSet(&vm.consts, AS_STRING(vm.stack[0]), BOOL_VAL(true));
+    tableSet(&vm.globals, AS_STRING(peek(1)), peek(0));
+    tableSet(&vm.consts, AS_STRING(peek(1)), BOOL_VAL(true));
     pop();
     pop();
 }
@@ -587,6 +587,24 @@ static InterpretResult run() {
 
                 vm.stackTop -= count;
                 push(OBJ_VAL(array));
+                break;
+            }
+            case OP_IMPORT: {
+                ObjString* name = READ_STRING();
+                if (!importModule(name)) {
+                    frame->ip = ip;
+                    runtimeError("Module not found: %s", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
+            case OP_IMPORT_LONG: {
+                ObjString* name = READ_STRING_LONG();
+                if (!importModule(name)) {
+                    frame->ip = ip;
+                    runtimeError("Module not found: %s", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 break;
             }
             case OP_EQUAL: {

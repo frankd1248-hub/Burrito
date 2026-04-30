@@ -32,6 +32,8 @@ typedef enum {
     OP_ARRAY_INIT,
     OP_ARRAY_INIT_LONG,
     OP_ARRAY_NEW,
+    OP_IMPORT,
+    OP_IMPORT_LONG,
     OP_EQUAL,
     OP_GREATER,
     OP_LESS,

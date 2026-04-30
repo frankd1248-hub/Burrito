@@ -1184,6 +1184,23 @@ static void ifStatement() {
     patchJump(elseJump);
 }
 
+static void importStatement() {
+    consume(TOKEN_IDENTIFIER, "Expect module name after 'import'.");
+    int idx = makeConstant(OBJ_VAL(copyString(parser.previous.start, parser.previous.length)));
+
+    if (idx < 256) {
+        emitWord(OP_IMPORT, (uint8_t) idx);
+    } else {
+        emitDoubleWord(OP_IMPORT_LONG,
+            (uint8_t) (idx & 0xff),
+            (uint8_t) ((idx >> 8) & 0xff),
+            (uint8_t) ((idx >> 16) & 0xff)
+        );
+    }
+
+    consume(TOKEN_SEMICOLON, "Expect ';' after import.");
+}
+
 static void printStatement() {
     consume(TOKEN_LEFT_PAREN, "Expect left parentheses after 'print'.");
 
@@ -1361,6 +1378,8 @@ static void statement() {
         forStatement();
     } else if (match(TOKEN_IF)) {
         ifStatement();
+    } else if (match(TOKEN_IMPORT)) {
+        importStatement();
     } else if (match(TOKEN_RETURN)) {
         returnStatement();
     } else if (match(TOKEN_SWITCH)) {

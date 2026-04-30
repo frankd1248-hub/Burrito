@@ -15,6 +15,7 @@ static bool gInitNative(int argCount, Value* args, Value* result) {
 #endif
 
     SetTraceLogLevel(LOG_NONE);
+    InitAudioDevice();
     InitWindow((int) AS_NUMBER(args[0]), (int) AS_NUMBER(args[1]), AS_CSTRING(args[2]));
     *result = BOOL_VAL(true);
     return true;
@@ -61,6 +62,7 @@ static bool gCloseWindowNative(int argCount, Value* args, Value* result) {
 #endif
 
     freeResources();
+    CloseAudioDevice();
     CloseWindow();
     *result = BOOL_VAL(true);
     return true;
@@ -246,6 +248,12 @@ static bool gDrawLineNative(int argCount, Value* args, Value* result) {
     *result = BOOL_VAL(true);
     return true;
 }
+
+static bool gLoadFontNative(int, Value*, Value*);
+static bool gDrawTextExNative(int, Value*, Value*);
+
+static bool gLoadImageNative(int, Value*, Value*);
+static bool gDrawImageNative(int, Value*, Value*);
 
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
     tableSet(&module->table, copyString(name, length), OBJ_VAL(newNative(fn)));
