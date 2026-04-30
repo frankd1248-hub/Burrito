@@ -73,7 +73,7 @@ typedef struct Compiler {
     ObjFunction* function;
     FunctionType type;
 
-    Local locals[LOCAL_COUNT];
+    Local locals[ARB_COUNT];
     int localCount;
     Upvalue upvalues[UINT8_COUNT];
     int scopeDepth;
@@ -830,7 +830,7 @@ static int resolveUpvalue(Compiler* compiler, Token* name) {
 }
 
 static void addLocal(Token name) {
-    if (current->localCount >= LOCAL_COUNT) {
+    if (current->localCount >= ARB_COUNT) {
         error("Too many local variables currently in scope.");
         return;
     }
