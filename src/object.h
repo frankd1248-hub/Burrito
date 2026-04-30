@@ -80,11 +80,13 @@ typedef enum {
     RESOURCE_SOUND,
 } ResourceType;
 
+typedef void (*DestroyFn) (void* resource);
+
 typedef struct {
     Obj obj;
     ResourceType type;
     void* handle;
-    void (*destroy) (void*);
+    DestroyFn destroy;
 } ObjResource;
 
 struct ObjString {
@@ -113,6 +115,7 @@ ObjClosure* newClosure(ObjFunction* function);
 ObjFunction* newFunction();
 ObjModule* newModule();
 ObjNative* newNative(NativeFn function);
+ObjResource* newResource(ResourceType type, void* resource, DestroyFn destroy);
 ObjString* takeString(char* chars, int length);
 ObjString* copyString(const char* chars, int length);
 ObjUpvalue* newUpvalue(Value* slot);
