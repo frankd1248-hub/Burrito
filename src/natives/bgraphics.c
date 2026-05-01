@@ -247,6 +247,15 @@ static bool gDrawLineNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+<<<<<<< HEAD
+=======
+static bool gLoadFontNative(int, Value*, Value*);
+static bool gDrawTextExNative(int, Value*, Value*);
+
+static bool gLoadImageNative(int, Value*, Value*);
+static bool gDrawImageNative(int, Value*, Value*);
+
+>>>>>>> parent of eb44bb0 (Font and Image capability)
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
     tableSet(&module->table, copyString(name, length), OBJ_VAL(newNative(fn)));
 }
