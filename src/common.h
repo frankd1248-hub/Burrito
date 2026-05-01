@@ -5,7 +5,7 @@
 #include <stddef.h>   // For misc. definitions
 #include <stdint.h>   // For fixed-width int types
 
-// #define DEBUG_PRINT_CODE
+#define DEBUG_PRINT_CODE
 // #define DEBUG_TRACE_EXECUTION
 // #define DEBUG_TRACE_STACK
 
