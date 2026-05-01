@@ -248,7 +248,10 @@ static bool gDrawLineNative(int argCount, Value* args, Value* result) {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> parent of eb44bb0 (Font and Image capability)
 static bool gLoadFontNative(int, Value*, Value*);
 static bool gDrawTextExNative(int, Value*, Value*);
 
