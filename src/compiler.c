@@ -556,6 +556,7 @@ static int resolveVariable(Token name, uint8_t* getOp, uint8_t* setOp, bool* lon
     } else if ((arg = resolveUpvalue(current, &name)) != -1) {
         *getOp = OP_GET_UPVALUE;
         *setOp = OP_SET_UPVALUE;
+        *longOp = false;
     } else {
         arg = identifierConstant(&name);
         if (arg <= UINT8_MAX) {
