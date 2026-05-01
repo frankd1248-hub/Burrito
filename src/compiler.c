@@ -1017,7 +1017,7 @@ static void varDeclaration() {
     int global = parseVariable("Expect variable name.");
 
     if (match(TOKEN_LEFT_BRACKET)) {
-        expression();        // parse the size — this is what was missing
+        expression();
         hasArraySize = true;
         consume(TOKEN_RIGHT_BRACKET, "Expect ']' after size.");
     }
@@ -1027,7 +1027,7 @@ static void varDeclaration() {
         expression();
     } else {
         if (hasArraySize) {
-            emitByte(OP_ARRAY_NEW);  // size already on stack, ARRAY_NEW consumes it
+            emitByte(OP_ARRAY_NEW);
         } else {
             emitByte(OP_NULL);
         }
@@ -1399,7 +1399,9 @@ ObjFunction* compile(const char* source) {
     initScanner(source);
     Compiler* compiler = malloc(sizeof(Compiler));
     initCompiler(compiler, TYPE_SCRIPT);
+#ifdef CONSTANT_OPTIMIZATIONS
     initTable(&compileTimeConsts);
+#endif
 
     parser.hadError = false;
     parser.panicMode = false;
@@ -1411,7 +1413,9 @@ ObjFunction* compile(const char* source) {
     }
 
     ObjFunction* function = endCompiler();
+#ifdef CONSTANT_OPTIMIZATIONS
     freeTable(&compileTimeConsts);
+#endif
     return parser.hadError ? NULL : function;
 }
 

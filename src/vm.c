@@ -503,9 +503,9 @@ static InterpretResult run() {
                 break;
             }
             case OP_SET_INDEX: {
-                Value value = pop();
-                Value index = pop();
-                Value array = pop();
+                Value value = peek(0);
+                Value index = peek(1);
+                Value array = peek(2);
 
                 if (!IS_NUMBER(index) || !IS_ARRAY(array)) {
                     frame->ip = ip;
@@ -524,6 +524,9 @@ static InterpretResult run() {
 
                 arr->values[idx] = value;
 
+                pop();
+                pop();
+                pop();
                 push(value);
                 break;
             }
