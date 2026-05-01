@@ -556,6 +556,7 @@ static int resolveVariable(Token name, uint8_t* getOp, uint8_t* setOp, bool* lon
     } else if ((arg = resolveUpvalue(current, &name)) != -1) {
         *getOp = OP_GET_UPVALUE;
         *setOp = OP_SET_UPVALUE;
+        *longOp = false;
     } else {
         arg = identifierConstant(&name);
         if (arg <= UINT8_MAX) {
@@ -890,7 +891,7 @@ static int parseVariable(const char* errorMessage) {
     return identifierConstant(&parser.previous);
 }
 
-static void markUninitialized() {
+static void markInitialized() {
     if (current->scopeDepth == 0) return;
 
     current->locals[current->localCount - 1].depth = current->scopeDepth;
@@ -898,7 +899,7 @@ static void markUninitialized() {
 
 static void defineVariable(int global) {
     if (current->scopeDepth > 0) {
-        markUninitialized();
+        markInitialized();
         return;
     }
 
@@ -911,7 +912,7 @@ static void defineVariable(int global) {
             (uint8_t) ((global >> 8) & 0xff),
             (uint8_t) ((global >> 16) & 0xff)
         );
-    }   
+    }
 }
 
 static uint8_t argumentList() {
@@ -1003,7 +1004,7 @@ static void function(FunctionType type){
 
 static void fnDeclaration() {
     int global = parseVariable("Expect function name.");
-    markUninitialized();
+    markInitialized();
 
     function(TYPE_FUNCTION);
 

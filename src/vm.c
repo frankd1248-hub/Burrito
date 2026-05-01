@@ -225,7 +225,7 @@ static InterpretResult run() {
 
 #define READ_BYTE() (*ip++)
 #define READ_SHORT() (ip += 2, (uint16_t) ((ip[-2] << 8) | ip[-1]))
-#define READ_LONG() (ip += 3, (uint32_t) ((ip[-3] << 16) | (ip[-2] << 8) | ip[-1]))
+#define READ_LONG() (ip += 3, (uint32_t)(ip[-3] | (ip[-2] << 8) | (ip[-1] << 16)))
 #define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
 #define READ_CONSTANT_LONG() (ip += 3, frame->closure->function->chunk.constants.values[ip[-3] | (ip[-2] << 8) | (ip[-1] << 16)])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
@@ -290,12 +290,16 @@ static InterpretResult run() {
             }
             case OP_SET_LOCAL: {
                 uint8_t slot = READ_BYTE();
-                frame->slots[slot] = peek(0);
+                Value val = pop();        // ← THIS IS MISSING
+                frame->slots[slot] = val;
+                push(val);                // keep expression semantics
                 break;
             }
             case OP_SET_LOCAL_LONG: {
-                int slot = READ_LONG();
-                frame->slots[slot] = peek(0);
+                uint8_t slot = READ_LONG();
+                Value val = pop();        // ← THIS IS MISSING
+                frame->slots[slot] = val;
+                push(val);                // keep expression semantics
                 break;
             }
             case OP_GET_GLOBAL: {

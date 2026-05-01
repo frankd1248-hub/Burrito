@@ -375,6 +375,7 @@ ObjModule** buildGraphicsModules() {
 
     modules[0] = grmodule;
 
+    pop();
     ObjModule* gamodule = newModule();
     push(OBJ_VAL(gamodule));
 
@@ -386,7 +387,6 @@ ObjModule** buildGraphicsModules() {
 
     modules[1] = gamodule;
 
-    pop();
     pop();
     return modules;
 }
