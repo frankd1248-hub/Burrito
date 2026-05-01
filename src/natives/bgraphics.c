@@ -248,92 +248,18 @@ static bool gDrawLineNative(int argCount, Value* args, Value* result) {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 static void destroyFont(void* handle) {
     UnloadFont(*(Font*)handle);
     free(handle);
 }
+=======
+static bool gLoadFontNative(int, Value*, Value*);
+static bool gDrawTextExNative(int, Value*, Value*);
+>>>>>>> parent of eb44bb0 (Font and Image capability)
 
-static bool gloadFontNative(int argCount, Value* args, Value* result) {
-#ifdef STRICT_NATIVES
-    if (argCount != 2 || !IS_STRING(args[0]) || !IS_NUMBER(args[1])) {
-        *result = OBJ_VAL(copyString("loadFont() takes one string and one number argument.", 52));
-        return false;
-    }
-#endif
-
-    Font* font = malloc(sizeof(Font));
-    *font = LoadFontEx(AS_CSTRING(args[0]), (int)AS_NUMBER(args[1]), NULL, 0);
-    *result = OBJ_VAL(newResource(RESOURCE_FONT, font, destroyFont));
-    return true;
-}
-
-static bool gDrawTextExNative(int argCount, Value* args, Value* result) {
-#ifdef STRICT_NATIVES
-    if (argCount != 8 || !IS_RESOURCE(args[0]) || !IS_STRING(args[1]) || 
-        !IS_NUMBER(args[2]) || !IS_NUMBER(args[3]) || !IS_NUMBER(args[4]) || 
-        !IS_NUMBER(args[5]) || !IS_NUMBER(args[6]) || !IS_NUMBER(args[7])) {
-        *result = OBJ_VAL(copyString("drawTextEx() expects eight arguments: one font, one string, and six numbers", 75));
-        return false;
-    }
-#endif
-
-    if (AS_RESOURCE(args[0])->type != RESOURCE_FONT) {
-        *result = OBJ_VAL(copyString("drawTextEx() expects a font.", 28));
-        return false;
-    }
-
-    Font* font = (Font*) AS_RESOURCE(args[0])->handle;
-    Color color = { (int)AS_NUMBER(args[2]), (int)AS_NUMBER(args[3]), (int)AS_NUMBER(args[4]), 255 };
-
-    DrawTextEx(*font, AS_CSTRING(args[1]),
-               (Vector2){ AS_NUMBER(args[5]), AS_NUMBER(args[6]) },
-               AS_NUMBER(args[7]), 1.0f, color);
-
-    *result = BOOL_VAL(true);
-    return true;
-}
-
-static void destroyImage(void* handle) {
-    UnloadTexture(*(Texture2D*)handle);
-    free(handle);
-}
-
-static bool gloadImageNative(int argCount, Value* args, Value* result) {
-#ifdef STRICT_NATIVES
-    if (argCount != 2 || !IS_STRING(args[0])) {
-        *result = OBJ_VAL(copyString("loadImage() takes one string argument.", 38));
-        return false;
-    }
-#endif
-
-    Image image = LoadImage(AS_CSTRING(args[0]));
-    Texture2D* texture = malloc(sizeof(Texture2D));
-    *texture = LoadTextureFromImage(image);
-    UnloadImage(image);
-    *result = OBJ_VAL(newResource(RESOURCE_IMAGE, texture, destroyImage));
-    return true;
-}
-
-static bool gDrawImageNative(int argCount, Value* args, Value* result) {
-#ifdef STRICT_NATIVES
-    if (argCount != 6 || !IS_RESOURCE(args[0]) || !IS_NUMBER(args[1]) || !IS_NUMBER(args[2]) || 
-        !IS_NUMBER(args[3]) || !IS_NUMBER(args[4]) || !IS_NUMBER(args[5])) {
-        *result = OBJ_VAL(copyString("drawTextEx() expects six arguments: one image and five numbers", 62));
-        return false;
-    }
-#endif
-
-    if (AS_RESOURCE(args[0])->type != RESOURCE_FONT) {
-        *result = OBJ_VAL(copyString("drawImage() expects an image.", 29));
-        return false;
-    }
-
-    Color color = {(int) AS_NUMBER(args[1]), (int) AS_NUMBER(args[2]), (int) AS_NUMBER(args[3]), 255};
-    DrawTexture(*((Texture2D*) AS_RESOURCE(args[0])->handle), 
-                (int) AS_NUMBER(args[4]), (int) AS_NUMBER(args[5]), color);
-    *result = BOOL_VAL(true);
-    return true;
-}
+static bool gLoadImageNative(int, Value*, Value*);
+static bool gDrawImageNative(int, Value*, Value*);
 
 =======
 >>>>>>> parent of ac678e6 (Import statements)
@@ -368,11 +294,6 @@ ObjModule** buildGraphicsModules() {
     addNative(grmodule, "drawText", 8, gDrawTextNative);
     addNative(grmodule, "drawLine", 8, gDrawLineNative);
     addNative(grmodule, "drawCircle", 10, gDrawCircleNative);
-
-    addNative(grmodule, "loadFont", 8, gloadFontNative);
-    addNative(grmodule, "drawTextEx", 10, gDrawTextExNative);
-    addNative(grmodule, "loadImage", 9, gloadImageNative);
-    addNative(grmodule, "drawImage", 9, gDrawImageNative);
 
     modules[0] = grmodule;
 
