@@ -247,22 +247,6 @@ static bool gDrawLineNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-static void destroyFont(void* handle) {
-    UnloadFont(*(Font*)handle);
-    free(handle);
-}
-=======
-static bool gLoadFontNative(int, Value*, Value*);
-static bool gDrawTextExNative(int, Value*, Value*);
->>>>>>> parent of eb44bb0 (Font and Image capability)
-
-static bool gLoadImageNative(int, Value*, Value*);
-static bool gDrawImageNative(int, Value*, Value*);
-
-=======
->>>>>>> parent of ac678e6 (Import statements)
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
     tableSet(&module->table, copyString(name, length), OBJ_VAL(newNative(fn)));
 }
