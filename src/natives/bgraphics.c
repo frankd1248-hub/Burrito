@@ -15,7 +15,6 @@ static bool gInitNative(int argCount, Value* args, Value* result) {
 #endif
 
     SetTraceLogLevel(LOG_NONE);
-    InitAudioDevice();
     InitWindow((int) AS_NUMBER(args[0]), (int) AS_NUMBER(args[1]), AS_CSTRING(args[2]));
     *result = BOOL_VAL(true);
     return true;
@@ -62,7 +61,6 @@ static bool gCloseWindowNative(int argCount, Value* args, Value* result) {
 #endif
 
     freeResources();
-    CloseAudioDevice();
     CloseWindow();
     *result = BOOL_VAL(true);
     return true;
@@ -249,6 +247,7 @@ static bool gDrawLineNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+<<<<<<< HEAD
 static void destroyFont(void* handle) {
     UnloadFont(*(Font*)handle);
     free(handle);
@@ -336,6 +335,8 @@ static bool gDrawImageNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+=======
+>>>>>>> parent of ac678e6 (Import statements)
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
     tableSet(&module->table, copyString(name, length), OBJ_VAL(newNative(fn)));
 }

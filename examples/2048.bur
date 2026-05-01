@@ -10,7 +10,7 @@ const GRID_X = 150;
 const GRID_Y = 70;
 const CELL_SIDE = 125;
 
-const COOLDOWN = 0.1;
+const COOLDOWN = 0.15;
 
 decl inCooldown = false;
 decl cooldownTimer = 0;
