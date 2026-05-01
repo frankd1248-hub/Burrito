@@ -16,44 +16,42 @@ static bool exitNative(int argCount, Value* args, Value* result) {
 }
 
 bool importModule(ObjString* name) {
-    // if (strcmp(name->chars, "cast") == 0) {
-    //     defineModule("cast", buildCastModule());
-    //     return true;
-    // } else if (strcmp(name->chars, "io") == 0) {
-    //     defineModule("io", buildIOModule());
-    //     return true;
-    // } else if (strcmp(name->chars, "math") == 0) {
-    //     defineModule("math", buildMathModule());
-    //     return true;
-    // } else if (strcmp(name->chars, "str") == 0) {
-    //     defineModule("str", buildStringModule());
-    //     return true;
-    // } else if (strcmp(name->chars, "time") == 0) {
-    //     defineModule("time", buildTimeModule());
-    //     return true;
-    // } else if (strcmp(name->chars, "graphics") == 0) {
-    //     defineModule("graphics", buildGraphicsModules()[0]);
-    //     return true;
-    // } else if (strcmp(name->chars, "game") == 0) {
-    //     defineModule("game", buildGraphicsModules()[1]);
-    //     return true;
-    // }
-    // return false;
-
-    return true;
+    if (strcmp(name->chars, "cast") == 0) {
+        defineModule("cast", buildCastModule());
+        return true;
+    } else if (strcmp(name->chars, "io") == 0) {
+        defineModule("io", buildIOModule());
+        return true;
+    } else if (strcmp(name->chars, "math") == 0) {
+        defineModule("math", buildMathModule());
+        return true;
+    } else if (strcmp(name->chars, "str") == 0) {
+        defineModule("str", buildStringModule());
+        return true;
+    } else if (strcmp(name->chars, "time") == 0) {
+        defineModule("time", buildTimeModule());
+        return true;
+    } else if (strcmp(name->chars, "graphics") == 0) {
+        defineModule("graphics", buildGraphicsModules()[0]);
+        return true;
+    } else if (strcmp(name->chars, "game") == 0) {
+        defineModule("game", buildGraphicsModules()[1]);
+        return true;
+    }
+    return false;
 }
 
 void defineAllNatives() {
-    defineModule("cast", buildCastModule());
-    defineModule("io", buildIOModule());
-    defineModule("math", buildMathModule());
-    defineModule("str", buildStringModule());
-    defineModule("time", buildTimeModule());
+    // defineModule("cast", buildCastModule());
+    // defineModule("io", buildIOModule());
+    // defineModule("math", buildMathModule());
+    // defineModule("str", buildStringModule());
+    // defineModule("time", buildTimeModule());
 
-    ObjModule** gmodules = buildGraphicsModules();
+    // ObjModule** gmodules = buildGraphicsModules();
 
-    defineModule("game", gmodules[1]);
-    defineModule("graphics", gmodules[0]);
+    // defineModule("game", gmodules[1]);
+    // defineModule("graphics", gmodules[0]);
 
     defineNative("exit", newNative(exitNative));
 }

@@ -4,23 +4,16 @@
 #include "memory.h"
 #include "vm.h"
 
-/**
- * Essentially a constructor for a Chunk.
- * Zeros all fields.
- */
 void initChunk(Chunk* chunk) {
     chunk->count = 0;
     chunk->capacity = 0;
     chunk->code = NULL;
     chunk->lineCount = 0;
     chunk->lineCapacity = 0;
-    chunk->lines = NULL;
+     chunk->lines = NULL;
     initValueArray(&chunk->constants);
 }
 
-/**
- * Frees all pointers held by the chunk.
- */
 void freeChunk(Chunk* chunk) {
     FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
     FREE_ARRAY(LineStart, chunk->lines, chunk->lineCapacity);
@@ -28,28 +21,20 @@ void freeChunk(Chunk* chunk) {
     initChunk(chunk);
 }
 
-/**
- * Writes a new byte to the Chunk, given a line.
- */
 void writeChunk(Chunk* chunk, uint8_t byte, int line) {
-    // If the chunk does not have more space we need to grow the code array
     if (chunk->capacity < chunk->count + 1) {
         int oldCapacity = chunk->capacity;
         chunk->capacity = GROW_CAPACITY(oldCapacity);
         chunk->code = GROW_ARRAY(uint8_t, chunk->code, oldCapacity, chunk->capacity);
     }
 
-    // Writing the byte
     chunk->code[chunk->count] = byte;
     chunk->count++;
 
-    // If it's the same line as the last token we don't need to do anything
     if (chunk->lineCount > 0 && chunk->lines[chunk->lineCount - 1].line == line) {
         return;
     }
-    // Otherwise, we need to add to the line array
 
-    // If we have run out of space we grow the array
     if (chunk->lineCapacity < chunk->lineCount + 1) {
         int oldCapacity = chunk->lineCapacity;
         chunk->lineCapacity = GROW_CAPACITY(oldCapacity);
@@ -61,9 +46,6 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line) {
     lineStart->line = line;
 }
 
-/**
- * Adds a constant to the current chunk.
- */
 int addConstant(Chunk* chunk, Value value) {
     push(value);
     writeValueArray(&chunk->constants, value);
@@ -71,9 +53,6 @@ int addConstant(Chunk* chunk, Value value) {
     return chunk->constants.count - 1;
 }
 
-/**
- * Helper function for writing a constant to a chunk.
- */
 void writeConstant(Chunk* chunk, Value value, int line) {
     int index = addConstant(chunk, value);
     if (index < 256) {
@@ -87,9 +66,6 @@ void writeConstant(Chunk* chunk, Value value, int line) {
     }
 }
 
-/**
- * Returns the line that the indexed instruction is at, by querying the line array.
- */
 int getLine(Chunk* chunk, int instruction) {
     int start = 0;
     int end = chunk->lineCount - 1;
