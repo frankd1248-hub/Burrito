@@ -36,9 +36,17 @@ ObjArray* newArray(int size) {
     return array;
 }
 
+ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method) {
+    ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD);
+    bound->receiver = receiver;
+    bound->method = method;
+    return bound;
+}
+
 ObjClass* newClass(ObjString* name) {
     ObjClass* class_ = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
     class_->name = name;
+    initTable(&class_->methods);
     return class_;
 }
 
@@ -189,6 +197,9 @@ void printObject(Value value, FILE* f) {
     switch (OBJ_TYPE(value)) {
         case OBJ_ARRAY:
             printArray(AS_ARRAY(value), f);
+            break;
+        case OBJ_BOUND_METHOD:
+            printFunction(AS_BOUND_METHOD(value)->method->function, f);
             break;
         case OBJ_CLASS:
             fprintf(f, "%s", AS_CLASS(value)->name->chars);

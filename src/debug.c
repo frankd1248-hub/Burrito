@@ -31,6 +31,26 @@ static int longConstantInstruction(const char* name, Chunk* chunk, int offset, F
     return offset + 4;
 }
 
+static int invokeInstruction(const char* name, Chunk* chunk, int offset, FILE* out) {
+    uint8_t constant = chunk->code[offset + 1];
+    uint8_t argCount = chunk->code[offset + 2];
+    fprintf(out, "%-16s (%d args) %4d '", name, argCount, constant);
+    printValue(chunk->constants.values[constant], out);
+    fprintf(out, "'\n");
+    return offset + 3;
+}
+
+static int longInvokeInstruction(const char* name, Chunk* chunk, int offset, FILE* out) {
+    uint32_t constant = chunk->code[offset + 1] |
+                       (chunk->code[offset + 2] << 8) |
+                       (chunk->code[offset + 3] << 16);
+    uint8_t argCount  = chunk->code[offset + 4];
+    fprintf(out, "%-16s (%d args) %4d '", name, argCount, constant);
+    printValue(chunk->constants.values[constant], out);
+    fprintf(out, "'\n");
+    return offset + 5;
+}
+
 static int simpleInstruction(const char* name, int offset, FILE* out) {
     fprintf(out, "%s\n", name);
     return offset + 1;
@@ -164,6 +184,10 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
             return jumpInstruction("OP_LOOP", -1, chunk, offset, out);
         case OP_CALL:
             return byteInstruction("OP_CALL", chunk, offset, out);
+        case OP_INVOKE:
+            return invokeInstruction("OP_INVOKE", chunk, offset, out);
+        case OP_INVOKE_LONG:
+            return longInvokeInstruction("OP_INVOKE_LONG", chunk, offset, out);
         case OP_CLOSURE: {
             offset++;
             uint8_t constant = chunk->code[offset++];
@@ -218,6 +242,10 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
             return constantInstruction("OP_CLASS", chunk, offset, out);
         case OP_CLASS_LONG:
             return longConstantInstruction("OP_CLASS_LONG", chunk, offset, out);
+        case OP_METHOD:
+            return constantInstruction("OP_METHOD", chunk, offset, out);
+        case OP_METHOD_LONG:
+            return longConstantInstruction("OP_METHOD_LONG", chunk, offset, out);
         default:
             fprintf(out, "Unknown opcode %d\n", instruction);
             return offset + 1;

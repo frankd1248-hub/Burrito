@@ -53,6 +53,7 @@ typedef struct {
     Table globals;
     Table consts;
     Table strings;
+    ObjString* initString;
     ObjUpvalue* openUpvalues;
 
     ErrorHandler handlerStack[HANDLER_MAX];

@@ -57,6 +57,8 @@ typedef struct {
 
 typedef enum {
     TYPE_FUNCTION,
+    TYPE_INITIALIZER,
+    TYPE_METHOD,
     TYPE_SCRIPT
 } FunctionType;
 
@@ -79,6 +81,10 @@ typedef struct Compiler {
     int scopeDepth;
 } Compiler;
 
+typedef struct ClassCompiler {
+    struct ClassCompiler* enclosing;
+} ClassCompiler;
+
 #ifdef CONSTANT_OPTIMIZATIONS
 
 /**
@@ -99,6 +105,7 @@ static Table compileTimeConsts; // For constant propagation
 
 Parser parser;
 Compiler* current = NULL;
+ClassCompiler* currentClass = NULL;
 Chunk* compilingChunk;
 
 Loop* currentLoop = NULL;
@@ -196,7 +203,10 @@ static int emitJump(uint8_t instruction) {
 }
 
 static void emitReturn() {
-    emitByte(OP_NULL);
+    if (current->type == TYPE_INITIALIZER) {
+        emitWord(OP_GET_LOCAL, 0);
+    } else emitByte(OP_NULL);
+
     emitByte(OP_RETURN);
 }
 
@@ -236,8 +246,14 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
     local->isCaptured = false;
-    local->name.start = "";
-    local->name.length = 0;
+
+    if (type != TYPE_FUNCTION) {
+        local->name.start = "this";
+        local->name.length = 4;
+    } else {
+        local->name.start = "";
+        local->name.length = 0;
+    }
 }
 
 static ObjFunction* endCompiler() {
@@ -413,15 +429,16 @@ static void dot(bool canAssign) {
 
     if (canAssign && match(TOKEN_EQUAL)) {
         expression();
-        if (name < 256)
-            emitSet(name, OP_SET_PROPERTY, false);
-        else
-            emitSet(name, OP_SET_PROPERTY_LONG, true);
+        if (name < 256) emitSet(name, OP_SET_PROPERTY, false);
+        else emitSet(name, OP_SET_PROPERTY_LONG, true);
+    } else if (match(TOKEN_LEFT_PAREN)) {
+        uint8_t argCount = argumentList();
+        if (name < 256) emitGet(name, OP_INVOKE, false);
+        else emitGet(name, OP_INVOKE_LONG, true);
+        emitByte(argCount);
     } else {
-        if (name < 256)
-            emitGet(name, OP_GET_PROPERTY, false);
-        else
-            emitGet(name, OP_GET_PROPERTY_LONG, true);
+        if (name < 256) emitGet(name, OP_GET_PROPERTY, false);
+        else emitGet(name, OP_GET_PROPERTY_LONG, true);
     }
 }
 
@@ -685,6 +702,15 @@ static void variable(bool canAssign) {
     namedVariable(parser.previous, canAssign);
 }
 
+static void this_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("Cannot use 'this' outside a class.");
+        return;
+    }
+
+    variable(false);
+}
+
 static void unary(bool canAssign) {
     TokenType operatorType = parser.previous.type;
 
@@ -749,6 +775,7 @@ ParseRule rules[] = {
     [TOKEN_AND]           = {NULL,     and_,    PREC_AND},
     [TOKEN_BREAK]         = {NULL,     NULL,    PREC_NONE},
     [TOKEN_CASE]          = {NULL,     NULL,    PREC_NONE},
+    [TOKEN_CATCH]         = {NULL,     NULL,    PREC_NONE},
     [TOKEN_CLASS]         = {NULL,     NULL,    PREC_NONE},
     [TOKEN_CONST]         = {NULL,     NULL,    PREC_NONE},
     [TOKEN_CONTINUE]      = {NULL,     NULL,    PREC_NONE},
@@ -764,8 +791,9 @@ ParseRule rules[] = {
     [TOKEN_QUESTION]      = {NULL,     ternary, PREC_TERNARY},
     [TOKEN_RETURN]        = {NULL,     NULL,    PREC_NONE},
     [TOKEN_SUPER]         = {NULL,     NULL,    PREC_NONE},
+    [TOKEN_TRY]           = {NULL,     NULL,    PREC_NONE},
     [TOKEN_SWITCH]        = {NULL,     NULL,    PREC_NONE},
-    [TOKEN_THIS]          = {NULL,     NULL,    PREC_NONE},
+    [TOKEN_THIS]          = {this_,    NULL,    PREC_NONE},
     [TOKEN_TRUE]          = {literal,  NULL,    PREC_NONE},
     [TOKEN_DECL]          = {NULL,     NULL,    PREC_NONE},
     [TOKEN_WHILE]         = {NULL,     NULL,    PREC_NONE},
@@ -1014,8 +1042,31 @@ static void function(FunctionType type){
     free(compiler);
 }
 
+static void method() {
+    consume(TOKEN_IDENTIFIER, "Expect method name.");
+    int constant = identifierConstant(&parser.previous);
+
+    FunctionType type = TYPE_METHOD;
+    if (parser.previous.length == 4 && memcmp(parser.previous.start, "init", 4) == 0) {
+        type = TYPE_INITIALIZER;
+    } 
+
+    function(type);
+
+    if (constant <= 255) {
+        emitWord(OP_METHOD, (uint8_t) constant);
+    } else {
+        emitDoubleWord(OP_METHOD_LONG,
+            (uint8_t) ((constant) & 0xff),
+            (uint8_t) ((constant >> 8) & 0xff),
+            (uint8_t) ((constant >> 16) & 0xff)
+        );
+    }
+}
+
 static void classDeclaration() {
     consume(TOKEN_IDENTIFIER, "Expect class name.");
+    Token className = parser.previous;
     int nameConstant = identifierConstant(&parser.previous);
     declareVariable();
 
@@ -1030,11 +1081,21 @@ static void classDeclaration() {
     }
     defineVariable(nameConstant);
 
+    ClassCompiler classCompiler;
+    classCompiler.enclosing = currentClass;
+    currentClass = &classCompiler;
+
+    namedVariable(className, false);
     consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
 
-    // What to put here?
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        method();
+    }
 
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
+    emitByte(OP_POP);
+
+    currentClass = currentClass->enclosing;
 }
 
 static void fnDeclaration() {
@@ -1249,7 +1310,7 @@ static void printStatement() {
 
 static void returnStatement() {
     if (current->type == TYPE_SCRIPT) {
-        error("Can't return from top-level code.");
+        error("Cannot return from top-level code.");
     }
 
     for (int i = 0; i < currentTryDepth; i++) {
@@ -1259,6 +1320,10 @@ static void returnStatement() {
     if (match(TOKEN_SEMICOLON)) {
         emitReturn();
     } else {
+        if (current->type == TYPE_INITIALIZER) {
+            error("Cannot return value from an initializer.");
+        }
+
         expression();
         consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
         emitByte(OP_RETURN);
