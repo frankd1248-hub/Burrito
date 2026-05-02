@@ -1,7 +1,7 @@
-// =============================================
-//   Galaga  —  Improved
+//=============================================
+//   Galaga
 //   Written in Burrito
-// =============================================
+//=============================================
 
 const SCREEN_W  = 800;
 const SCREEN_H  = 600;
@@ -10,13 +10,13 @@ const FPS       = 50;
 // Player
 const PLAYER_W   = 36;
 const PLAYER_H   = 28;
-const PLAYER_SPD = 290;
+const PLAYER_SPD = 320;
 const FIRE_RATE  = 0.18;
 
 // Player bullets
 const MAX_BULLETS = 2;
 const BULLET_W    = 4;
-const BULLET_H    = 16;
+const BULLET_H    = 18;
 const BULLET_SPD  = 560;
 
 // Enemy formation grid
@@ -32,12 +32,12 @@ const FORM_Y0       = 55;
 
 // Formation sway
 const SWAY_AMP   = 24.0;
-const SWAY_FREQ  = 0.8;
+const SWAY_FREQ  = 0.6;
 
 // Diving
 const MAX_DIVERS    = 3;
 const DIVE_INTERVAL = 3.2;
-const DIVE_SPD      = 210;
+const DIVE_SPD      = 310;
 const DIVE_WOBBLE   = 28.0;
 const DIVE_WOBBLE_F = 4.2;
 
@@ -79,8 +79,13 @@ fn eCol(idx) {
     return math.mod(idx, ENEMY_COLS);
 }
 
+fn formationWidth() {
+    return ENEMY_COLS * ENEMY_W + (ENEMY_COLS - 1) * ENEMY_PAD_X;
+}
+
 fn formX(col) {
-    return FORM_X0 + col * (ENEMY_W + ENEMY_PAD_X);
+    decl start = (SCREEN_W - formationWidth()) / 2;
+    return start + col * (ENEMY_W + ENEMY_PAD_X);
 }
 
 fn formY(row) {
@@ -498,7 +503,7 @@ decl starSpd[55];
 for (decl s = 0; s < STAR_COUNT; s++) {
     starX[s]   = math.floor(math.rand() * SCREEN_W);
     starY[s]   = math.floor(math.rand() * SCREEN_H);
-    starSpd[s] = (math.floor(math.rand() * 3) + 1) * 20;
+    starSpd[s] = (math.floor(math.rand() * 3) + 1) * 120;
 }
 
 fn updateStars(dt) {
