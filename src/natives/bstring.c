@@ -138,6 +138,7 @@ static bool sSplitNative(int argCount, Value* args, Value* result) {
     push(OBJ_VAL(arr));
     for (int i = 0; i < count; i++) {
         arr->values[i] = OBJ_VAL(copyString(array[i], lengths[i]));
+        FREE_ARRAY(char, array[i], lengths[i] + 1);  // ← free after copyString is done with it
     }
 
     *result = peek(0);
@@ -151,23 +152,19 @@ static bool sSplitNative(int argCount, Value* args, Value* result) {
 
 static bool sJoinNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
-    if (!IS_ARRAY(args[0])) {
-        *result = OBJ_VAL(copyString("join() expects an array argument.", 33));
+    if (argCount != 2 || !IS_ARRAY(args[0]) || !IS_STRING(args[1])) {
+        *result = OBJ_VAL(copyString("join() expects an array and a string arguments.", 47));
         return false;
     }
 #endif
 
     ObjArray* array = AS_ARRAY(args[0]);
+    ObjString* delim = AS_STRING(args[1]);
 
-    int length = 0;
-    for (int i = 0; i < array->size; i++) {
-        if (!IS_STRING(array->values[i])) {
-            *result = OBJ_VAL(copyString("join() expects an array made of strings.", 40));
-            return false;
-        }
-
+    int length = delim->length * (array->size > 0 ? array->size - 1 : 0);
+    for (int i = 0; i < array->size; i++)
         length += AS_STRING(array->values[i])->length;
-    }
+
 
     char* res = calloc(length + 1, sizeof(char));
     if (res == NULL) {
@@ -177,6 +174,7 @@ static bool sJoinNative(int argCount, Value* args, Value* result) {
 
     for (int i = 0; i < array->size; i++) {
         strcat(res, AS_CSTRING(array->values[i]));
+        if (i < array->size - 1) strcat(res, delim->chars);
     }
 
     *result = OBJ_VAL(copyString(res, length));
@@ -200,14 +198,14 @@ static bool sTrimNative(int argCount, Value* args, Value* result) {
     bool foundStart = false;
     for (int i = 0; i < length; i++) {
         if (string[i] == ' ' || string[i] == '\n' ||
-            string[i] == '\n' || string[i] == '\r') continue;
+            string[i] == '\t' || string[i] == '\r') continue;
         start = i; foundStart = true; break;
     }
     if (!foundStart) { *result = OBJ_VAL(copyString("", 0)); return true; }
 
     for (int i = length - 1; i >= start; i--) {
         if (string[i] == ' ' || string[i] == '\n' ||
-            string[i] == '\n' || string[i] == '\r') continue;
+            string[i] == '\t' || string[i] == '\r') continue;
         end = i + 1; break;
     }
 

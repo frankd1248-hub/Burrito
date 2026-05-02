@@ -37,6 +37,15 @@ typedef struct {
 } CallFrame;
 
 typedef struct {
+    int       frameCount;      // vm.frameCount at the OP_TRY point
+    Value*    stackTop;        // vm.stackTop at the OP_TRY point
+    uint8_t*  handlerIp;       // IP of the catch block
+    CallFrame* frame;          // the frame that owns this try block
+} ErrorHandler;
+
+#define HANDLER_MAX 64
+
+typedef struct {
     CallFrame frames[FRAMES_MAX];
     int frameCount;
 
@@ -45,6 +54,9 @@ typedef struct {
     Table consts;
     Table strings;
     ObjUpvalue* openUpvalues;
+
+    ErrorHandler handlerStack[HANDLER_MAX];
+    int handlerCount;
 
     size_t bytesAllocated;
     size_t nextGC;

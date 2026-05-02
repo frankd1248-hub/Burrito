@@ -201,6 +201,7 @@ void printObject(Value value, FILE* f) {
             break;
         case OBJ_INSTANCE:
             fprintf(f, "%s instance", AS_INSTANCE(value)->class_->name->chars);
+            break;
         case OBJ_MODULE:
             fprintf(f, "<native module>");
             break;

@@ -103,6 +103,8 @@ Chunk* compilingChunk;
 
 Loop* currentLoop = NULL;
 
+int currentTryDepth = 0;
+
 static Chunk* currentChunk() {
     return &current->function->chunk;
 }
@@ -895,7 +897,7 @@ static int parseVariable(const char* errorMessage) {
     return identifierConstant(&parser.previous);
 }
 
-static void markUninitialized() {
+static void markInitialized() {
     if (current->scopeDepth == 0) return;
 
     current->locals[current->localCount - 1].depth = current->scopeDepth;
@@ -903,7 +905,7 @@ static void markUninitialized() {
 
 static void defineVariable(int global) {
     if (current->scopeDepth > 0) {
-        markUninitialized();
+        markInitialized();
         return;
     }
 
@@ -1020,7 +1022,7 @@ static void classDeclaration() {
     if (nameConstant < 256) {
         emitWord(OP_CLASS, (uint8_t) nameConstant);
     } else {
-        emitDoubleWord(OP_CLASS,
+        emitDoubleWord(OP_CLASS_LONG,
             (uint8_t) ((nameConstant) & 0xff),
             (uint8_t) ((nameConstant >> 8) & 0xff),
             (uint8_t) ((nameConstant >> 16) & 0xff)
@@ -1037,7 +1039,7 @@ static void classDeclaration() {
 
 static void fnDeclaration() {
     int global = parseVariable("Expect function name.");
-    markUninitialized();
+    markInitialized();
 
     function(TYPE_FUNCTION);
 
@@ -1112,6 +1114,10 @@ static void breakStatement() {
     if (currentLoop == NULL) {
         error("Cannot use 'break' outside a loop.");
     } 
+
+    if (currentTryDepth > 0) {
+        error("Cannot use 'break' inside a try block.");
+    }
     
     if (currentLoop->breakCount == MAX_BREAKS) {
         error("Too many break statements in current loop.");
@@ -1131,6 +1137,10 @@ static void breakStatement() {
 static void continueStatement() {
     if (currentLoop == NULL) {
         error("Cannot use 'continue' outside of a loop.");
+    }
+
+    if (currentTryDepth > 0) {
+        error("Cannot use 'continue' inside a try block.");
     }
 
     consume(TOKEN_SEMICOLON, "Expect ';' after 'continue'");
@@ -1242,6 +1252,10 @@ static void returnStatement() {
         error("Can't return from top-level code.");
     }
 
+    for (int i = 0; i < currentTryDepth; i++) {
+        emitByte(OP_END_TRY);
+    }
+
     if (match(TOKEN_SEMICOLON)) {
         emitReturn();
     } else {
@@ -1318,6 +1332,30 @@ static void switchStatement() {
     emitByte(OP_POP);
 }
 
+static void tryStatement() {
+    int errorJump = emitJump(OP_TRY);
+    currentTryDepth++;
+
+    statement();
+
+    emitByte(OP_END_TRY);
+    int successJump = emitJump(OP_JUMP);
+    patchJump(errorJump);
+    consume(TOKEN_CATCH, "Expect 'catch' after try.");
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'catch'.");
+    consume(TOKEN_IDENTIFIER, "Expect variable name.");
+
+    beginScope();
+    addLocal(parser.previous);
+    markInitialized();
+
+    statement();
+    endScope();
+
+    currentTryDepth--;
+    patchJump(successJump);
+}
+
 static void whileStatement() {
     Loop loop;
     loop.start = currentChunk()->count;
@@ -1353,6 +1391,7 @@ static void synchronize() {
         if (parser.previous.type == TOKEN_SEMICOLON) return;
         switch(parser.current.type) {
             case TOKEN_CLASS:
+            case TOKEN_CONST:
             case TOKEN_FN:
             case TOKEN_DECL:
             case TOKEN_FOR:
@@ -1360,6 +1399,7 @@ static void synchronize() {
             case TOKEN_WHILE:
             case TOKEN_PRINT:
             case TOKEN_RETURN:
+            case TOKEN_TRY:
                 return;
 
             default:
@@ -1401,6 +1441,8 @@ static void statement() {
         returnStatement();
     } else if (match(TOKEN_SWITCH)) {
         switchStatement();
+    } else if (match(TOKEN_TRY)) {
+        tryStatement();
     } else if (match(TOKEN_WHILE)) {
         whileStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {
@@ -1414,6 +1456,7 @@ static void statement() {
 
 ObjFunction* compile(const char* source) {
     initScanner(source);
+    currentTryDepth = 0;
     Compiler* compiler = malloc(sizeof(Compiler));
     initCompiler(compiler, TYPE_SCRIPT);
     initTable(&compileTimeConsts);

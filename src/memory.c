@@ -195,6 +195,7 @@ static void markRoots() {
     }
 
     markTable(&vm.globals);
+    markTable(&vm.consts);
     markCompilerRoots();
 }
 

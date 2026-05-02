@@ -208,6 +208,10 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
         }
         case OP_CLOSE_UPVALUE:
             return simpleInstruction("OP_CLOSE_UPVALUE", offset, out);
+        case OP_TRY:
+            return jumpInstruction("OP_TRY", 1, chunk, offset, out);
+        case OP_END_TRY:
+            return simpleInstruction("OP_END_TRY", offset, out);
         case OP_RETURN:
             return simpleInstruction("OP_RETURN", offset, out);
         case OP_CLASS:

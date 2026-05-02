@@ -52,6 +52,8 @@ typedef enum {
     OP_CLOSURE,
     OP_CLOSURE_LONG,
     OP_CLOSE_UPVALUE,
+    OP_TRY,
+    OP_END_TRY,
     OP_RETURN,
     OP_CLASS,
     OP_CLASS_LONG,

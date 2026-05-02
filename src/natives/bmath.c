@@ -16,6 +16,7 @@ static bool checkNumberArguments(char* name, Value* args, Value* result, int cou
             strcat(errorMessage, name);
             strcat(errorMessage, "() expects number parameters.");
             *result = OBJ_VAL(copyString(errorMessage, strlen(errorMessage)));
+            free(errorMessage);
             return false;
         }
     }

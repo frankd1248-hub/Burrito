@@ -32,6 +32,7 @@ ObjModule* buildTimeModule() {
 
     tableSet(&module->table, copyString("clock", 5), OBJ_VAL(newNative(clockNative)));
     tableSet(&module->table, copyString("sleep", 5), OBJ_VAL(newNative(sleepNative)));
+    tableSet(&module->table, copyString("time", 4), OBJ_VAL(newNative(timeNative)));
 
     pop();
     return module;
