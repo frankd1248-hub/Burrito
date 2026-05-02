@@ -142,6 +142,10 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
             return constantInstruction("OP_SET_PROPERTY", chunk, offset, out);
         case OP_SET_PROPERTY_LONG:
             return longConstantInstruction("OP_SET_PROPERTY_LONG", chunk, offset, out);
+        case OP_GET_SUPER:
+            return constantInstruction("OP_GET_SUPER", chunk, offset, out);
+        case OP_GET_SUPER_LONG:
+            return longConstantInstruction("OP_GET_SUPER_LONG", chunk, offset, out);
         case OP_GET_INDEX:
             return simpleInstruction("OP_GET_INDEX", offset, out);
         case OP_SET_INDEX:
@@ -187,6 +191,10 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
         case OP_INVOKE:
             return invokeInstruction("OP_INVOKE", chunk, offset, out);
         case OP_INVOKE_LONG:
+            return longInvokeInstruction("OP_INVOKE_LONG", chunk, offset, out);
+        case OP_SUPER_INVOKE:
+            return invokeInstruction("OP_INVOKE", chunk, offset, out);
+        case OP_SUPER_INVOKE_LONG:
             return longInvokeInstruction("OP_INVOKE_LONG", chunk, offset, out);
         case OP_CLOSURE: {
             offset++;
@@ -242,6 +250,8 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
             return constantInstruction("OP_CLASS", chunk, offset, out);
         case OP_CLASS_LONG:
             return longConstantInstruction("OP_CLASS_LONG", chunk, offset, out);
+        case OP_INHERIT:
+            return simpleInstruction("OP_INHERIT", offset, out);
         case OP_METHOD:
             return constantInstruction("OP_METHOD", chunk, offset, out);
         case OP_METHOD_LONG:

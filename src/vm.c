@@ -650,6 +650,24 @@ static InterpretResult run() {
                 push(value);
                 break;
             }
+            case OP_GET_SUPER: {
+                ObjString* name = READ_STRING();
+                ObjClass* superclass = AS_CLASS(pop());
+
+                if (!bindMethod(superclass, name)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
+            case OP_GET_SUPER_LONG: {
+                ObjString* name = READ_STRING_LONG();
+                ObjClass* superclass = AS_CLASS(pop());
+
+                if (!bindMethod(superclass, name)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
             case OP_GET_INDEX: {
                 Value indexVal = peek(0);
                 Value val = peek(1);
@@ -965,6 +983,30 @@ end:
                 ip = frame->ip;
                 break;
             }
+            case OP_SUPER_INVOKE: {
+                ObjString* method = READ_STRING();
+                int argCount = READ_BYTE();
+                ObjClass* superclass = AS_CLASS(pop());
+                frame->ip = ip;
+                if (!invokeFromClass(superclass, method, argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm.frames[vm.frameCount - 1];
+                ip = frame->ip;
+                break;
+            }
+            case OP_SUPER_INVOKE_LONG: {
+                ObjString* method = READ_STRING_LONG();
+                int argCount = READ_BYTE();
+                ObjClass* superclass = AS_CLASS(pop());
+                frame->ip = ip;
+                if (!invokeFromClass(superclass, method, argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm.frames[vm.frameCount - 1];
+                ip = frame->ip;
+                break;
+            }
             case OP_CLOSURE: {
                 ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
                 ObjClosure* closure = newClosure(function);
@@ -1032,6 +1074,20 @@ end:
             case OP_CLASS_LONG:
                 push(OBJ_VAL(newClass(READ_STRING_LONG())));
                 break;
+            case OP_INHERIT: {
+                Value superclass = peek(1);
+                if (!IS_CLASS(superclass)) {
+                    frame->ip = ip;
+                    runtimeError("Superclass must be a class.");
+                    if (errorWasHandled) break;
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjClass* subclass = AS_CLASS(peek(0));
+                tableAddAll(&AS_CLASS(superclass)->methods, &subclass->methods);
+                pop();
+                break;
+            }
             case OP_METHOD:
                 defineMethod(READ_STRING());
                 break;
