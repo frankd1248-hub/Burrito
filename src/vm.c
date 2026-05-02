@@ -286,7 +286,9 @@ static InterpretResult run() {
         push(valueType(a op b)); \
     } while (false)
 
+#if defined(DEBUG_TRACE_EXECUTION) || defined(DEBUG_TRACE_STACK)
     FILE* file = fopen("trace.text", "a");
+#endif
 
     for (;;) {
 
@@ -937,7 +939,10 @@ end:
         }
     }
 
+
+#if defined(DEBUG_TRACE_EXECUTION) || defined(DEBUG_TRACE_STACK)
     fclose(file);
+#endif
 
 #undef READ_BYTE
 #undef READ_SHORT

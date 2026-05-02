@@ -1,11 +1,11 @@
 // =============================================
-//   Galaga
+//   Galaga  —  Improved
 //   Written in Burrito
 // =============================================
 
 const SCREEN_W  = 800;
 const SCREEN_H  = 600;
-const FPS       = 40;
+const FPS       = 50;
 
 // Player
 const PLAYER_W   = 36;
@@ -13,7 +13,7 @@ const PLAYER_H   = 28;
 const PLAYER_SPD = 290;
 const FIRE_RATE  = 0.18;
 
-// Player bullets (two at once, Galaga-style)
+// Player bullets
 const MAX_BULLETS = 2;
 const BULLET_W    = 4;
 const BULLET_H    = 16;
@@ -34,11 +34,11 @@ const FORM_Y0       = 55;
 const SWAY_AMP   = 24.0;
 const SWAY_FREQ  = 0.8;
 
-// Diving enemies
+// Diving
 const MAX_DIVERS    = 3;
 const DIVE_INTERVAL = 3.2;
-const DIVE_SPD      = 210;   // was 248
-const DIVE_WOBBLE   = 28.0;  // was 52.0
+const DIVE_SPD      = 210;
+const DIVE_WOBBLE   = 28.0;
 const DIVE_WOBBLE_F = 4.2;
 
 // Enemy bullets
@@ -49,8 +49,16 @@ const EBULLET_SPD    = 235;
 const EBULLET_CHANCE = 0.0045;
 
 // Respawn
-const RESPAWN_DELAY = 2.5;
+const RESPAWN_DELAY  = 2.5;
 const RESPAWN_INVULN = 1.2;
+
+// Explosions
+const MAX_EXPLOSIONS = 16;
+const EXPLOSION_DUR  = 0.35;
+
+// Score popups
+const MAX_POPUPS   = 16;
+const POPUP_DUR    = 0.7;
 
 // =============================================
 //   INIT
@@ -58,98 +66,6 @@ const RESPAWN_INVULN = 1.2;
 
 graphics.init(SCREEN_W, SCREEN_H, "Galaga");
 graphics.targetFPS(FPS);
-
-// =============================================
-//   PLAYER STATE
-// =============================================
-
-decl playerX     = SCREEN_W / 2 - PLAYER_W / 2;
-decl playerY     = SCREEN_H - 68;
-decl playerAlive = true;
-decl lives       = 3;
-decl score       = 0;
-decl gameOver    = false;
-decl victory     = false;
-decl respTimer   = 0.0;
-decl fireCool    = 0.0;
-decl invulnTimer = 0.0;
-
-// Player bullets (parallel arrays)
-decl pbX      = {0, 0};
-decl pbY      = {0, 0};
-decl pbActive = {false, false};
-
-// =============================================
-//   ENEMY STATE
-// =============================================
-
-// Alive flags - flat, row-major: index = row*ENEMY_COLS + col
-decl eAlive = {
-    true, true, true, true, true, true, true, true, true, true,
-    true, true, true, true, true, true, true, true, true, true,
-    true, true, true, true, true, true, true, true, true, true,
-    true, true, true, true, true, true, true, true, true, true,
-    true, true, true, true, true, true, true, true, true, true
-};
-
-// Is this enemy currently diving (not in formation)?
-decl eDiving = {
-    false, false, false, false, false, false, false, false, false, false,
-    false, false, false, false, false, false, false, false, false, false,
-    false, false, false, false, false, false, false, false, false, false,
-    false, false, false, false, false, false, false, false, false, false,
-    false, false, false, false, false, false, false, false, false, false
-};
-
-// World position of diving enemies
-decl eDiveX = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-decl eDiveY = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-
-decl eTargetX = {
-    0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0
-};
-
-decl eTargetY = {
-    0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0
-};
-
-// Per-diver wobble phase
-decl eDivePhase = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-
-decl enemyCount = TOTAL_ENEMIES;
-decl swayT      = 0.0;
-decl diveTimer  = 0.0;
-
-// Enemy bullets
-decl ebX      = {0, 0, 0, 0, 0, 0};
-decl ebY      = {0, 0, 0, 0, 0, 0};
-decl ebActive = {false, false, false, false, false, false};
 
 // =============================================
 //   HELPER FUNCTIONS
@@ -160,7 +76,7 @@ fn eRow(idx) {
 }
 
 fn eCol(idx) {
-    return idx - math.floor(idx / ENEMY_COLS) * ENEMY_COLS;
+    return math.mod(idx, ENEMY_COLS);
 }
 
 fn formX(col) {
@@ -175,7 +91,6 @@ fn rectsOverlap(ax, ay, aw, ah, bx2, by2, bw, bh) {
     return ax < bx2 + bw and ax + aw > bx2 and ay < by2 + bh and ay + ah > by2;
 }
 
-// Score for destroying an enemy (more points when diving)
 fn scoreForEnemy(idx, wasDiving) {
     decl r = eRow(idx);
     if (wasDiving) {
@@ -189,6 +104,149 @@ fn scoreForEnemy(idx, wasDiving) {
     }
 }
 
+// =============================================
+//   GAME STATE  (wrapped in a reset function
+//   so we can start a new wave cleanly)
+// =============================================
+
+// --- persistent across waves ---
+decl lives    = 3;
+decl score    = 0;
+decl wave     = 1;
+decl highScore = 0;
+decl gameOver = false;
+
+// --- per-wave state (initialised by initWave) ---
+decl playerX     = 0.0;
+decl playerY     = 0.0;
+decl playerAlive = true;
+decl respTimer   = 0.0;
+decl fireCool    = 0.0;
+decl invulnTimer = 0.0;
+decl victory     = false;
+decl enemyCount  = 0;
+decl swayT       = 0.0;
+decl diveTimer   = 0.0;
+
+decl pbX[2];
+decl pbY[2];
+decl pbActive[2];
+
+decl eAlive[50];
+decl eDiving[50];
+decl eDiveX[50];
+decl eDiveY[50];
+decl eTargetX[50];
+decl eTargetY[50];
+decl eDivePhase[50];
+decl eDiveStartY[50];
+decl eTrackingLocked[50];
+
+decl ebX[6];
+decl ebY[6];
+decl ebActive[6];
+
+// Explosions
+decl exX[16];
+decl exY[16];
+decl exTimer[16];
+decl exActive[16];
+
+// Score popups
+decl popX[16];
+decl popY[16];
+decl popTimer[16];
+decl popValue[16];
+decl popActive[16];
+
+// Cached enemy count string (updated only when count changes)
+decl enemyCountStr = "";
+decl enemyCountDirty = true;
+
+fn initWave() {
+    playerX     = SCREEN_W / 2 - PLAYER_W / 2;
+    playerY     = SCREEN_H - 68;
+    playerAlive = true;
+    respTimer   = 0.0;
+    fireCool    = FIRE_RATE;
+    invulnTimer = 0.0;
+    victory     = false;
+    enemyCount  = TOTAL_ENEMIES;
+    swayT       = 0.0;
+    diveTimer   = 0.0;
+
+    enemyCountDirty = true;
+
+    for (decl i = 0; i < MAX_BULLETS; i++) {
+        pbX[i]      = 0;
+        pbY[i]      = 0;
+        pbActive[i] = false;
+    }
+
+    for (decl i = 0; i < TOTAL_ENEMIES; i++) {
+        eAlive[i]          = true;
+        eDiving[i]         = false;
+        eDiveX[i]          = 0;
+        eDiveY[i]          = 0;
+        eTargetX[i]        = 0;
+        eTargetY[i]        = 0;
+        eDivePhase[i]      = 0;
+        eTrackingLocked[i] = false;
+    }
+
+    for (decl i = 0; i < MAX_EBULLETS; i++) {
+        ebX[i]      = 0;
+        ebY[i]      = 0;
+        ebActive[i] = false;
+    }
+
+    for (decl i = 0; i < MAX_EXPLOSIONS; i++) {
+        exActive[i] = false;
+    }
+
+    for (decl i = 0; i < MAX_POPUPS; i++) {
+        popActive[i] = false;
+    }
+}
+
+initWave();
+
+// =============================================
+//   DIFFICULTY SCALING
+// =============================================
+
+fn diffScale() {
+    // Returns a 0..1 factor: 0 = full enemies, 1 = last enemy
+    decl base = 1.0 - enemyCount / TOTAL_ENEMIES;
+    // Also ramp per wave
+    decl waveBonus = (wave - 1) * 0.12;
+    decl s = base + waveBonus;
+    if (s > 1.0) s = 1.0;
+    return s;
+}
+
+fn scaledSway() {
+    return SWAY_AMP * (1.0 + diffScale() * 1.5);
+}
+
+fn scaledDiveSPD() {
+    return DIVE_SPD * (1.0 + diffScale() * 0.8);
+}
+
+fn scaledEBulletChance() {
+    return EBULLET_CHANCE * (1.0 + diffScale() * 3.0);
+}
+
+fn scaledDiveInterval() {
+    decl d = DIVE_INTERVAL * (1.0 - diffScale() * 0.5);
+    if (d < 1.2) d = 1.2;
+    return d;
+}
+
+// =============================================
+//   SPAWN HELPERS
+// =============================================
+
 fn countDivers() {
     decl n = 0;
     for (decl i = 0; i < TOTAL_ENEMIES; i++) {
@@ -197,24 +255,96 @@ fn countDivers() {
     return n;
 }
 
-// Pick a random alive formation enemy and send it diving
+fn spawnExplosion(x, y) {
+    for (decl i = 0; i < MAX_EXPLOSIONS; i++) {
+        if (!exActive[i]) {
+            exX[i]      = x;
+            exY[i]      = y;
+            exTimer[i]  = EXPLOSION_DUR;
+            exActive[i] = true;
+            return;
+        }
+    }
+}
+
+fn spawnPopup(x, y, val) {
+    for (decl i = 0; i < MAX_POPUPS; i++) {
+        if (!popActive[i]) {
+            popX[i]      = x;
+            popY[i]      = y;
+            popTimer[i]  = POPUP_DUR;
+            popValue[i]  = val;
+            popActive[i] = true;
+            return;
+        }
+    }
+}
+
+// Returns the lowest alive enemy index in a given column, or -1
+fn lowestInColumn(col) {
+    decl best = -1;
+    for (decl row = ENEMY_ROWS - 1; row >= 0; row--) {
+        decl idx = row * ENEMY_COLS + col;
+        if (eAlive[idx] and !eDiving[idx]) {
+            best = idx;
+            break;
+        }
+    }
+    return best;
+}
+
 fn launchDiver(swayOffset) {
     if (countDivers() >= MAX_DIVERS) return;
 
     for (decl attempt = 0; attempt < 40; attempt++) {
-        decl idx = math.floor(math.randRange(0, TOTAL_ENEMIES - 1));
+        decl idx = math.floor(math.rand() * TOTAL_ENEMIES);
+        if (idx >= TOTAL_ENEMIES) idx = TOTAL_ENEMIES - 1;
 
         if (eAlive[idx] and !eDiving[idx]) {
             decl r = eRow(idx);
             decl c = eCol(idx);
 
-            eDiving[idx]    = true;
-            eDiveX[idx]     = formX(c) + swayOffset;
-            eDiveY[idx]     = formY(r);
-            eDivePhase[idx] = math.randRange(0, 6.28318);
+            eDiving[idx]          = true;
+            eDiveX[idx]           = formX(c) + swayOffset;
+            eDiveY[idx]           = formY(r);
+            eDivePhase[idx]       = math.randRange(0, 6.28318);
+            eTrackingLocked[idx]  = false;
 
+            // Target is live player pos; will track until halfway
             eTargetX[idx] = playerX + PLAYER_W / 2 - ENEMY_W / 2;
+            eDiveStartY[idx]      = formY(r);
             eTargetY[idx] = playerY;
+
+            // Boss (row 0) always brings two escort butterflies
+            if (r == 0) {
+                // Try the two immediate neighbours in row 1
+                decl escort1 = ENEMY_COLS + c - 1;
+                decl escort2 = ENEMY_COLS + c + 1;
+
+                if (escort1 >= ENEMY_COLS and escort1 < ENEMY_COLS * 2 and
+                    eAlive[escort1] and !eDiving[escort1] and countDivers() < MAX_DIVERS) {
+                    eDiving[escort1]          = true;
+                    eDiveX[escort1]           = formX(eCol(escort1)) + swayOffset;
+                    eDiveY[escort1]           = formY(1);
+                    eDivePhase[escort1]       = math.randRange(0, 6.28318);
+                    eTrackingLocked[escort1]  = false;
+                    eDiveStartY[escort1]      = formY(eCol(escort1));
+                    eTargetX[escort1]         = playerX + PLAYER_W / 2 - ENEMY_W / 2 - 30;
+                    eTargetY[escort1]         = playerY;
+                }
+
+                if (escort2 >= ENEMY_COLS and escort2 < ENEMY_COLS * 2 and
+                    eAlive[escort2] and !eDiving[escort2] and countDivers() < MAX_DIVERS) {
+                    eDiving[escort2]          = true;
+                    eDiveX[escort2]           = formX(eCol(escort2)) + swayOffset;
+                    eDiveY[escort2]           = formY(1);
+                    eDivePhase[escort2]       = math.randRange(0, 6.28318);
+                    eTrackingLocked[escort2]  = false;
+                    eDiveStartY[escort2]      = formY(eCol(escort2));
+                    eTargetX[escort2]         = playerX + PLAYER_W / 2 - ENEMY_W / 2 + 30;
+                    eTargetY[escort2]         = playerY;
+                }
+            }
 
             return;
         }
@@ -240,7 +370,25 @@ fn firePlayerBullet() {
     }
 }
 
-fn fireEnemyBullet(ex, ey) {
+fn fireEnemyBulletFromColumn() {
+    // Pick a random column and fire from its lowest visible enemy
+    decl col = math.floor(math.rand() * ENEMY_COLS);
+    if (col >= ENEMY_COLS) col = ENEMY_COLS - 1;
+
+    decl idx = lowestInColumn(col);
+    if (idx == -1) return;
+
+    decl ex = 0;
+    decl ey = 0;
+
+    if (eDiving[idx]) {
+        ex = eDiveX[idx];
+        ey = eDiveY[idx];
+    } else {
+        ex = formX(eCol(idx));
+        ey = formY(eRow(idx));
+    }
+
     for (decl i = 0; i < MAX_EBULLETS; i++) {
         if (!ebActive[i]) {
             ebX[i]      = ex + ENEMY_W / 2 - EBULLET_W / 2;
@@ -256,73 +404,45 @@ fn fireEnemyBullet(ex, ey) {
 // =============================================
 
 fn drawPlayer(px, py) {
-    // --- Outer wings (dark blue outline) ---
-    graphics.drawRect(0, 90, 200, px + 2,  py + 16, 32, 10);
-    // --- Inner wings (bright blue) ---
-    graphics.drawRect(0, 160, 255, px + 4,  py + 18, 28, 8);
-    // --- Wing tips ---
-    graphics.drawRect(0, 200, 255, px,      py + 18, 4,  6);
-    graphics.drawRect(0, 200, 255, px + 32, py + 18, 4,  6);
-    // --- Body core ---
-    graphics.drawRect(0, 220, 255, px + 12, py + 8,  12, 12);
-    // --- Cockpit highlight ---
-    graphics.drawRect(120, 255, 255, px + 15, py + 10, 6, 6);
-    // --- Nose ---
-    graphics.drawRect(80, 255, 255, px + 14, py + 2,  8, 6);
-    // --- Center spine ---
-    graphics.drawRect(0, 140, 255, px + 16, py + 6,  4, 14);
-    // --- Thrusters (animated flicker look) ---
-    graphics.drawRect(255, 180, 0, px + 10, py + 26, 5, 4);
-    graphics.drawRect(255, 100, 0, px + 11, py + 28, 3, 3);
-    graphics.drawRect(255, 180, 0, px + 21, py + 26, 5, 4);
-    graphics.drawRect(255, 100, 0, px + 22, py + 28, 3, 3);
+    graphics.drawRect(0, 90, 200,   px + 2,  py + 16, 32, 10);
+    graphics.drawRect(0, 160, 255,  px + 4,  py + 18, 28, 8);
+    graphics.drawRect(0, 200, 255,  px,      py + 18, 4,  6);
+    graphics.drawRect(0, 200, 255,  px + 32, py + 18, 4,  6);
+    graphics.drawRect(0, 220, 255,  px + 12, py + 8,  12, 12);
+    graphics.drawRect(120, 255, 255, px + 15, py + 10, 6,  6);
+    graphics.drawRect(80, 255, 255,  px + 14, py + 2,  8,  6);
+    graphics.drawRect(0, 140, 255,   px + 16, py + 6,  4,  14);
+    graphics.drawRect(255, 180, 0,   px + 10, py + 26, 5,  4);
+    graphics.drawRect(255, 100, 0,   px + 11, py + 28, 3,  3);
+    graphics.drawRect(255, 180, 0,   px + 21, py + 26, 5,  4);
+    graphics.drawRect(255, 100, 0,   px + 22, py + 28, 3,  3);
 }
 
-// Boss Galaga (row 0) — red/gold butterfly
 fn drawBoss(x, y) {
-    // --- Wings outer (deep red) ---
-    graphics.drawRect(200, 20, 80, x,      y + 6,  28, 10);
-    // --- Wings inner (bright pink/red) ---
-    graphics.drawRect(255, 60, 140, x + 4, y + 8,  20, 8);
-    // --- Top crest ---
-    graphics.drawRect(255, 120, 60, x + 8, y,      12, 6);
-    // --- Body ---
-    graphics.drawRect(255, 160, 40, x + 10, y + 10, 8, 10);
-    // --- Eye/core ---
-    graphics.drawRect(255, 255, 120, x + 11, y + 11, 6, 6);
-    // --- Lower wings ---
-    graphics.drawRect(200, 20, 80, x + 6, y + 18, 16, 6);
+    graphics.drawRect(200, 20, 80,   x,      y + 6,  28, 10);
+    graphics.drawRect(255, 60, 140,  x + 4,  y + 8,  20, 8);
+    graphics.drawRect(255, 120, 60,  x + 8,  y,      12, 6);
+    graphics.drawRect(255, 160, 40,  x + 10, y + 10, 8,  10);
+    graphics.drawRect(255, 255, 120, x + 11, y + 11, 6,  6);
+    graphics.drawRect(200, 20, 80,   x + 6,  y + 18, 16, 6);
 }
 
-// Butterfly (rows 1-2) — cool blue
 fn drawButterfly(x, y) {
-    // --- Top wings ---
-    graphics.drawRect(80, 80, 255, x + 6,  y,      16, 6);
-    // --- Outer wings ---
-    graphics.drawRect(40, 40, 200, x,      y + 6,  28, 8);
-    // --- Inner wings ---
-    graphics.drawRect(100, 160, 255, x + 4, y + 8,  20, 6);
-    // --- Body ---
-    graphics.drawRect(200, 200, 255, x + 10, y + 6, 8, 10);
-    // --- Eye/core ---
-    graphics.drawRect(255, 255, 255, x + 11, y + 7, 6, 4);
-    // --- Bottom accent ---
-    graphics.drawRect(80, 80, 255, x + 8, y + 16, 12, 6);
+    graphics.drawRect(80, 80, 255,   x + 6,  y,      16, 6);
+    graphics.drawRect(40, 40, 200,   x,      y + 6,  28, 8);
+    graphics.drawRect(100, 160, 255, x + 4,  y + 8,  20, 6);
+    graphics.drawRect(200, 200, 255, x + 10, y + 6,  8,  10);
+    graphics.drawRect(255, 255, 255, x + 11, y + 7,  6,  4);
+    graphics.drawRect(80, 80, 255,   x + 8,  y + 16, 12, 6);
 }
 
-// Bee (rows 3-4) — yellow-green
 fn drawBee(x, y) {
-    // --- Wings ---
-    graphics.drawRect(220, 255, 120, x + 6, y,      16, 6);
-    // --- Body base (greenish) ---
-    graphics.drawRect(120, 200, 0, x + 4, y + 6, 20, 10);
-    // --- Yellow stripes ---
-    graphics.drawRect(255, 255, 0, x + 6,  y + 8, 16, 2);
-    graphics.drawRect(255, 255, 0, x + 6,  y + 12, 16, 2);
-    // --- Core highlight ---
-    graphics.drawRect(255, 255, 120, x + 10, y + 7, 8, 6);
-    // --- Tail ---
-    graphics.drawRect(200, 255, 0, x + 10, y + 16, 8, 6);
+    graphics.drawRect(220, 255, 120, x + 6,  y,      16, 6);
+    graphics.drawRect(120, 200, 0,   x + 4,  y + 6,  20, 10);
+    graphics.drawRect(255, 255, 0,   x + 6,  y + 8,  16, 2);
+    graphics.drawRect(255, 255, 0,   x + 6,  y + 12, 16, 2);
+    graphics.drawRect(255, 255, 120, x + 10, y + 7,  8,  6);
+    graphics.drawRect(200, 255, 0,   x + 10, y + 16, 8,  6);
 }
 
 fn drawEnemy(idx, x, y) {
@@ -338,21 +458,110 @@ fn drawEnemy(idx, x, y) {
     }
 }
 
+fn drawExplosion(x, y, t) {
+    // t goes from EXPLOSION_DUR down to 0
+    // frac goes from 1 (just spawned) to 0 (about to die)
+    decl frac  = t / EXPLOSION_DUR;
+    decl inv   = 1.0 - frac;
+
+    // Three expanding rings of rects
+    decl r1 = math.floor(inv * 22);
+    decl r2 = math.floor(inv * 14);
+
+    // Outer ring: orange → dark
+    decl oR = math.floor(255 * frac);
+    decl oG = math.floor(140 * frac);
+    graphics.drawRect(oR, oG, 0, x - r1,          y + ENEMY_H / 2 - 3, r1 * 2, 6);
+    graphics.drawRect(oR, oG, 0, x + ENEMY_W / 2 - 3, y - r1,          6, r1 * 2);
+
+    // Inner ring: white → yellow
+    decl iG = math.floor(200 + 55 * frac);
+    graphics.drawRect(255, iG, 0, x + ENEMY_W / 2 - r2, y + ENEMY_H / 2 - r2, r2 * 2, r2 * 2);
+
+    // Core flash (only first half)
+    if (frac > 0.5) {
+        decl cf = (frac - 0.5) * 2.0;
+        decl cs = math.floor(cf * 255);
+        graphics.drawRect(cs, cs, cs, x + ENEMY_W / 2 - 5, y + ENEMY_H / 2 - 5, 10, 10);
+    }
+}
+
+// =============================================
+//   STARFIELD (precomputed, dt-driven)
+// =============================================
+
+const STAR_COUNT = 55;
+decl starX[55];
+decl starY[55];
+decl starSpd[55];
+
+for (decl s = 0; s < STAR_COUNT; s++) {
+    starX[s]   = math.floor(math.rand() * SCREEN_W);
+    starY[s]   = math.floor(math.rand() * SCREEN_H);
+    starSpd[s] = (math.floor(math.rand() * 3) + 1) * 20;
+}
+
+fn updateStars(dt) {
+    for (decl s = 0; s < STAR_COUNT; s++) {
+        starY[s] = starY[s] + starSpd[s] * dt;
+        if (starY[s] >= SCREEN_H) starY[s] = starY[s] - SCREEN_H;
+    }
+}
+
+fn drawStars(swayTLocal) {
+    for (decl s = 0; s < STAR_COUNT; s++) {
+        decl twinkle = math.floor(math.sin(swayTLocal * 2 + s) * 55 + 180);
+        graphics.drawRect(twinkle, twinkle, twinkle, starX[s], math.floor(starY[s]), 2, 2);
+    }
+}
+
 // =============================================
 //   MAIN LOOP
 // =============================================
 
 decl dt = 0.0;
+decl waveTransTimer = 0.0;   // counts down between wave clear and next wave start
+decl showingWaveBanner = false;
 
-while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !gameOver and !victory) {
+while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !gameOver) {
 
     dt = graphics.getDeltaTime();
-    swayT  += dt;
+
+    // ---- WAVE TRANSITION ----
+
+    if (showingWaveBanner) {
+        waveTransTimer -= dt;
+        updateStars(dt);
+
+        graphics.beginDraw();
+        graphics.clearColor(0, 0, 0);
+        drawStars(swayT);
+
+        graphics.drawText("STAGE " + cast.ntos(wave - 1) + " CLEAR!", 0, 255, 80,
+                          SCREEN_W / 2 - 150, SCREEN_H / 2 - 30, 36);
+        graphics.drawText("STAGE " + cast.ntos(wave), 255, 255, 80,
+                          SCREEN_W / 2 - 80, SCREEN_H / 2 + 20, 26);
+        graphics.drawText("GET READY!", 200, 200, 255,
+                          SCREEN_W / 2 - 90, SCREEN_H / 2 + 60, 22);
+
+        graphics.endDraw();
+
+        if (waveTransTimer <= 0.0) {
+            showingWaveBanner = false;
+            initWave();
+        }
+
+        continue;
+    }
+
+    // ---- TIMING ----
+
+    swayT    += dt;
     fireCool -= dt;
 
-    if (invulnTimer > 0.0) {
-        invulnTimer -= dt;
-    }
+    if (invulnTimer > 0.0) invulnTimer -= dt;
+
+    updateStars(dt);
 
     // ---- PLAYER MOVEMENT ----
 
@@ -368,18 +577,19 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
         if (respTimer <= 0.0) {
             playerAlive = true;
             playerX     = SCREEN_W / 2 - PLAYER_W / 2;
-
             invulnTimer = RESPAWN_INVULN;
+            fireCool    = FIRE_RATE;
         }
     }
 
-    // Fire (up to two bullets; rate-limited)
-    if (playerAlive and game.isKeyDown(game.KEY_SPACE) and fireCool <= 0.0 and activeBullets() < MAX_BULLETS) {
+    // Fire
+    if (playerAlive and game.isKeyDown(game.KEY_SPACE) and
+        fireCool <= 0.0 and activeBullets() < MAX_BULLETS) {
         firePlayerBullet();
         fireCool = FIRE_RATE;
     }
 
-    // Move player bullets upward
+    // Move player bullets
     for (decl i = 0; i < MAX_BULLETS; i++) {
         if (pbActive[i]) {
             pbY[i] = pbY[i] - BULLET_SPD * dt;
@@ -390,23 +600,34 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
     // ---- DIVE LAUNCH ----
 
     diveTimer += dt;
-    if (diveTimer >= DIVE_INTERVAL) {
+    if (diveTimer >= scaledDiveInterval()) {
         diveTimer = 0.0;
-        decl off = SWAY_AMP * math.sin(swayT * SWAY_FREQ * 6.28318);
+        decl off = scaledSway() * math.sin(swayT * SWAY_FREQ * 6.28318);
         launchDiver(off);
-        // Send a second diver when many enemies remain
         if (enemyCount > 25) launchDiver(off);
     }
 
-    // Formation sway offset (used for collision + draw)
-    decl swayOff = SWAY_AMP * math.sin(swayT * SWAY_FREQ * 6.28318);
+    decl swayOff = scaledSway() * math.sin(swayT * SWAY_FREQ * 6.28318);
 
     // ---- UPDATE DIVERS ----
+
+    decl spd = scaledDiveSPD();
 
     for (decl i = 0; i < TOTAL_ENEMIES; i++) {
         if (!eAlive[i] or !eDiving[i]) continue;
 
-        // Use locked target instead of live tracking
+        // Update target: track player for the first half of the dive, then lock
+        // Compute halfway point ONCE using start Y
+        decl halfwayY = (eDiveStartY[i] + playerY) * 0.5;
+
+        if (!eTrackingLocked[i] and eDiveY[i] < halfwayY) {
+            // Track player
+            eTargetX[i] = playerX + PLAYER_W / 2 - ENEMY_W / 2;
+            eTargetY[i] = playerY;
+        } else {
+            eTrackingLocked[i] = true;
+        }
+
         decl tx   = eTargetX[i];
         decl ty   = eTargetY[i];
         decl dx   = tx - eDiveX[i];
@@ -415,54 +636,56 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
 
         eDivePhase[i] = eDivePhase[i] + DIVE_WOBBLE_F * dt;
 
-        // If still above target → home in
         if (eDiveY[i] < ty) {
-
             if (dist > 0.001) {
-                decl nx = dx / dist;
-                decl ny = dy / dist;
-
+                decl nx     = dx / dist;
+                decl ny     = dy / dist;
                 decl wobble = math.sin(eDivePhase[i]) * DIVE_WOBBLE;
-
-                eDiveX[i] = eDiveX[i] + (nx * DIVE_SPD + wobble) * dt;
-                eDiveY[i] = eDiveY[i] + ny * DIVE_SPD * dt;
+                eDiveX[i]   = eDiveX[i] + (nx * spd + wobble) * dt;
+                eDiveY[i]   = eDiveY[i] + ny * spd * dt;
             }
-
         } else {
-            // Passed player → go straight down
-            eDiveY[i] = eDiveY[i] + DIVE_SPD * dt;
+            eDiveY[i] = eDiveY[i] + spd * dt;
         }
 
-        // Randomly fire a bullet while diving
-        if (math.rand() < EBULLET_CHANCE) {
-            fireEnemyBullet(eDiveX[i], eDiveY[i]);
+        // Enemy bullets (only from front-row of each column while diving)
+        if (math.rand() < scaledEBulletChance()) {
+            decl frontIdx = lowestInColumn(eCol(i));
+            if (frontIdx == i) {
+                fireEnemyBulletFromColumn();
+            }
         }
 
-        // Off the bottom — return to formation slot (still alive)
+        // Off-screen → return to formation
         if (eDiveY[i] > SCREEN_H + 40 or
             eDiveX[i] < -40 or
             eDiveX[i] > SCREEN_W + 40) {
-
-            eDiving[i] = false;
+            eDiving[i]          = false;
+            eTrackingLocked[i]  = false;
         }
 
-        // Diver collides with player
+        // Diver hits player
         if (playerAlive and eAlive[i] and eDiving[i] and invulnTimer <= 0.0) {
             if (rectsOverlap(eDiveX[i], eDiveY[i], ENEMY_W, ENEMY_H,
-                             playerX,   playerY,   PLAYER_W, PLAYER_H)) {
+                             playerX, playerY, PLAYER_W, PLAYER_H)) {
+                spawnExplosion(eDiveX[i], eDiveY[i]);
                 eAlive[i]   = false;
                 eDiving[i]  = false;
                 enemyCount--;
-                if (enemyCount <= 0) victory = true;
+                enemyCountDirty = true;
+                score      += scoreForEnemy(i, true);
+                spawnPopup(eDiveX[i], eDiveY[i] - 10, scoreForEnemy(i, true));
+
                 playerAlive = false;
                 respTimer   = RESPAWN_DELAY;
                 lives--;
                 if (lives <= 0) gameOver = true;
+                if (enemyCount <= 0) victory = true;
             }
         }
     }
 
-    // ---- UPDATE ENEMY BULLETS ----
+    // ---- ENEMY BULLETS ----
 
     for (decl i = 0; i < MAX_EBULLETS; i++) {
         if (!ebActive[i]) continue;
@@ -483,6 +706,11 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
                 }
             }
         }
+    }
+
+    // Formation fires randomly from lowest-in-column (non-diving)
+    if (math.rand() < scaledEBulletChance() * 0.5) {
+        fireEnemyBulletFromColumn();
     }
 
     // ---- PLAYER BULLETS vs ENEMIES ----
@@ -506,15 +734,59 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
 
             if (rectsOverlap(pbX[bi], pbY[bi], BULLET_W, BULLET_H, ex2, ey2, ENEMY_W, ENEMY_H)) {
                 decl wasDiving = eDiving[i];
+                decl pts       = scoreForEnemy(i, wasDiving);
+
+                spawnExplosion(ex2, ey2);
+                spawnPopup(ex2, ey2 - 10, pts);
+
                 pbActive[bi]   = false;
                 eAlive[i]      = false;
                 eDiving[i]     = false;
-                score         += scoreForEnemy(i, wasDiving);
+                eTrackingLocked[i] = false;
+                score         += pts;
                 enemyCount--;
+                enemyCountDirty = true;
+
                 if (enemyCount <= 0) victory = true;
                 break;
             }
         }
+    }
+
+    // ---- UPDATE EXPLOSIONS & POPUPS ----
+
+    for (decl i = 0; i < MAX_EXPLOSIONS; i++) {
+        if (exActive[i]) {
+            exTimer[i] = exTimer[i] - dt;
+            if (exTimer[i] <= 0.0) exActive[i] = false;
+        }
+    }
+
+    for (decl i = 0; i < MAX_POPUPS; i++) {
+        if (popActive[i]) {
+            popTimer[i]  = popTimer[i] - dt;
+            popY[i]      = popY[i] - 24.0 * dt;
+            if (popTimer[i] <= 0.0) popActive[i] = false;
+        }
+    }
+
+    // Update high score
+    if (score > highScore) highScore = score;
+
+    // Cache enemy count string
+    if (enemyCountDirty) {
+        enemyCountStr   = "ENEMIES: " + cast.ntos(enemyCount);
+        enemyCountDirty = false;
+    }
+
+    // ---- CHECK WAVE CLEAR ----
+
+    if (victory) {
+        wave++;
+        showingWaveBanner  = true;
+        waveTransTimer     = 3.5;
+        victory            = false;
+        continue;
     }
 
     // =============================================
@@ -524,39 +796,27 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
     graphics.beginDraw();
     graphics.clearColor(0, 0, 0);
 
-    // --- Starfield ---
-    for (decl s = 0; s < 55; s++) {
-
-        decl speed = ((s - math.floor(s / 3) * 3) + 1) * 20;
-        decl sx = math.floor((math.sin(s * 127.3) * 0.5 + 0.5) * SCREEN_W);
-        decl sy = math.floor(
-            (math.sin(s * 311.7 + 1.0) * 0.5 + 0.5) * SCREEN_H + swayT * speed
-        );
-
-        while (sy >= SCREEN_H) sy -= SCREEN_H;
-        while (sy < 0)         sy += SCREEN_H;
-
-        decl twinkle = math.floor(math.sin(swayT * 2 + s) * 55 + 180);
-        graphics.drawRect(twinkle, twinkle, twinkle, sx, sy, 2, 2);
-    }
+    drawStars(swayT);
 
     // --- HUD ---
     graphics.drawText("1UP", 255, 255, 255, 10, 6, 16);
     graphics.drawText(cast.ntos(score), 255, 255, 80, 10, 24, 22);
 
     graphics.drawText("HIGH SCORE", 255, 200, 200, SCREEN_W / 2 - 60, 6, 14);
-    graphics.drawText(cast.ntos(score), 255, 200, 200, SCREEN_W / 2 - 20, 22, 18);
+    graphics.drawText(cast.ntos(highScore), 255, 200, 200, SCREEN_W / 2 - 20, 22, 18);
 
-    // Life icons (small ships in bottom bar)
+    graphics.drawText("WAVE " + cast.ntos(wave), 160, 160, 255,
+                      SCREEN_W - 110, 6, 16);
+
+    // Life icons
     for (decl l = 0; l < lives - 1; l++) {
         decl lx = 14 + l * 32;
         decl ly = SCREEN_H - 24;
-        graphics.drawRect(0, 190, 255, lx,      ly + 8,  22, 10);
-        graphics.drawRect(0, 225, 255, lx + 6,  ly + 4,  10,  8);
-        graphics.drawRect(80, 255, 255, lx + 9,  ly,       4,  5);
+        graphics.drawRect(0, 190, 255, lx,     ly + 8, 22, 10);
+        graphics.drawRect(0, 225, 255, lx + 6, ly + 4, 10, 8);
+        graphics.drawRect(80, 255, 255, lx + 9, ly,    4,  5);
     }
 
-    // Bottom separator line
     graphics.drawLine(80, 80, 180, 0, SCREEN_H - 34, SCREEN_W, SCREEN_H - 34);
 
     // --- FORMATION ENEMIES ---
@@ -573,34 +833,45 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
         drawEnemy(i, eDiveX[i], eDiveY[i]);
     }
 
+    // --- EXPLOSIONS ---
+    for (decl i = 0; i < MAX_EXPLOSIONS; i++) {
+        if (exActive[i]) {
+            drawExplosion(exX[i], exY[i], exTimer[i]);
+        }
+    }
+
+    // --- SCORE POPUPS ---
+    for (decl i = 0; i < MAX_POPUPS; i++) {
+        if (popActive[i]) {
+            decl frac = popTimer[i] / POPUP_DUR;
+            decl pR   = 255;
+            decl pG   = math.floor(255 * frac);
+            graphics.drawText(cast.ntos(popValue[i]), pR, pG, 0,
+                              math.floor(popX[i]), math.floor(popY[i]), 14);
+        }
+    }
+
     // --- PLAYER ---
     if (playerAlive) {
         if (invulnTimer > 0.0) {
-            // Blink effect
             decl blink = math.floor(invulnTimer * 10);
             decl r = blink - math.floor(blink / 2) * 2;
-            
-            if (r == 0) {
-                drawPlayer(playerX, playerY);
-            }
+            if (r == 0) drawPlayer(playerX, playerY);
         } else {
             drawPlayer(playerX, playerY);
         }
     } else {
-        // Brief "!" warning at the spawn point when player just died
         if (respTimer > 1.8) {
-            graphics.drawText("! ! !", 255, 60, 60, SCREEN_W / 2 - 28, playerY - 22, 20);
+            graphics.drawText("! ! !", 255, 60, 60,
+                              SCREEN_W / 2 - 28, playerY - 22, 20);
         }
     }
 
     // --- PLAYER BULLETS ---
     for (decl i = 0; i < MAX_BULLETS; i++) {
         if (pbActive[i]) {
-            // Trail
-            graphics.drawRect(255, 200, 0, pbX[i], pbY[i] + 6, BULLET_W, BULLET_H);
-
-            // Core
-            graphics.drawRect(255, 255, 120, pbX[i], pbY[i], BULLET_W, BULLET_H);
+            graphics.drawRect(255, 200, 0,   pbX[i], pbY[i] + 6, BULLET_W, BULLET_H);
+            graphics.drawRect(255, 255, 120, pbX[i], pbY[i],     BULLET_W, BULLET_H);
         }
     }
 
@@ -611,8 +882,8 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
         }
     }
 
-    // --- ENEMY COUNT DISPLAY ---
-    graphics.drawText("ENEMIES: " + cast.ntos(enemyCount), 160, 160, 255, SCREEN_W - 155, 24, 16);
+    // --- ENEMY COUNT ---
+    graphics.drawText(enemyCountStr, 160, 160, 255, SCREEN_W - 155, 24, 16);
 
     graphics.endDraw();
 }
@@ -623,25 +894,34 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
 
 while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
 
+    dt = graphics.getDeltaTime();
+    swayT += dt;
+    updateStars(dt);
+
     graphics.beginDraw();
     graphics.clearColor(0, 0, 0);
+    drawStars(swayT);
 
-    // Starfield on end screen too
-    for (decl s = 0; s < 55; s++) {
-        decl sx = math.floor((math.sin(s * 127.3)       * 0.5 + 0.5) * SCREEN_W);
-        decl sy = math.floor((math.sin(s * 311.7 + 1.0) * 0.5 + 0.5) * SCREEN_H);
-        graphics.drawRect(120, 120, 120, sx, sy, 2, 2);
-    }
+    graphics.drawText("GAME OVER", 255, 40, 40,
+                      SCREEN_W / 2 - 120, SCREEN_H / 2 - 60, 44);
 
-    if (victory) {
-        graphics.drawText("STAGE CLEAR!", 0, 255, 80, SCREEN_W / 2 - 130, SCREEN_H / 2 - 50, 42);
-    } else {
-        graphics.drawText("GAME OVER", 255, 40, 40, SCREEN_W / 2 - 120, SCREEN_H / 2 - 50, 44);
-    }
+    graphics.drawText("WAVE REACHED", 255, 255, 255,
+                      SCREEN_W / 2 - 95, SCREEN_H / 2 + 0, 20);
+    graphics.drawText(cast.ntos(wave), 255, 220, 80,
+                      SCREEN_W / 2 - 15, SCREEN_H / 2 + 26, 28);
 
-    graphics.drawText("FINAL SCORE", 255, 255, 255, SCREEN_W / 2 - 80, SCREEN_H / 2 + 10, 20);
-    graphics.drawText(cast.ntos(score), 255, 255, 80, SCREEN_W / 2 - 40, SCREEN_H / 2 + 36, 30);
-    graphics.drawText("Press ESC to quit", 140, 140, 140, SCREEN_W / 2 - 110, SCREEN_H / 2 + 90, 18);
+    graphics.drawText("FINAL SCORE", 255, 255, 255,
+                      SCREEN_W / 2 - 80, SCREEN_H / 2 + 62, 20);
+    graphics.drawText(cast.ntos(score), 255, 255, 80,
+                      SCREEN_W / 2 - 40, SCREEN_H / 2 + 88, 30);
+
+    graphics.drawText("HIGH SCORE", 200, 200, 255,
+                      SCREEN_W / 2 - 75, SCREEN_H / 2 + 126, 18);
+    graphics.drawText(cast.ntos(highScore), 200, 200, 255,
+                      SCREEN_W / 2 - 35, SCREEN_H / 2 + 148, 24);
+
+    graphics.drawText("Press ESC to quit", 140, 140, 140,
+                      SCREEN_W / 2 - 110, SCREEN_H / 2 + 190, 18);
 
     graphics.endDraw();
 }
