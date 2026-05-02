@@ -34,8 +34,8 @@ static bool getStringNative(int argCount, Value* args, Value* result) {
     }
 #endif
 
-    char* buf = malloc(sizeof(char) * 256);
-    if (scanf("%s", buf) != 1) {
+    char* buf = malloc(sizeof(char) * 512);
+    if (scanf("%511s", buf) != 1) {
         *result = OBJ_VAL(copyString("Failed to read string.", 23));
         return false;
     }
@@ -60,9 +60,11 @@ static bool readLineNative(int argCount, Value* args, Value* result) {
     int count = 0;
     int c;
 
-    while ((c = getchar()) != '\n') {
+    do {
+        c = getchar();
         buf[count++] = c;
-    }
+    } while (c != '\n' && c != EOF);
+    count--;
     buf[count] = '\0';
 
     *result = OBJ_VAL(copyString(buf, count));

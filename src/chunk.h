@@ -25,6 +25,8 @@ typedef enum {
     OP_DEFINE_CONST_LONG,
     OP_GET_PROPERTY,
     OP_GET_PROPERTY_LONG,
+    OP_SET_PROPERTY,
+    OP_SET_PROPERTY_LONG,
     OP_GET_INDEX,
     OP_SET_INDEX,
     OP_GET_UPVALUE,
@@ -48,8 +50,13 @@ typedef enum {
     OP_LOOP,
     OP_CALL,
     OP_CLOSURE,
+    OP_CLOSURE_LONG,
     OP_CLOSE_UPVALUE,
+    OP_TRY,
+    OP_END_TRY,
     OP_RETURN,
+    OP_CLASS,
+    OP_CLASS_LONG,
 } OpCode;
 
 typedef struct {

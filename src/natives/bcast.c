@@ -71,7 +71,7 @@ static bool typeOfNative(int argCount, Value* args, Value* result) {
         switch (AS_OBJ(args[0])->type) {
             case OBJ_ARRAY:    *result = OBJ_VAL(copyString("Array", 5)); break;
             case OBJ_CLOSURE:  *result = OBJ_VAL(copyString("Closure", 7)); break;
-            case OBJ_FUNCTION: *result = OBJ_VAL(copyString("Function", 2)); break;
+            case OBJ_FUNCTION: *result = OBJ_VAL(copyString("Function", 8)); break;
             case OBJ_MODULE:   *result = OBJ_VAL(copyString("Module", 6)); break;
             case OBJ_NATIVE:   *result = OBJ_VAL(copyString("Native", 6)); break;
             case OBJ_STRING:   *result = OBJ_VAL(copyString("String", 6)); break;
@@ -87,7 +87,7 @@ static bool typeOfNative(int argCount, Value* args, Value* result) {
             switch (AS_OBJ(args[0])->type) {
                 case OBJ_ARRAY:    *result = OBJ_VAL(copyString("Array", 5)); break;
                 case OBJ_CLOSURE:  *result = OBJ_VAL(copyString("Closure", 7)); break;
-                case OBJ_FUNCTION: *result = OBJ_VAL(copyString("Function", 2)); break;
+                case OBJ_FUNCTION: *result = OBJ_VAL(copyString("Function", 8)); break;
                 case OBJ_MODULE:   *result = OBJ_VAL(copyString("Module", 6)); break;
                 case OBJ_NATIVE:   *result = OBJ_VAL(copyString("Native", 6)); break;
                 case OBJ_STRING:   *result = OBJ_VAL(copyString("String", 6)); break;

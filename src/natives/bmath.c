@@ -16,6 +16,7 @@ static bool checkNumberArguments(char* name, Value* args, Value* result, int cou
             strcat(errorMessage, name);
             strcat(errorMessage, "() expects number parameters.");
             *result = OBJ_VAL(copyString(errorMessage, strlen(errorMessage)));
+            free(errorMessage);
             return false;
         }
     }
@@ -265,6 +266,24 @@ static bool log10Native(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool modulusNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_NUMBER(args[0]) || !IS_NUMBER(args[1])) {
+        *result = OBJ_VAL(copyString("mod() expects two number arguments.", 35));
+        return false;
+    }
+#endif
+
+    double m = fmod(AS_NUMBER(args[0]), AS_NUMBER(args[1]));
+
+    if (isnan(m) || isinf(m)) {
+        m = 0;
+    }
+
+    *result = NUMBER_VAL(m);
+    return true;
+}
+
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
     tableSet(&module->table, copyString(name, length), OBJ_VAL(newNative(fn)));
 }
@@ -296,6 +315,7 @@ ObjModule* buildMathModule() {
     addNative(module, "floor", 5, floorNative);
     addNative(module, "ceil", 4, ceilNative);
     addNative(module, "round", 5, roundNative);
+    addNative(module, "mod", 3, modulusNative);
 
     addNative(module, "rand", 4, randNative);
     addNative(module, "randRange", 9, randRangeNative);

@@ -5,6 +5,7 @@
 #include "value.h"
 
 void dissassembleChunk(Chunk* chunk, const char* name, FILE* out) {
+    if (out == NULL) out = stdout;
     fprintf(out, "== %s ==\n", name);
     for (int offset = 0; offset < chunk->count;) {
         offset = dissassembleInstruction(chunk, offset, out);
@@ -79,127 +80,90 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
     switch(instruction) {
         case OP_CONSTANT:
             return constantInstruction("OP_CONSTANT", chunk, offset, out);
-
         case OP_CONSTANT_LONG:
             return longConstantInstruction("OP_CONSTANT_LONG", chunk, offset, out);
-
         case OP_NULL:
             return simpleInstruction("OP_NULL", offset, out);
-
         case OP_TRUE:
             return simpleInstruction("OP_TRUE", offset, out);
-
         case OP_FALSE:
             return simpleInstruction("OP_FALSE", offset, out);
-
         case OP_POP:
             return simpleInstruction("OP_POP", offset, out);
-
         case OP_GET_LOCAL:
             return byteInstruction("OP_GET_LOCAL", chunk, offset, out);
-
         case OP_GET_LOCAL_LONG:
             return longByteInstruction("OP_GET_LOCAL_LONG", chunk, offset, out);
-
         case OP_SET_LOCAL:
             return byteInstruction("OP_SET_LOCAL", chunk, offset, out);
-
         case OP_SET_LOCAL_LONG:
             return longByteInstruction("OP_SET_LOCAL_LONG", chunk, offset, out);
-
         case OP_GET_GLOBAL:
             return constantInstruction("OP_GET_GLOBAL", chunk, offset, out);
-
         case OP_GET_GLOBAL_LONG:
             return longConstantInstruction("OP_GET_GLOBAL_LONG", chunk, offset, out);
-
         case OP_DEFINE_GLOBAL:
             return constantInstruction("OP_DEFINE_GLOBAL", chunk, offset, out);
-
         case OP_DEFINE_GLOBAL_LONG:
             return longConstantInstruction("OP_DEFINE_GLOBAL_LONG", chunk, offset, out);
-
         case OP_SET_GLOBAL:
             return constantInstruction("OP_SET_GLOBAL", chunk, offset, out);
-
         case OP_SET_GLOBAL_LONG:
             return longConstantInstruction("OP_SET_GLOBAL_LONG", chunk, offset, out);
-
         case OP_DEFINE_CONST:
             return constantInstruction("OP_DEFINE_CONST", chunk, offset, out);
-
         case OP_DEFINE_CONST_LONG:
             return longConstantInstruction("OP_DEFINE_CONST_LONG", chunk, offset, out);
-
         case OP_GET_PROPERTY:
             return constantInstruction("OP_GET_PROPERTY", chunk, offset, out);
-
         case OP_GET_PROPERTY_LONG:
             return longConstantInstruction("OP_GET_PROPERTY_LONG", chunk, offset, out);
-
+        case OP_SET_PROPERTY:
+            return constantInstruction("OP_SET_PROPERTY", chunk, offset, out);
+        case OP_SET_PROPERTY_LONG:
+            return longConstantInstruction("OP_SET_PROPERTY_LONG", chunk, offset, out);
         case OP_GET_INDEX:
             return simpleInstruction("OP_GET_INDEX", offset, out);
-
         case OP_SET_INDEX:
             return simpleInstruction("OP_SET_INDEX", offset, out);
-
         case OP_GET_UPVALUE:
             return byteInstruction("OP_GET_UPVALUE", chunk, offset, out);
-
         case OP_SET_UPVALUE:
             return byteInstruction("OP_SET_UPVALUE", chunk, offset, out);
-
         case OP_ARRAY_INIT:
             return constantInstruction("OP_ARRAY_INIT", chunk, offset, out);
-
         case OP_ARRAY_INIT_LONG:
             return longConstantInstruction("OP_ARRAY_INIT_LONG", chunk, offset, out);
-
         case OP_ARRAY_NEW:
             return simpleInstruction("OP_ARRAY_NEW", offset, out);
-
         case OP_EQUAL:
             return simpleInstruction("OP_EQUAL", offset, out);
-
         case OP_GREATER:
             return simpleInstruction("OP_GREATER", offset, out);
-
         case OP_LESS:
             return simpleInstruction("OP_LESS", offset, out);
-
         case OP_ADD:
             return simpleInstruction("OP_ADD", offset, out);
-
         case OP_SUBTRACT:
             return simpleInstruction("OP_SUBTRACT", offset, out);
-
         case OP_MULTIPLY:
             return simpleInstruction("OP_MULTIPLY", offset, out);
-
         case OP_DIVIDE:
             return simpleInstruction("OP_DIVIDE", offset, out);
-
         case OP_NOT:
             return simpleInstruction("OP_NOT", offset, out);
-
         case OP_NEGATE:
             return simpleInstruction("OP_NEGATE", offset, out);
-
         case OP_PRINT:
             return byteInstruction("OP_PRINT", chunk, offset, out);
-
         case OP_JUMP:
             return jumpInstruction("OP_JUMP", 1, chunk, offset, out);
-
         case OP_JUMP_IF_FALSE:
             return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset, out);
-
         case OP_LOOP:
             return jumpInstruction("OP_LOOP", -1, chunk, offset, out);
-
         case OP_CALL:
             return byteInstruction("OP_CALL", chunk, offset, out);
-
         case OP_CLOSURE: {
             offset++;
             uint8_t constant = chunk->code[offset++];
@@ -221,13 +185,39 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
 
             return offset;
         }
+        case OP_CLOSURE_LONG: {
+            offset++;
+            uint32_t constant = (chunk->code[offset++]) | (chunk->code[offset++] << 8) | (chunk->code[offset++] << 16);
+            
+            fprintf(out, "%-16s %4d ", "OP_CLOSURE_LONG", constant);
+            printValue(chunk->constants.values[constant], out);
+            fprintf(out, "\n");
 
+            ObjFunction* function = AS_FUNCTION(chunk->constants.values[constant]);
+
+            for (int j = 0; j < function->upvalueCount; j++) {
+                int isLocal = chunk->code[offset++];
+                int index = chunk->code[offset++];
+                fprintf(out, "%04d      |                     %s %d\n",
+                        offset - 2,
+                        isLocal ? "local" : "upvalue",
+                        index);
+            }
+
+            return offset;
+        }
         case OP_CLOSE_UPVALUE:
             return simpleInstruction("OP_CLOSE_UPVALUE", offset, out);
-
+        case OP_TRY:
+            return jumpInstruction("OP_TRY", 1, chunk, offset, out);
+        case OP_END_TRY:
+            return simpleInstruction("OP_END_TRY", offset, out);
         case OP_RETURN:
             return simpleInstruction("OP_RETURN", offset, out);
-
+        case OP_CLASS:
+            return constantInstruction("OP_CLASS", chunk, offset, out);
+        case OP_CLASS_LONG:
+            return longConstantInstruction("OP_CLASS_LONG", chunk, offset, out);
         default:
             fprintf(out, "Unknown opcode %d\n", instruction);
             return offset + 1;
