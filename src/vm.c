@@ -21,15 +21,45 @@ static void resetStack() {
     vm.stackTop = vm.stack;
     vm.frameCount = 0;
     vm.openUpvalues = NULL;
+    vm.handlerCount = 0;
 }
 
+static bool errorWasHandled = false;
+
+static void closeUpvalues(Value*);
+
 static void runtimeError(const char* format, ...) {
+    char* errorString = malloc(sizeof(char) * 4096);
+    int length = 0;
+
     va_list args;
     va_start(args, format);
-    vfprintf(stderr, format, args);
+    length += vsprintf(errorString, format, args);
     va_end(args);
-    fputs("\n", stderr);
+    errorString[length++] = '\n';
+    errorString[length]   = '\0';
 
+    if (vm.handlerCount > 0) {
+        ErrorHandler* handler = &vm.handlerStack[--vm.handlerCount];
+
+        // Unwind: restore frame count, stack, and IP
+        vm.frameCount = handler->frameCount;
+        vm.stackTop   = handler->stackTop;
+
+        // Close any open upvalues that are being unwound
+        closeUpvalues(vm.stackTop);
+
+        // Push the error string so the catch block can use it
+        push(OBJ_VAL(copyString(errorString, length)));
+
+        // Jump into the catch block
+        handler->frame->ip = handler->handlerIp;
+        free(errorString);
+        errorWasHandled = true;
+        return;
+    }
+
+    fprintf(stderr, "%s\n", errorString);
     for (int i = vm.frameCount - 1; i >= 0; i--) {
         CallFrame* frame = &vm.frames[i];
         ObjFunction* function = frame->closure->function;
@@ -42,7 +72,10 @@ static void runtimeError(const char* format, ...) {
         }
     }
 
+    free(errorString);
     resetStack();
+    errorWasHandled = false;
+    return;
 }
 
 void defineNative(const char* name, ObjNative* native) {
@@ -68,6 +101,8 @@ void initVM() {
     vm.objects = NULL;
     vm.bytesAllocated = 0;
     vm.nextGC = 1024 * 1024; // 1 MiB
+
+    vm.handlerCount = 0;
 
     vm.grayCount = 0;
     vm.grayCapacity = 0;
@@ -126,11 +161,13 @@ Value peek(int distance) {
 static bool call(ObjClosure* closure, int argCount) {
     if (argCount != closure->function->arity) {
         runtimeError("Expected %d arguments but got %d.", closure->function->arity, argCount);
+        if (errorWasHandled) return true;
         return false;
     }
 
     if (vm.frameCount == FRAMES_MAX) {
         runtimeError("Call stack overflow.");
+        return false;
     }
 
     CallFrame* frame = &vm.frames[vm.frameCount++];
@@ -143,6 +180,11 @@ static bool call(ObjClosure* closure, int argCount) {
 static bool callValue(Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
+            case OBJ_CLASS: {
+                ObjClass* class_ = AS_CLASS(callee);
+                vm.stackTop[-argCount-1] = OBJ_VAL(newInstance(class_));
+                return true;
+            }
             case OBJ_CLOSURE:
                 return call(AS_CLOSURE(callee), argCount);
             case OBJ_NATIVE: {
@@ -153,8 +195,8 @@ static bool callValue(Value callee, int argCount) {
                     push(result);
                     return true;
                 } else {
-                    
                     runtimeError(AS_STRING(result)->chars);
+                    if (errorWasHandled) return true;
                     return false;
                 }
             }
@@ -163,6 +205,7 @@ static bool callValue(Value callee, int argCount) {
         }
     }
     runtimeError("Can only call functions and classes.");
+    if (errorWasHandled) return true;
     return false;
 }
 
@@ -235,6 +278,7 @@ static InterpretResult run() {
         if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
             frame->ip = ip; \
             runtimeError("Operands must be numbers."); \
+            if (errorWasHandled) break; \
             return INTERPRET_RUNTIME_ERROR; \
         } \
         double b = AS_NUMBER(pop()); \
@@ -242,24 +286,23 @@ static InterpretResult run() {
         push(valueType(a op b)); \
     } while (false)
 
+    FILE* file = fopen("trace.text", "a");
+
     for (;;) {
 
 #ifdef DEBUG_TRACE_STACK
-        printf("          ");
+        fprintf(file, "          ");
         for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
-            printf("[ ");
-            printValue(*slot, NULL);
-            printf(" ]");
+            fprintf(file, "[ ");
+            printValue(*slot, file);
+            fprintf(file, " ]");
         }
-        printf("\n");
+        fprintf(file, "\n");
 #endif
             
 #ifdef DEBUG_TRACE_EXECUTION
-        dissassembleInstruction(
-            &frame->closure->function->chunk,
-            (int) (frame->ip - frame->closure->function->chunk.code),
-            NULL
-        );
+        dissassembleInstruction(&frame->closure->function->chunk,
+        (int)(ip - frame->closure->function->chunk.code), file);
 #endif
 
         uint8_t instruction;
@@ -304,6 +347,7 @@ static InterpretResult run() {
                 if (!tableGet(&vm.globals, name, &value)) {
                     frame->ip = ip;
                     runtimeError("Undefined variable '%s'.", name->chars);
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 push(value);
@@ -315,6 +359,7 @@ static InterpretResult run() {
                 if (!tableGet(&vm.globals, name, &value)) {
                     frame->ip = ip;
                     runtimeError("Undefined variable '%s'.", name->chars);
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 push(value);
@@ -339,6 +384,7 @@ static InterpretResult run() {
                 if (tableGet(&vm.consts, name, &isConst)) {
                     frame->ip = ip;
                     runtimeError("Attempting to assign to constant '%s'.", name->chars);
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
@@ -346,6 +392,7 @@ static InterpretResult run() {
                 if (!tableGet(&vm.globals, name, &dummy)) {
                     frame->ip = ip;
                     runtimeError("Undefined variable '%s'.", name->chars);
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
@@ -358,6 +405,7 @@ static InterpretResult run() {
                 if (tableGet(&vm.consts, name, &isConst)) {
                     frame->ip = ip;
                     runtimeError("Attempting to assign to constant '%s'.", name->chars);
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
@@ -365,6 +413,7 @@ static InterpretResult run() {
                 if (!tableGet(&vm.globals, name, &dummy)) {
                     frame->ip = ip;
                     runtimeError("Undefined variable '%s'.", name->chars);
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
@@ -394,12 +443,28 @@ static InterpretResult run() {
                     if (!tableGet(&module->table, name, &value)) {
                         frame->ip = ip;
                         runtimeError("Undefined property '%s'.", name->chars);
+                        if (errorWasHandled) break;
                         return INTERPRET_RUNTIME_ERROR;
                     }
 
                     pop();
                     push(value);
                     break;
+                } else if (IS_INSTANCE(peek(0))) {
+                    ObjInstance* instance = AS_INSTANCE(peek(0));
+                    ObjString* name = READ_STRING();
+
+                    Value value;
+                    if (tableGet(&instance->fields, name, &value)) {
+                        pop();
+                        push(value);
+                        break;
+                    }
+
+                    frame->ip = ip;
+                    runtimeError("Undefined property '%s'.", name->chars);
+                    if (errorWasHandled) break;
+                    return INTERPRET_RUNTIME_ERROR;
                 } else if (IS_ARRAY(peek(0))) {
                     ObjArray* array = AS_ARRAY(peek(0));
                     ObjString* name = READ_STRING();
@@ -410,13 +475,15 @@ static InterpretResult run() {
                     } else {
                         frame->ip = ip;
                         runtimeError("Undefined property '%s'.", name->chars);
+                        if (errorWasHandled) break;
                         return INTERPRET_RUNTIME_ERROR;
                     }
 
                     break;
                 } else {
                     frame->ip = ip;
-                    runtimeError("Only modules and arrays have properties.");
+                    runtimeError("Only modules, instances, and arrays have properties.");
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
@@ -432,12 +499,28 @@ static InterpretResult run() {
                     if (!tableGet(&module->table, name, &value)) {
                         frame->ip = ip;
                         runtimeError("Undefined property '%s'.", name->chars);
+                        if (errorWasHandled) break;
                         return INTERPRET_RUNTIME_ERROR;
                     }
 
                     pop();
                     push(value);
                     break;
+                } else if (IS_INSTANCE(peek(0))) {
+                    ObjInstance* instance = AS_INSTANCE(peek(0));
+                    ObjString* name = READ_STRING_LONG();
+
+                    Value value;
+                    if (tableGet(&instance->fields, name, &value)) {
+                        pop();
+                        push(value);
+                        break;
+                    }
+
+                    frame->ip = ip;
+                    runtimeError("Undefined property '%s'.", name->chars);
+                    if (errorWasHandled) break;
+                    return INTERPRET_RUNTIME_ERROR;
                 } else if (IS_ARRAY(peek(0))) {
                     ObjArray* array = AS_ARRAY(peek(0));
                     ObjString* name = READ_STRING_LONG();
@@ -448,15 +531,47 @@ static InterpretResult run() {
                     } else {
                         frame->ip = ip;
                         runtimeError("Undefined property '%s'.", name->chars);
+                        if (errorWasHandled) break;
                         return INTERPRET_RUNTIME_ERROR;
                     }
 
                     break;
                 } else {
                     frame->ip = ip;
-                    runtimeError("Only modules and arrays have properties.");
+                    runtimeError("Only modules, instances, and arrays have properties.");
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
+                break;
+            }
+            case OP_SET_PROPERTY: {
+                if (!IS_INSTANCE(peek(1))) {
+                    frame->ip = ip;
+                    runtimeError("Only instances have settable fields.");
+                    if (errorWasHandled) break;
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjInstance* instance = AS_INSTANCE(peek(1));
+                tableSet(&instance->fields, READ_STRING(), peek(0));
+                Value value = pop();
+                pop();
+                push(value);
+                break;
+            }
+            case OP_SET_PROPERTY_LONG: {
+                if (!IS_INSTANCE(peek(1))) {
+                    frame->ip = ip;
+                    runtimeError("Only instances have settable fields.");
+                    if (errorWasHandled) break;
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjInstance* instance = AS_INSTANCE(peek(1));
+                tableSet(&instance->fields, READ_STRING_LONG(), peek(0));
+                Value value = pop();
+                pop();
+                push(value);
                 break;
             }
             case OP_GET_INDEX: {
@@ -466,6 +581,7 @@ static InterpretResult run() {
                 if ((!IS_STRING(val) && !IS_ARRAY(val)) || !IS_NUMBER(indexVal)) {
                     frame->ip = ip;
                     runtimeError("Indexing requires string or array and number.");
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
@@ -476,6 +592,7 @@ static InterpretResult run() {
                     if (index < 0 || index >= str->length) {
                         frame->ip = ip;
                         runtimeError("String index out of bounds.");
+                        if (errorWasHandled) break;
                         return INTERPRET_RUNTIME_ERROR;
                     }
 
@@ -492,6 +609,7 @@ static InterpretResult run() {
                     if (index < 0 || index >= arr->size) {
                         frame->ip = ip;
                         runtimeError("Array index out of bounds.");
+                        if (errorWasHandled) break;
                         return INTERPRET_RUNTIME_ERROR;
                     }
 
@@ -510,6 +628,7 @@ static InterpretResult run() {
                 if (!IS_NUMBER(index) || !IS_ARRAY(array)) {
                     frame->ip = ip;
                     runtimeError("Setting index requires an array and a number.");
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
@@ -519,6 +638,7 @@ static InterpretResult run() {
                 if (idx < 0 || idx >= arr->size) {
                     frame->ip = ip;
                     runtimeError("Array index out of range.");
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
@@ -543,6 +663,7 @@ static InterpretResult run() {
                 if (!IS_NUMBER(sizeVal)) {
                     frame->ip = ip;
                     runtimeError("Array size must be a number.");
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
@@ -551,6 +672,7 @@ static InterpretResult run() {
                 if (size < 0) {
                     frame->ip = ip;
                     runtimeError("Array size must be non-negative.");
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
@@ -607,6 +729,7 @@ static InterpretResult run() {
                 } else {
                     frame->ip = ip;
                     runtimeError("Operands to addition must be two numbers or two strings.");
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
@@ -621,6 +744,7 @@ static InterpretResult run() {
                 if (!IS_NUMBER(peek(0))) {
                     frame->ip = ip;
                     runtimeError("Operand to unary negation must be a number.");
+                    if (errorWasHandled) break;
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 push(NUMBER_VAL(-AS_NUMBER(pop())));
@@ -628,6 +752,7 @@ static InterpretResult run() {
             }            
             case OP_PRINT: {
                 int argCount = READ_BYTE();
+                bool printError = false;
 
                 Value* args = vm.stackTop - argCount;
 
@@ -635,7 +760,8 @@ static InterpretResult run() {
                 if (!IS_STRING(args[0])) {
                     frame->ip = ip;
                     runtimeError("First argument to print must be a format string.");
-                    return INTERPRET_RUNTIME_ERROR;
+                    printError = true;
+                    goto end;
                 }
 
                 ObjString* format = AS_STRING(args[0]);
@@ -650,7 +776,8 @@ static InterpretResult run() {
                         if (i + 1 >= format->length) {
                             frame->ip = ip;
                             runtimeError("Incomplete format specifier.");
-                            return INTERPRET_RUNTIME_ERROR;
+                            printError = true;
+                            break;
                         }
 
                         char spec = chars[++i];
@@ -658,7 +785,8 @@ static InterpretResult run() {
                         if (argIndex >= argCount) {
                             frame->ip = ip;
                             runtimeError("Not enough arguments for format string.");
-                            return INTERPRET_RUNTIME_ERROR;
+                            printError = true;
+                            break;
                         }
 
                         Value v = args[argIndex++];
@@ -668,7 +796,8 @@ static InterpretResult run() {
                                 if (!IS_NUMBER(v)) {
                                     frame->ip = ip;
                                     runtimeError("%%d expects number.");
-                                    return INTERPRET_RUNTIME_ERROR;
+                                    printError = true;
+                                    break;
                                 }
                                 printValue(v, NULL);
                                 break;
@@ -677,7 +806,8 @@ static InterpretResult run() {
                                 if (!IS_STRING(v)) {
                                     frame->ip = ip;
                                     runtimeError("%%s expects string.");
-                                    return INTERPRET_RUNTIME_ERROR;
+                                    printError = true;
+                                    break;
                                 }
                                 printObject(v, NULL);
                                 break;
@@ -689,12 +819,21 @@ static InterpretResult run() {
                             default:
                                 frame->ip = ip;
                                 runtimeError("Unknown format specifier '%%%c'.", spec);
-                                return INTERPRET_RUNTIME_ERROR;
+                                printError = true;
+                                break;
                         }
+
+                        if (printError) break;
 
                     } else {
                         putchar(c);
                     }
+                }
+
+end:
+                if (printError) {
+                    if (errorWasHandled) break;  // exits case OP_PRINT
+                    return INTERPRET_RUNTIME_ERROR;
                 }
 
                 printf("\n");
@@ -743,9 +882,36 @@ static InterpretResult run() {
                 }
                 break;
             }
+            case OP_CLOSURE_LONG: {
+                ObjFunction* function = AS_FUNCTION(READ_CONSTANT_LONG());
+                ObjClosure* closure = newClosure(function);
+                push(OBJ_VAL(closure));
+                for (int i = 0; i < closure->upvalueCount; i++) {
+                    uint8_t isLocal = READ_BYTE();
+                    uint8_t index = READ_BYTE();
+                    if (isLocal) {
+                        closure->upvalues[i] = captureUpvalue(frame->slots + index);
+                    } else {
+                        closure->upvalues[i] = frame->closure->upvalues[index];
+                    }
+                }
+                break;
+            }
             case OP_CLOSE_UPVALUE:
                 closeUpvalues(vm.stackTop - 1);
                 pop();
+                break;
+            case OP_TRY: {
+                uint16_t offset = READ_SHORT();
+                ErrorHandler* handler = &vm.handlerStack[vm.handlerCount++];
+                handler->frameCount = vm.frameCount;
+                handler->stackTop   = vm.stackTop;
+                handler->handlerIp  = ip + offset;
+                handler->frame      = frame;
+                break;
+            }
+            case OP_END_TRY:
+                vm.handlerCount--;
                 break;
             case OP_RETURN: {
                 Value result = pop();
@@ -762,8 +928,16 @@ static InterpretResult run() {
                 ip = frame->ip;
                 break;
             }
+            case OP_CLASS:
+                push(OBJ_VAL(newClass(READ_STRING())));
+                break;
+            case OP_CLASS_LONG:
+                push(OBJ_VAL(newClass(READ_STRING_LONG())));
+                break;
         }
     }
+
+    fclose(file);
 
 #undef READ_BYTE
 #undef READ_SHORT
@@ -776,6 +950,7 @@ static InterpretResult run() {
 }
 
 InterpretResult interpret(const char* source) {
+    initLookup();
     resetStack();
 
     ObjFunction* function = compile(source);

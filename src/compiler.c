@@ -103,6 +103,8 @@ Chunk* compilingChunk;
 
 Loop* currentLoop = NULL;
 
+int currentTryDepth = 0;
+
 static Chunk* currentChunk() {
     return &current->function->chunk;
 }
@@ -410,7 +412,11 @@ static void dot(bool canAssign) {
     int name = identifierConstant(&parser.previous);
 
     if (canAssign && match(TOKEN_EQUAL)) {
-        // Wait for instances
+        expression();
+        if (name < 256)
+            emitSet(name, OP_SET_PROPERTY, false);
+        else
+            emitSet(name, OP_SET_PROPERTY_LONG, true);
     } else {
         if (name < 256)
             emitGet(name, OP_GET_PROPERTY, false);
@@ -556,6 +562,7 @@ static int resolveVariable(Token name, uint8_t* getOp, uint8_t* setOp, bool* lon
     } else if ((arg = resolveUpvalue(current, &name)) != -1) {
         *getOp = OP_GET_UPVALUE;
         *setOp = OP_SET_UPVALUE;
+        *longOp = false;
     } else {
         arg = identifierConstant(&name);
         if (arg <= UINT8_MAX) {
@@ -890,7 +897,7 @@ static int parseVariable(const char* errorMessage) {
     return identifierConstant(&parser.previous);
 }
 
-static void markUninitialized() {
+static void markInitialized() {
     if (current->scopeDepth == 0) return;
 
     current->locals[current->localCount - 1].depth = current->scopeDepth;
@@ -898,7 +905,7 @@ static void markUninitialized() {
 
 static void defineVariable(int global) {
     if (current->scopeDepth > 0) {
-        markUninitialized();
+        markInitialized();
         return;
     }
 
@@ -991,6 +998,12 @@ static void function(FunctionType type){
     int index = makeConstant(OBJ_VAL(function));
     if (index <= 255) {
         emitWord(OP_CLOSURE, (uint8_t) index);
+    } else {
+        emitDoubleWord(OP_CLOSURE_LONG,
+            (uint8_t) ((index) & 0xff),
+            (uint8_t) ((index >> 8) & 0xff),
+            (uint8_t) ((index >> 16) & 0xff)
+        );
     }
 
     for (int i = 0; i < function->upvalueCount; i++) {
@@ -1001,9 +1014,32 @@ static void function(FunctionType type){
     free(compiler);
 }
 
+static void classDeclaration() {
+    consume(TOKEN_IDENTIFIER, "Expect class name.");
+    int nameConstant = identifierConstant(&parser.previous);
+    declareVariable();
+
+    if (nameConstant < 256) {
+        emitWord(OP_CLASS, (uint8_t) nameConstant);
+    } else {
+        emitDoubleWord(OP_CLASS_LONG,
+            (uint8_t) ((nameConstant) & 0xff),
+            (uint8_t) ((nameConstant >> 8) & 0xff),
+            (uint8_t) ((nameConstant >> 16) & 0xff)
+        );
+    }
+    defineVariable(nameConstant);
+
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
+
+    // What to put here?
+
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
+}
+
 static void fnDeclaration() {
     int global = parseVariable("Expect function name.");
-    markUninitialized();
+    markInitialized();
 
     function(TYPE_FUNCTION);
 
@@ -1078,6 +1114,10 @@ static void breakStatement() {
     if (currentLoop == NULL) {
         error("Cannot use 'break' outside a loop.");
     } 
+
+    if (currentTryDepth > 0) {
+        error("Cannot use 'break' inside a try block.");
+    }
     
     if (currentLoop->breakCount == MAX_BREAKS) {
         error("Too many break statements in current loop.");
@@ -1097,6 +1137,10 @@ static void breakStatement() {
 static void continueStatement() {
     if (currentLoop == NULL) {
         error("Cannot use 'continue' outside of a loop.");
+    }
+
+    if (currentTryDepth > 0) {
+        error("Cannot use 'continue' inside a try block.");
     }
 
     consume(TOKEN_SEMICOLON, "Expect ';' after 'continue'");
@@ -1208,6 +1252,10 @@ static void returnStatement() {
         error("Can't return from top-level code.");
     }
 
+    for (int i = 0; i < currentTryDepth; i++) {
+        emitByte(OP_END_TRY);
+    }
+
     if (match(TOKEN_SEMICOLON)) {
         emitReturn();
     } else {
@@ -1284,6 +1332,30 @@ static void switchStatement() {
     emitByte(OP_POP);
 }
 
+static void tryStatement() {
+    int errorJump = emitJump(OP_TRY);
+    currentTryDepth++;
+
+    statement();
+
+    emitByte(OP_END_TRY);
+    int successJump = emitJump(OP_JUMP);
+    patchJump(errorJump);
+    consume(TOKEN_CATCH, "Expect 'catch' after try.");
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'catch'.");
+    consume(TOKEN_IDENTIFIER, "Expect variable name.");
+
+    beginScope();
+    addLocal(parser.previous);
+    markInitialized();
+
+    statement();
+    endScope();
+
+    currentTryDepth--;
+    patchJump(successJump);
+}
+
 static void whileStatement() {
     Loop loop;
     loop.start = currentChunk()->count;
@@ -1319,6 +1391,7 @@ static void synchronize() {
         if (parser.previous.type == TOKEN_SEMICOLON) return;
         switch(parser.current.type) {
             case TOKEN_CLASS:
+            case TOKEN_CONST:
             case TOKEN_FN:
             case TOKEN_DECL:
             case TOKEN_FOR:
@@ -1326,6 +1399,7 @@ static void synchronize() {
             case TOKEN_WHILE:
             case TOKEN_PRINT:
             case TOKEN_RETURN:
+            case TOKEN_TRY:
                 return;
 
             default:
@@ -1337,7 +1411,9 @@ static void synchronize() {
 }
 
 static void declaration() {
-    if (match(TOKEN_FN)) {
+    if (match(TOKEN_CLASS)) {
+        classDeclaration();
+    } else if (match(TOKEN_FN)) {
         fnDeclaration();
     } else if (match(TOKEN_DECL)) {
         varDeclaration();
@@ -1365,6 +1441,8 @@ static void statement() {
         returnStatement();
     } else if (match(TOKEN_SWITCH)) {
         switchStatement();
+    } else if (match(TOKEN_TRY)) {
+        tryStatement();
     } else if (match(TOKEN_WHILE)) {
         whileStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {
@@ -1378,6 +1456,7 @@ static void statement() {
 
 ObjFunction* compile(const char* source) {
     initScanner(source);
+    currentTryDepth = 0;
     Compiler* compiler = malloc(sizeof(Compiler));
     initCompiler(compiler, TYPE_SCRIPT);
     initTable(&compileTimeConsts);

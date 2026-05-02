@@ -36,6 +36,12 @@ ObjArray* newArray(int size) {
     return array;
 }
 
+ObjClass* newClass(ObjString* name) {
+    ObjClass* class_ = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
+    class_->name = name;
+    return class_;
+}
+
 ObjClosure* newClosure(ObjFunction* function) {
     ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
 
@@ -58,6 +64,13 @@ ObjFunction* newFunction() {
     function->name = NULL;
     initChunk(&function->chunk);
     return function;
+}
+
+ObjInstance* newInstance(ObjClass* class_) {
+    ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE);
+    instance->class_ = class_;
+    initTable(&instance->fields);
+    return instance;
 }
 
 ObjModule* newModule() {
@@ -124,16 +137,13 @@ ObjUpvalue* newUpvalue(Value* slot) {
 }
 
 static void printArray(ObjArray* array, FILE* f) {
-    if (f == NULL) printf("{ ");
-    else fprintf(f, "{ ");
+    fprintf(f, "{ ");
     for (int i = 0; i < array->size - 1; i++) {
         printValue(array->values[i], f);
-        if (f == NULL) printf(", ");
-        else fprintf(f, ", ");
+        fprintf(f, ", ");
     }
     printValue(array->values[array->size - 1], f);
-    if (f == NULL) printf(" }");
-    else fprintf(f, " }");
+    fprintf(f, " }");
 }
 
 static void printFunction(ObjFunction* function, FILE* f) {
@@ -142,54 +152,46 @@ static void printFunction(ObjFunction* function, FILE* f) {
         else fprintf(f, "<script>");
         return;
     }
-    if (f == NULL) printf("<fn %s>", function->name->chars);
-    else fprintf(f, "<fn %s>", function->name->chars);
+    fprintf(f, "<fn %s>", function->name->chars);
 }
 
 static void printString(ObjString* string, FILE* f) {
-    if (f == NULL) {
-        for (int i = 0; i < string->length; i++) {
-            if (string->chars[i] == '\\') {
-                if (i == string->length - 1) {
-                    putchar('\\');
-                    continue;
-                }
-
-                switch (string->chars[++i]) {
-                    case 'n':  putchar('\n'); break;
-                    case 't':  putchar('\t'); break;
-                    case '"':  putchar('"');  break;
-                    case '\\': putchar('\\'); break;
-                }
-            } else {
-                putchar(string->chars[i]);
+    for (int i = 0; i < string->length; i++) {
+        if (string->chars[i] == '\\') {
+            if (i == string->length - 1) {
+                fputc('\\', f);
+                continue;
             }
-        }
-    } else {
-        for (int i = 0; i < string->length; i++) {
-            if (string->chars[i] == '\\') {
-                if (i == string->length - 1) {
-                    fputc('\\', f);
-                    continue;
-                }
 
-                switch (string->chars[++i]) {
-                    case 'n':  fputc('\n', f); break;
-                    case 't':  fputc('\t', f); break;
-                    case '"':  fputc('"', f);  break;
-                    case '\\': fputc('\\', f); break;
-                }
-            } else {
-                fputc(string->chars[i], f);
+            switch (string->chars[++i]) {
+                case 'n':  fputc('\n', f); break;
+                case 't':  fputc('\t', f); break;
+                case '"':  fputc('"', f);  break;
+                case '\\': fputc('\\', f); break;
             }
+        } else {
+            fputc(string->chars[i], f);
         }
     }
 }
 
+static char* ResourceTypeLookup[3];
+
+void initLookup() {
+    ResourceTypeLookup[0] = "Font";
+    ResourceTypeLookup[1] = "Image";
+    ResourceTypeLookup[2] = "Sound";
+}
+
 void printObject(Value value, FILE* f) {
+    if (f == NULL) f = stdout;
+
     switch (OBJ_TYPE(value)) {
         case OBJ_ARRAY:
             printArray(AS_ARRAY(value), f);
+            break;
+        case OBJ_CLASS:
+            fprintf(f, "%s", AS_CLASS(value)->name->chars);
             break;
         case OBJ_CLOSURE:
             printFunction(AS_CLOSURE(value)->function, f);
@@ -197,16 +199,23 @@ void printObject(Value value, FILE* f) {
         case OBJ_FUNCTION:
             printFunction(AS_FUNCTION(value), f);
             break;
+        case OBJ_INSTANCE:
+            fprintf(f, "%s instance", AS_INSTANCE(value)->class_->name->chars);
+            break;
+        case OBJ_MODULE:
+            fprintf(f, "<native module>");
+            break;
         case OBJ_NATIVE:
-            if (f == NULL) printf("<native fn>");
-            else fprintf(f, "<native fn>");
+            fprintf(f, "<native fn>");
+            break;
+        case OBJ_RESOURCE:
+            fprintf(f, "<resource %s>", ResourceTypeLookup[AS_RESOURCE(value)->type]);
             break;
         case OBJ_STRING:
             printString(AS_STRING(value), f);
             break;
         case OBJ_UPVALUE:
-            if (f == NULL) printf("upvalue");
-            else fprintf(f, "upvalue");
+            fprintf(f, "upvalue");
             break;
     }
 }
