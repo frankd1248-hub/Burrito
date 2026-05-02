@@ -143,6 +143,11 @@ static bool call(ObjClosure* closure, int argCount) {
 static bool callValue(Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
+            case OBJ_CLASS: {
+                ObjClass* class_ = AS_CLASS(callee);
+                vm.stackTop[-argCount-1] = OBJ_VAL(newInstance(class_));
+                return true;
+            }
             case OBJ_CLOSURE:
                 return call(AS_CLOSURE(callee), argCount);
             case OBJ_NATIVE: {
@@ -153,7 +158,6 @@ static bool callValue(Value callee, int argCount) {
                     push(result);
                     return true;
                 } else {
-                    
                     runtimeError(AS_STRING(result)->chars);
                     return false;
                 }
@@ -399,6 +403,20 @@ static InterpretResult run() {
                     pop();
                     push(value);
                     break;
+                } else if (IS_INSTANCE(peek(0))) {
+                    ObjInstance* instance = AS_INSTANCE(peek(0));
+                    ObjString* name = READ_STRING();
+
+                    Value value;
+                    if (tableGet(&instance->fields, name, &value)) {
+                        pop();
+                        push(value);
+                        break;
+                    }
+
+                    frame->ip = ip;
+                    runtimeError("Undefined property '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
                 } else if (IS_ARRAY(peek(0))) {
                     ObjArray* array = AS_ARRAY(peek(0));
                     ObjString* name = READ_STRING();
@@ -415,7 +433,7 @@ static InterpretResult run() {
                     break;
                 } else {
                     frame->ip = ip;
-                    runtimeError("Only modules and arrays have properties.");
+                    runtimeError("Only modules, instances, and arrays have properties.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 break;
@@ -437,6 +455,20 @@ static InterpretResult run() {
                     pop();
                     push(value);
                     break;
+                } else if (IS_INSTANCE(peek(0))) {
+                    ObjInstance* instance = AS_INSTANCE(peek(0));
+                    ObjString* name = READ_STRING_LONG();
+
+                    Value value;
+                    if (tableGet(&instance->fields, name, &value)) {
+                        pop();
+                        push(value);
+                        break;
+                    }
+
+                    frame->ip = ip;
+                    runtimeError("Undefined property '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
                 } else if (IS_ARRAY(peek(0))) {
                     ObjArray* array = AS_ARRAY(peek(0));
                     ObjString* name = READ_STRING_LONG();
@@ -453,9 +485,37 @@ static InterpretResult run() {
                     break;
                 } else {
                     frame->ip = ip;
-                    runtimeError("Only modules and arrays have properties.");
+                    runtimeError("Only modules, instances, and arrays have properties.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
+                break;
+            }
+            case OP_SET_PROPERTY: {
+                if (!IS_INSTANCE(peek(1))) {
+                    frame->ip = ip;
+                    runtimeError("Only instances have settable fields.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjInstance* instance = AS_INSTANCE(peek(1));
+                tableSet(&instance->fields, READ_STRING(), peek(0));
+                Value value = pop();
+                pop();
+                push(value);
+                break;
+            }
+            case OP_SET_PROPERTY_LONG: {
+                if (!IS_INSTANCE(peek(1))) {
+                    frame->ip = ip;
+                    runtimeError("Only instances have settable fields.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjInstance* instance = AS_INSTANCE(peek(1));
+                tableSet(&instance->fields, READ_STRING_LONG(), peek(0));
+                Value value = pop();
+                pop();
+                push(value);
                 break;
             }
             case OP_GET_INDEX: {
@@ -776,6 +836,12 @@ static InterpretResult run() {
                 ip = frame->ip;
                 break;
             }
+            case OP_CLASS:
+                push(OBJ_VAL(newClass(READ_STRING())));
+                break;
+            case OP_CLASS_LONG:
+                push(OBJ_VAL(newClass(READ_STRING_LONG())));
+                break;
         }
     }
 
@@ -792,6 +858,7 @@ static InterpretResult run() {
 }
 
 InterpretResult interpret(const char* source) {
+    initLookup();
     resetStack();
 
     ObjFunction* function = compile(source);

@@ -76,6 +76,18 @@ static void blackenObject(Obj* object) {
 #endif
 
     switch(object->type) {
+        case OBJ_ARRAY: {
+            ObjArray* array = (ObjArray*) object;
+            for (int i = 0; i < array->size; i++) {
+                markValue(array->values[i]);
+            }
+            break;
+        }
+        case OBJ_CLASS: {
+            ObjClass* class_ = (ObjClass*) object;
+            markObject((Obj*) class_->name);
+            break;
+        }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*) object;
             markObject((Obj*) closure->function);
@@ -92,10 +104,21 @@ static void blackenObject(Obj* object) {
             markArray(&function->chunk.constants);
             break;
         }
+        case OBJ_INSTANCE:
+            ObjInstance* instance = (ObjInstance*) object;
+            markObject((Obj*) instance->class_);
+            markTable(&instance->fields);
+            break;
+        case OBJ_MODULE: {
+            ObjModule* module = (ObjModule*) object;
+            markTable(&module->table);
+            break;
+        }
         case OBJ_UPVALUE:
             markValue(((ObjUpvalue*) object)->closed);
             break;
         case OBJ_NATIVE:
+        case OBJ_RESOURCE:
         case OBJ_STRING:
             break;
     }
@@ -113,6 +136,10 @@ static void freeObject(Obj* object) {
             FREE(ObjArray, object);
             break;
         }
+        case OBJ_CLASS: {
+            FREE(ObjClass, object);
+            break;
+        }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*) object;
             FREE_ARRAY(ObjUpvalue*, closure->upvalues, closure->upvalueCount);
@@ -123,6 +150,12 @@ static void freeObject(Obj* object) {
             ObjFunction* function = (ObjFunction*) object;
             freeChunk(&function->chunk);
             FREE(ObjFunction, object);
+            break;
+        }
+        case OBJ_INSTANCE: {
+            ObjInstance* instance = (ObjInstance*) object;
+            freeTable(&instance->fields);
+            FREE(ObjInstance, object);
             break;
         }
         case OBJ_NATIVE:

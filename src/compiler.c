@@ -410,7 +410,11 @@ static void dot(bool canAssign) {
     int name = identifierConstant(&parser.previous);
 
     if (canAssign && match(TOKEN_EQUAL)) {
-        // Wait for instances
+        expression();
+        if (name < 256)
+            emitSet(name, OP_SET_PROPERTY, false);
+        else
+            emitSet(name, OP_SET_PROPERTY_LONG, true);
     } else {
         if (name < 256)
             emitGet(name, OP_GET_PROPERTY, false);
@@ -1008,6 +1012,29 @@ static void function(FunctionType type){
     free(compiler);
 }
 
+static void classDeclaration() {
+    consume(TOKEN_IDENTIFIER, "Expect class name.");
+    int nameConstant = identifierConstant(&parser.previous);
+    declareVariable();
+
+    if (nameConstant < 256) {
+        emitWord(OP_CLASS, (uint8_t) nameConstant);
+    } else {
+        emitDoubleWord(OP_CLASS,
+            (uint8_t) ((nameConstant) & 0xff),
+            (uint8_t) ((nameConstant >> 8) & 0xff),
+            (uint8_t) ((nameConstant >> 16) & 0xff)
+        );
+    }
+    defineVariable(nameConstant);
+
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
+
+    // What to put here?
+
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
+}
+
 static void fnDeclaration() {
     int global = parseVariable("Expect function name.");
     markUninitialized();
@@ -1344,7 +1371,9 @@ static void synchronize() {
 }
 
 static void declaration() {
-    if (match(TOKEN_FN)) {
+    if (match(TOKEN_CLASS)) {
+        classDeclaration();
+    } else if (match(TOKEN_FN)) {
         fnDeclaration();
     } else if (match(TOKEN_DECL)) {
         varDeclaration();
