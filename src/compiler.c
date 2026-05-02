@@ -992,6 +992,12 @@ static void function(FunctionType type){
     int index = makeConstant(OBJ_VAL(function));
     if (index <= 255) {
         emitWord(OP_CLOSURE, (uint8_t) index);
+    } else {
+        emitDoubleWord(OP_CLOSURE_LONG,
+            (uint8_t) ((index) & 0xff),
+            (uint8_t) ((index >> 8) & 0xff),
+            (uint8_t) ((index >> 16) & 0xff)
+        );
     }
 
     for (int i = 0; i < function->upvalueCount; i++) {

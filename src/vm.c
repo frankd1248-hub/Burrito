@@ -242,24 +242,23 @@ static InterpretResult run() {
         push(valueType(a op b)); \
     } while (false)
 
+    FILE* file = fopen("trace.text", "a");
+
     for (;;) {
 
 #ifdef DEBUG_TRACE_STACK
-        printf("          ");
+        fprintf(file, "          ");
         for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
-            printf("[ ");
-            printValue(*slot, NULL);
-            printf(" ]");
+            fprintf(file, "[ ");
+            printValue(*slot, file);
+            fprintf(file, " ]");
         }
-        printf("\n");
+        fprintf(file, "\n");
 #endif
             
 #ifdef DEBUG_TRACE_EXECUTION
-        dissassembleInstruction(
-            &frame->closure->function->chunk,
-            (int) (frame->ip - frame->closure->function->chunk.code),
-            NULL
-        );
+        dissassembleInstruction(&frame->closure->function->chunk,
+        (int)(ip - frame->closure->function->chunk.code), file);
 #endif
 
         uint8_t instruction;
@@ -743,6 +742,21 @@ static InterpretResult run() {
                 }
                 break;
             }
+            case OP_CLOSURE_LONG: {
+                ObjFunction* function = AS_FUNCTION(READ_CONSTANT_LONG());
+                ObjClosure* closure = newClosure(function);
+                push(OBJ_VAL(closure));
+                for (int i = 0; i < closure->upvalueCount; i++) {
+                    uint8_t isLocal = READ_BYTE();
+                    uint8_t index = READ_BYTE();
+                    if (isLocal) {
+                        closure->upvalues[i] = captureUpvalue(frame->slots + index);
+                    } else {
+                        closure->upvalues[i] = frame->closure->upvalues[index];
+                    }
+                }
+                break;
+            }
             case OP_CLOSE_UPVALUE:
                 closeUpvalues(vm.stackTop - 1);
                 pop();
@@ -764,6 +778,8 @@ static InterpretResult run() {
             }
         }
     }
+
+    fclose(file);
 
 #undef READ_BYTE
 #undef READ_SHORT

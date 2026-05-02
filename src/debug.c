@@ -5,6 +5,7 @@
 #include "value.h"
 
 void dissassembleChunk(Chunk* chunk, const char* name, FILE* out) {
+    if (out == NULL) out = stdout;
     fprintf(out, "== %s ==\n", name);
     for (int offset = 0; offset < chunk->count;) {
         offset = dissassembleInstruction(chunk, offset, out);
@@ -205,6 +206,28 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
             uint8_t constant = chunk->code[offset++];
             
             fprintf(out, "%-16s %4d ", "OP_CLOSURE", constant);
+            printValue(chunk->constants.values[constant], out);
+            fprintf(out, "\n");
+
+            ObjFunction* function = AS_FUNCTION(chunk->constants.values[constant]);
+
+            for (int j = 0; j < function->upvalueCount; j++) {
+                int isLocal = chunk->code[offset++];
+                int index = chunk->code[offset++];
+                fprintf(out, "%04d      |                     %s %d\n",
+                        offset - 2,
+                        isLocal ? "local" : "upvalue",
+                        index);
+            }
+
+            return offset;
+        }
+
+        case OP_CLOSURE_LONG: {
+            offset++;
+            uint32_t constant = (chunk->code[offset++]) | (chunk->code[offset++] << 8) | (chunk->code[offset++] << 16);
+            
+            fprintf(out, "%-16s %4d ", "OP_CLOSURE_LONG", constant);
             printValue(chunk->constants.values[constant], out);
             fprintf(out, "\n");
 
