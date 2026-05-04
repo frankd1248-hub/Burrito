@@ -2,8 +2,8 @@
 
 ### Highest Priority
 
-1. Document *everything*
-2. Maybe classes & inheritance?
+1. Write a better test suite
+2. Document *everything*
 
 ### Moderate Priority
 
@@ -19,11 +19,15 @@
     - [ ] (*) Mutation operations
     - [ ] (*) Prefix and postfix increment and decrement operations
     - [ ] (****) Functions: calls, declarations, etc.
-    - [x] (***) Modules / natives
+    - [ ] (*****) Modules / natives
     - [ ] (*) Escape characters
     - [ ] (**) Native formatted prints
     - [ ] (*) String indexing
     - [ ] (****) Arrays
+    - [ ] (*****) Object Oriented Paradigms
+    - [ ] (***) Functional Paradigms
+    - [ ] (****) Imperative Paradigms
+    - [ ] (**) Try/catch blocks
 
 Note: *'s mark amount of effort estimated for task.
 

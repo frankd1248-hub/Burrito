@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 #include "common.h"
 #include "compiler.h"
@@ -34,8 +35,9 @@ static void runtimeError(const char* format, ...) {
 
     va_list args;
     va_start(args, format);
-    length += vsprintf(errorString, format, args);
+    length += vsnprintf(errorString, 4095, format, args);
     va_end(args);
+    if (length >= 4095) length = 4094;
     errorString[length++] = '\n';
     errorString[length]   = '\0';
 
@@ -130,16 +132,18 @@ void freeResources() {
     Obj* iter = vm.objects;
     Obj* previous = NULL;
     while (iter != NULL) {
+        Obj* next = iter->next;  // save before any potential free
         if (IS_RESOURCE(OBJ_VAL(iter)) && AS_RESOURCE(OBJ_VAL(iter))->destroy) {
             AS_RESOURCE(OBJ_VAL(iter))->destroy(AS_RESOURCE(OBJ_VAL(iter))->handle);
             if (previous == NULL)
-                vm.objects = iter->next;
-            else {
-                previous->next = iter->next;
-            }
+                vm.objects = next;
+            else
+                previous->next = next;
+            free(iter);
+        } else {
+            previous = iter;
         }
-        previous = iter;
-        iter = iter->next;
+        iter = next;
     }
 }
 
@@ -241,13 +245,24 @@ static bool invoke(ObjString* name, int argCount) {
     Value receiver = peek(argCount);
 
     if (!IS_INSTANCE(receiver)) {
+        if (IS_MODULE(receiver)) {
+            ObjModule* module = AS_MODULE(receiver);
+            Value value;
+            if (!tableGet(&module->table, name, &value)) {
+                runtimeError("Undefined property '%s'.", name->chars);
+                if (errorWasHandled) return true;
+                return false;
+            }
+            vm.stackTop[-argCount - 1] = value;
+            return callValue(value, argCount);
+        }
+
         runtimeError("Only instances have methods.");
         if (errorWasHandled) return true;
         return false;
     }
 
     ObjInstance* instance = AS_INSTANCE(receiver);
-
     Value value;
     if (tableGet(&instance->fields, name, &value)) {
         vm.stackTop[-argCount - 1] = value;
@@ -354,6 +369,30 @@ static InterpretResult run() {
         double b = AS_NUMBER(pop()); \
         double a = AS_NUMBER(pop()); \
         push(valueType(a op b)); \
+    } while (false)
+#define BIT_OP(valueType, op) \
+    do { \
+        if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
+            frame->ip = ip; \
+            runtimeError("Operands must be numbers."); \
+            if (errorWasHandled) break; \
+            return INTERPRET_RUNTIME_ERROR; \
+        } \
+        int32_t b = (int32_t) AS_NUMBER(pop()); \
+        int32_t a = (int32_t) AS_NUMBER(pop()); \
+        push(valueType(a op b)); \
+    } while (false) 
+#define BIT_SHIFT_OP(op) \
+    do { \
+        if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
+            frame->ip = ip; \
+            runtimeError("Operands must be numbers."); \
+            if (errorWasHandled) break; \
+            return INTERPRET_RUNTIME_ERROR; \
+        } \
+        uint32_t b = (uint32_t) AS_NUMBER(pop()) & 31; \
+        uint32_t a = (uint32_t) AS_NUMBER(pop()); \
+        push(NUMBER_VAL((double)(int32_t)(a op b))); \
     } while (false)
 
 #if defined(DEBUG_TRACE_EXECUTION) || defined(DEBUG_TRACE_STACK)
@@ -831,6 +870,35 @@ static InterpretResult run() {
             case OP_SUBTRACT: BINARY_OP(NUMBER_VAL, -); break;
             case OP_MULTIPLY: BINARY_OP(NUMBER_VAL, *); break;
             case OP_DIVIDE:   BINARY_OP(NUMBER_VAL, /); break;
+            case OP_MODULUS: {
+                if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+                    double b = AS_NUMBER(pop());
+                    double a = AS_NUMBER(pop());
+                    push(NUMBER_VAL(fmod(a, b)));
+                } else {
+                    frame->ip = ip;
+                    runtimeError("Operands to modulus must be two numbers.");
+                    if (errorWasHandled) break;
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
+            case OP_BITAND:   BIT_OP(NUMBER_VAL, &); break;
+            case OP_BITOR:    BIT_OP(NUMBER_VAL, |); break;
+            case OP_BITXOR:   BIT_OP(NUMBER_VAL, ^); break;
+            case OP_BITLEFT:  BIT_SHIFT_OP(<<); break;
+            case OP_BITRIGHT: BIT_SHIFT_OP(>>); break;
+            case OP_BITNOT: {
+                if (!IS_NUMBER(peek(0))) {
+                    frame->ip = ip;
+                    runtimeError("Operand to bitwise not must be a number.");
+                    if (errorWasHandled) break;
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                int32_t val = (int32_t) AS_NUMBER(pop());
+                push(NUMBER_VAL(~val));
+                break;
+            }
             case OP_NOT:
                 push(BOOL_VAL(isFalsey(pop())));
                 break;

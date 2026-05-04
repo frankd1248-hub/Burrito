@@ -20,7 +20,7 @@ static bool sLengthNative(int argCount, Value* args, Value* result) {
     }
 #endif
 
-    *result = NUMBER_VAL(strlen(AS_CSTRING(args[0])));
+    *result = NUMBER_VAL(AS_STRING(args[0])->length);
     return true;
 }
 
@@ -37,13 +37,14 @@ static bool sSubstrNative(int argCount, Value* args, Value* result) {
     int length = endIndex - beginIndex;
     char* string = AS_CSTRING(args[0]);
 
-    if (beginIndex < 0 || endIndex > strlen(string) || beginIndex > endIndex) {
+    if (beginIndex < 0 || endIndex > AS_STRING(args[0])->length || beginIndex > endIndex) {
         *result = OBJ_VAL(copyString("Invalid string index(ces) in substr()", 37));
         return false;
     }
 
-    char* res = malloc(sizeof(char) * (endIndex - beginIndex));
+    char* res = malloc(sizeof(char) * (endIndex - beginIndex + 1));
     strncpy(res, string + beginIndex, length);
+    res[length] = '\0';
 
     *result = OBJ_VAL(copyString(res, length));
 
@@ -231,7 +232,7 @@ static bool sUpperNative(int argCount, Value* args, Value* result) {
 #endif
 
     ObjString* string = AS_STRING(args[0]);
-    char* res = malloc(sizeof(char) * string->length);
+    char* res = malloc(sizeof(char) * (string->length + 1));
 
     for (int i = 0; i < string->length; i++) {
         char c = string->chars[i];
@@ -239,6 +240,7 @@ static bool sUpperNative(int argCount, Value* args, Value* result) {
             res[i] = c - 32;
         } else res[i] = c;
     }
+    res[string->length] = '\0';
 
     *result = OBJ_VAL(copyString(res, string->length));
     free(res);
@@ -254,7 +256,7 @@ static bool sLowerNative(int argCount, Value* args, Value* result) {
 #endif
 
     ObjString* string = AS_STRING(args[0]);
-    char* res = malloc(sizeof(char) * string->length);
+    char* res = malloc(sizeof(char) * (string->length + 1));
 
     for (int i = 0; i < string->length; i++) {
         char c = string->chars[i];
@@ -262,6 +264,7 @@ static bool sLowerNative(int argCount, Value* args, Value* result) {
             res[i] = c + 32;
         } else res[i] = c;
     }
+    res[string->length] = '\0';
 
     *result = OBJ_VAL(copyString(res, string->length));
     free(res);

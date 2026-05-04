@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "common.h"
 #include "compiler.h"
@@ -23,16 +24,20 @@ typedef struct {
 
 typedef enum {
     PREC_NONE,
-    PREC_ASSIGNMENT,  // =
-    PREC_TERNARY,     // ?
-    PREC_OR,          // OR
-    PREC_AND,         // AND
-    PREC_EQUALITY,    // == !=
-    PREC_COMPARISON,  // < > <= >=
-    PREC_TERM,        // + -
-    PREC_FACTOR,      // * /
-    PREC_UNARY,       // ! -
-    PREC_CALL,        // . () ++ --
+    PREC_ASSIGNMENT,    // =
+    PREC_TERNARY,       // ?
+    PREC_OR,            // or
+    PREC_AND,           // and
+    PREC_BITWISE_OR,    // |
+    PREC_BITWISE_XOR,   // ^
+    PREC_BITWISE_AND,   // &
+    PREC_EQUALITY,      // == !=
+    PREC_COMPARISON,    // < > <= >=
+    PREC_BITWISE_SHIFT, // << >>
+    PREC_TERM,          // + -
+    PREC_FACTOR,        // * /
+    PREC_UNARY,         // ! - ~
+    PREC_CALL,          // . ()
     PREC_PRIMARY
 } Precedence;
 
@@ -365,6 +370,14 @@ static void binary(bool canAssign) {
             case TOKEN_SLASH:
                 if (b == 0.0) { fold = false; break; }
                 numResult = a / b; break;
+            case TOKEN_PERCENT:
+                if (b == 0.0) { fold = false; break; }
+                numResult = fmod(a, b); break;
+            case TOKEN_AMPERSAND:     numResult = (double) (((int32_t) a) & ((int32_t) b)); break;
+            case TOKEN_PIPE:          numResult = (double) (((int32_t) a) | ((int32_t) b)); break;
+            case TOKEN_CARET:         numResult = (double) (((int32_t) a) ^ ((int32_t) b)); break;
+            case TOKEN_LEFT_SHIFT:    numResult = (double) (int32_t) (((uint32_t) a) << ((uint32_t) b & 31)); break;
+            case TOKEN_RIGHT_SHIFT:   numResult = (double) (int32_t) (((uint32_t) a) >> ((uint32_t) b & 31)); break;
             case TOKEN_GREATER:       isBool = true; boolResult = a > b;  break;
             case TOKEN_LESS:          isBool = true; boolResult = a < b;  break;
             case TOKEN_EQUAL_EQUAL:   isBool = true; boolResult = a == b; break;
@@ -411,6 +424,12 @@ static void binary(bool canAssign) {
         case TOKEN_MINUS:         emitByte(OP_SUBTRACT); break;
         case TOKEN_STAR:          emitByte(OP_MULTIPLY); break;
         case TOKEN_SLASH:         emitByte(OP_DIVIDE); break;
+        case TOKEN_PERCENT:       emitByte(OP_MODULUS); break;
+        case TOKEN_AMPERSAND:     emitByte(OP_BITAND); break;
+        case TOKEN_PIPE:          emitByte(OP_BITOR); break;
+        case TOKEN_CARET:         emitByte(OP_BITXOR); break;
+        case TOKEN_LEFT_SHIFT:    emitByte(OP_BITLEFT); break;
+        case TOKEN_RIGHT_SHIFT:   emitByte(OP_BITRIGHT); break;
         default: return;
     }
 }
@@ -691,6 +710,11 @@ static void namedVariable(Token name, bool canAssign) {
             expression();
             emitByte(OP_DIVIDE);
             emitSet(arg, setOp, longOp);
+        } else if (match(TOKEN_PERCENT_EQUAL)) {
+            emitGet(arg, getOp, longOp);
+            expression();
+            emitByte(OP_MODULUS);
+            emitSet(arg, setOp, longOp);
         } else {
             emitGet(arg, getOp, longOp);
         }
@@ -738,7 +762,7 @@ static void super_(bool canAssign) {
         if (name < 256) {
             emitGet(name, OP_GET_SUPER, false);
         } else {
-            emitGet(name, OP_GET_SUPER, true);
+            emitGet(name, OP_GET_SUPER_LONG, true);
         }
     }
 }
@@ -762,25 +786,36 @@ static void unary(bool canAssign) {
     parsePrecedence(PREC_UNARY);
 
 #ifdef CONSTANT_OPTIMIZATIONS
-    if (operatorType == TOKEN_MINUS &&
-        lastExpr.isConst && IS_NUMBER(lastExpr.value)) {
-        currentChunk()->count           = lastExpr.chunkSizeBefore;
-        currentChunk()->constants.count = lastExpr.constPoolBefore;
-        Value folded = NUMBER_VAL(-AS_NUMBER(lastExpr.value));
-        lastExpr.chunkSizeBefore  = currentChunk()->count;
-        lastExpr.constPoolBefore  = currentChunk()->constants.count;
-        emitConstant(folded);
-        lastExpr.isConst = true;
-        lastExpr.value   = folded;
-        return;
+    if (lastExpr.isConst && IS_NUMBER(lastExpr.value)) {
+        if (operatorType == TOKEN_MINUS) {
+            currentChunk()->count           = lastExpr.chunkSizeBefore;
+            currentChunk()->constants.count = lastExpr.constPoolBefore;
+            Value folded = NUMBER_VAL(-AS_NUMBER(lastExpr.value));
+            lastExpr.chunkSizeBefore  = currentChunk()->count;
+            lastExpr.constPoolBefore  = currentChunk()->constants.count;
+            emitConstant(folded);
+            lastExpr.isConst = true;
+            lastExpr.value   = folded;
+            return;
+        } else if (operatorType == TOKEN_TILDE) {
+            currentChunk()->count           = lastExpr.chunkSizeBefore;
+            currentChunk()->constants.count = lastExpr.constPoolBefore;
+            Value folded = NUMBER_VAL((double)(~(int32_t)AS_NUMBER(lastExpr.value)));
+            lastExpr.chunkSizeBefore  = currentChunk()->count;
+            lastExpr.constPoolBefore  = currentChunk()->constants.count;
+            emitConstant(folded);
+            lastExpr.isConst = true;
+            lastExpr.value   = folded;
+            return;
+        }
     }
-
     lastExpr.isConst = false;
 #endif
 
     switch (operatorType) {
         case TOKEN_BANG:  emitByte(OP_NOT);    break;
         case TOKEN_MINUS: emitByte(OP_NEGATE); break;
+        case TOKEN_TILDE: emitByte(OP_BITNOT); break;
         default: return;
     }
 }
@@ -799,7 +834,14 @@ ParseRule rules[] = {
     [TOKEN_MINUS_MINUS]   = {preDec,   NULL,    PREC_CALL},
     [TOKEN_PLUS]          = {NULL,     binary,  PREC_TERM},
     [TOKEN_PLUS_PLUS]     = {preInc,   NULL,    PREC_CALL},
+    [TOKEN_PERCENT]       = {NULL,     binary,  PREC_FACTOR},
     [TOKEN_SEMICOLON]     = {NULL,     NULL,    PREC_NONE},
+    [TOKEN_AMPERSAND]     = {NULL,     binary,  PREC_BITWISE_AND},
+    [TOKEN_PIPE]          = {NULL,     binary,  PREC_BITWISE_OR},
+    [TOKEN_CARET]         = {NULL,     binary,  PREC_BITWISE_XOR},
+    [TOKEN_TILDE]         = {unary,    NULL,    PREC_UNARY},
+    [TOKEN_LEFT_SHIFT]    = {NULL,     binary,  PREC_BITWISE_SHIFT},
+    [TOKEN_RIGHT_SHIFT]   = {NULL,     binary,  PREC_BITWISE_SHIFT},
     [TOKEN_SLASH]         = {NULL,     binary,  PREC_FACTOR},
     [TOKEN_STAR]          = {NULL,     binary,  PREC_FACTOR},
     [TOKEN_BANG]          = {unary,    NULL,    PREC_NONE},
@@ -913,7 +955,12 @@ static int resolveUpvalue(Compiler* compiler, Token* name) {
     if (compiler->enclosing == NULL) return -1;
 
     int local = resolveLocal(compiler->enclosing, name);
-    if (local != -1 && local < 256) {
+    if (local != -1) {
+        if (local >= 256) {
+            error("Cannot capture local variable beyond slot 255.");
+            return 0;
+        }
+
         compiler->enclosing->locals[local].isCaptured = true;
         return addUpvalue(compiler, (uint8_t) local, true);
     }
@@ -1476,6 +1523,8 @@ static void tryStatement() {
     beginScope();
     addLocal(parser.previous);
     markInitialized();
+
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after variable name.");
 
     statement();
     endScope();

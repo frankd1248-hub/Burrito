@@ -174,6 +174,20 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
             return simpleInstruction("OP_MULTIPLY", offset, out);
         case OP_DIVIDE:
             return simpleInstruction("OP_DIVIDE", offset, out);
+        case OP_MODULUS:
+            return simpleInstruction("OP_MODULUS", offset, out);
+        case OP_BITAND:
+            return simpleInstruction("OP_BITAND", offset, out);
+        case OP_BITOR:
+            return simpleInstruction("OP_BITOR", offset, out);
+        case OP_BITXOR:
+            return simpleInstruction("OP_BITXOR", offset, out);
+        case OP_BITNOT:
+            return simpleInstruction("OP_BITNOT", offset, out);
+        case OP_BITLEFT:
+            return simpleInstruction("OP_BITLEFT", offset, out);
+        case OP_BITRIGHT:
+            return simpleInstruction("OP_BITRIGHT", offset, out);
         case OP_NOT:
             return simpleInstruction("OP_NOT", offset, out);
         case OP_NEGATE:

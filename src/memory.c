@@ -111,11 +111,12 @@ static void blackenObject(Obj* object) {
             markArray(&function->chunk.constants);
             break;
         }
-        case OBJ_INSTANCE:
+        case OBJ_INSTANCE: {
             ObjInstance* instance = (ObjInstance*) object;
             markObject((Obj*) instance->class_);
             markTable(&instance->fields);
             break;
+        }
         case OBJ_MODULE: {
             ObjModule* module = (ObjModule*) object;
             markTable(&module->table);

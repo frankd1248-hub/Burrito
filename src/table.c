@@ -43,11 +43,13 @@ static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
 bool tableGet(Table* table, ObjString* key, Value* value) {
     if (table->count == 0) return false;
 
-    Entry* entry = findEntry(table->entries, table->capacity, key);
-    if (entry->key == NULL) return false;
-
-    *value = entry->value;
-    return true;
+    uint32_t index = key->hash & (table->capacity - 1);
+    for (;;) {
+        Entry* entry = &table->entries[index];
+        if (entry->key == key) { *value = entry->value; return true; }
+        if (entry->key == NULL && IS_NULL(entry->value)) return false;
+        index = (index + 1) & (table->capacity - 1);
+    }
 }
 
 static void adjustCapacity(Table* table, int capacity) {
@@ -75,8 +77,10 @@ static void adjustCapacity(Table* table, int capacity) {
 }
 
 bool tableSet(Table* table, ObjString* key, Value value) {
-    if (table->count + table->tombstones + 1 > table->capacity * TABLE_MAX_LOAD) {
-        int capacity = GROW_CAPACITY(table->capacity);
+    if (table->count + 1 > table->capacity * TABLE_MAX_LOAD) {
+        int capacity = (table->tombstones > table->count / 4)
+            ? table->capacity   // lots of tombstones — rehash at same size to clear them
+            : GROW_CAPACITY(table->capacity);
         adjustCapacity(table, capacity);
     }
 
@@ -93,13 +97,19 @@ bool tableSet(Table* table, ObjString* key, Value value) {
 bool tableDelete(Table* table, ObjString* key) {
     if (table->count == 0) return false;
 
-    Entry* entry = findEntry(table->entries, table->capacity, key);
-    if (entry->key == NULL) return false;
-
-    entry->key = NULL;
-    entry->value = BOOL_VAL(true);
-    table->tombstones++;
-    return true;
+    uint32_t index = key->hash & (table->capacity - 1);
+    for (;;) {
+        Entry* entry = &table->entries[index];
+        if (entry->key == key) {
+            entry->key = NULL;
+            entry->value = BOOL_VAL(true);
+            table->tombstones++;
+            table->count--;  // ← you're also missing this
+            return true;
+        }
+        if (entry->key == NULL && IS_NULL(entry->value)) return false;
+        index = (index + 1) & (table->capacity - 1);
+    }
 }
 
 void tableAddAll(Table* from, Table* to) {
@@ -140,6 +150,7 @@ void tableRemoveWhite(Table* table) {
 void markTable(Table* table) {
     for (int i = 0; i < table->capacity; i++) {
         Entry* entry = &table->entries[i];
+        if (entry->key == NULL) continue;
         markObject((Obj*) entry->key);
         markValue(entry->value);
     }

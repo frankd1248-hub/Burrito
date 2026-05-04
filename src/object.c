@@ -145,6 +145,11 @@ ObjUpvalue* newUpvalue(Value* slot) {
 }
 
 static void printArray(ObjArray* array, FILE* f) {
+    if (array->size == 0) {
+        fprintf(f, "{ }");
+        return;
+    }
+
     fprintf(f, "{ ");
     for (int i = 0; i < array->size - 1; i++) {
         printValue(array->values[i], f);

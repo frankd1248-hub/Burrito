@@ -1,0 +1,33 @@
+== <script> ==
+000000      4 OP_CONSTANT         1 '1'
+000002      | OP_DEFINE_GLOBAL    0 'a'
+000004      6 OP_CONSTANT         2 '%d'
+000006      | OP_GET_GLOBAL       3 'a'
+000008      | OP_PRINT            2
+000010      8 OP_CONSTANT         4 '0'
+000012      | OP_GET_LOCAL        1
+000014      | OP_CONSTANT         5 '50000000'
+000016      | OP_GREATER
+000017      | OP_NOT
+000018      | OP_JUMP_IF_FALSE   18 -> 44
+000021      | OP_POP
+000022      | OP_JUMP            22 -> 36
+000025      | OP_GET_LOCAL        1
+000027      | OP_CONSTANT         6 '1'
+000029      | OP_ADD
+000030      | OP_SET_LOCAL        1
+000032      | OP_POP
+000033      | OP_LOOP            33 -> 12
+000036      9 OP_GET_LOCAL        1
+000038      | OP_SET_GLOBAL       7 'a'
+000040      | OP_POP
+000041     10 OP_LOOP            41 -> 25
+000044      | OP_POP
+000045      | OP_POP
+000046     12 OP_CONSTANT         8 '%d'
+000048      | OP_GET_GLOBAL       9 'a'
+000050      | OP_PRINT            2
+000052      | OP_NULL
+000053      | OP_RETURN
+
+

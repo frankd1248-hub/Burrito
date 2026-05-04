@@ -57,6 +57,21 @@ static bool setFieldNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool assertNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_BOOL(args[0]) || !IS_STRING(args[1])) {
+        *result = OBJ_VAL(copyString("assert() takes a bool and a string.", 35));
+        return false;
+    }
+#endif
+    if (!AS_BOOL(args[0])) {
+        *result = args[1];
+        return false;
+    }
+    *result = NULL_VAL;
+    return true;
+}
+
 void defineAllNatives() {
     defineModule("cast", buildCastModule());
     defineModule("io", buildIOModule());
@@ -73,4 +88,5 @@ void defineAllNatives() {
     defineNative("hasField", newNative(hasFieldNative));
     defineNative("getField", newNative(getFieldNative));
     defineNative("setField", newNative(setFieldNative));
+    defineNative("assert", newNative(assertNative));
 }
