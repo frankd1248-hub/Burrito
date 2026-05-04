@@ -30,6 +30,7 @@ static bool errorWasHandled = false;
 static void closeUpvalues(Value*);
 
 static void runtimeError(const char* format, ...) {
+    errorWasHandled = false;
     char* errorString = malloc(sizeof(char) * 4096);
     int length = 0;
 
@@ -76,7 +77,6 @@ static void runtimeError(const char* format, ...) {
 
     free(errorString);
     resetStack();
-    errorWasHandled = false;
     return;
 }
 

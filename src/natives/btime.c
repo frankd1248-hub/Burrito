@@ -22,7 +22,7 @@ static bool sleepNative(int argCount, Value* args, Value* result) {
 #endif
 
     double seconds = AS_NUMBER(args[0]);
-    SLEEP(seconds * 1000000);
+    SLEEP(seconds * 1000);
     return true;
 }
 

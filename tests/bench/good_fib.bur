@@ -1,0 +1,22 @@
+
+decl fibs[250];
+fibs[0] = 1;
+fibs[1] = 1;
+decl size = 2;
+
+fn fib(n) {
+    if (n > 250) return -1;
+
+    if (size >= n) return fibs[n-1];
+
+    for (decl i = size; i < n; i++) {
+        fibs[i] = fibs[i-1] + fibs[i-2];
+    }
+
+    return fibs[n-1];
+}
+
+decl start = time.clock();
+print("%d", fib(92));
+decl elapsed = time.clock() - start;
+print("Time: %d", elapsed);

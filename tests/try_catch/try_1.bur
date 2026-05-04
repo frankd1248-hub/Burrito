@@ -1,0 +1,7 @@
+
+
+try {
+    print("%s", 5);
+} catch (error) {
+    print("%s", error);
+}

@@ -88,7 +88,7 @@ static TestResult runTest(const fs::path& path, const fs::path& root, bool verbo
         printf("  ");
     }
 
-    string cmd = "./dist/burrito " + path.string() + " 2>&1";
+    string cmd = "./dist/burrito_linuxx86_64 " + path.string() + " 2>&1";
     FILE* pipe = popen(cmd.c_str(), "r");
     if (!pipe) {
         printf(CLR_RED "  ERROR (could not launch)\n" CLR_RESET);
@@ -281,6 +281,8 @@ int main(int argc, char** argv) {
         vector<fs::path> batch = parseSelection(input, tests, root);
         if (!batch.empty())
             runTests(batch, root, verbose);
+
+        getchar();
     }
 
     return 0;
