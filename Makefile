@@ -3,7 +3,7 @@
 	testsuite debug run test runsuite asm
 
 make:
-	gcc -O3 -march=native ./src/*.c ./src/natives/*.c -o ./dist/burrito -lm -lraylib
+	gcc -O3 -march=x86-64-v2 -mtune=generic -flto -fno-plt -fvisibility=hidden ./src/*.c ./src/natives/*.c -o ./dist/burrito -lm -lraylib
 
 test:
 	./dist/burritoTestSuite
