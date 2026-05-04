@@ -76,7 +76,7 @@ fn eRow(idx) {
 }
 
 fn eCol(idx) {
-    return math.mod(idx, ENEMY_COLS);
+    return idx % ENEMY_COLS;
 }
 
 fn formationWidth() {

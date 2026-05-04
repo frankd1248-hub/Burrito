@@ -72,6 +72,90 @@ static bool readLineNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool read(const char* fn, Value* result) {
+    FILE* file = fopen(fn, "r");
+    if (file == NULL) return false;
+
+    fseek(file, 0, SEEK_END);
+    long fsize = ftell(file);
+    rewind(file);
+
+    char* buf = malloc(sizeof(char) * (fsize + 1));
+    if (buf == NULL) {
+        fclose(file);
+        return false;
+    }
+
+    long red = fread(buf, sizeof(char), fsize, file);
+    buf[red] = '\0';
+
+    *result = OBJ_VAL(copyString(buf, red));
+    fclose(file);
+    free(buf);
+
+    return true;
+}
+
+static bool write(const char* fn, char* toWrite, char* mode) {
+    FILE* file = fopen(fn, mode);
+    if (file == NULL) return false;
+
+    fputs(toWrite, file);
+    fclose(file);
+
+    return true;
+}
+
+static bool readFileNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_STRING(args[0])) {
+        *result = OBJ_VAL(copyString("readFile() expects one string argument.", 39));
+        return false;
+    }
+#endif
+
+    bool res = read(AS_CSTRING(args[0]), result);
+    if (!res) {
+        *result = OBJ_VAL(copyString("Failed to read file", 19));
+        return false;
+    }
+    return true;
+}
+
+static bool writeFileNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_STRING(args[0]) || !IS_STRING(args[1])) {
+        *result = OBJ_VAL(copyString("writeFile() expects two string arguments.", 41));
+        return false;
+    }
+#endif
+
+    bool res = write(AS_CSTRING(args[0]), AS_CSTRING(args[1]), "w");
+    if (!res) {
+        *result = OBJ_VAL(copyString("Failed to write file", 20));
+        return false;
+    }
+    *result = BOOL_VAL(true);
+    return true;
+}
+
+static bool appendFileNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_STRING(args[0]) || !IS_STRING(args[1])) {
+        *result = OBJ_VAL(copyString("appendFile() expects two string arguments.", 42));
+        return false;
+    }
+#endif
+
+    bool res = write(AS_CSTRING(args[0]), AS_CSTRING(args[1]), "a");
+    if (!res) {
+        *result = OBJ_VAL(copyString("Failed to write file", 20));
+        return false;
+    }
+    *result = BOOL_VAL(true);
+    return true;
+}
+
 ObjModule* buildIOModule() {
     ObjModule* module = newModule();
     push(OBJ_VAL(module));
@@ -79,6 +163,9 @@ ObjModule* buildIOModule() {
     tableSet(&module->table, copyString("getNumber", 9), OBJ_VAL(newNative(getNumberNative)));
     tableSet(&module->table, copyString("getString", 9), OBJ_VAL(newNative(getStringNative)));
     tableSet(&module->table, copyString("readLine", 8), OBJ_VAL(newNative(readLineNative)));
+    tableSet(&module->table, copyString("readFile", 8), OBJ_VAL(newNative(readFileNative)));
+    tableSet(&module->table, copyString("writeFile", 9), OBJ_VAL(newNative(writeFileNative)));
+    tableSet(&module->table, copyString("appendFile", 10), OBJ_VAL(newNative(appendFileNative)));
 
     pop();
     return module;

@@ -184,6 +184,7 @@ ObjModule* buildCastModule() {
     tableSet(&module->table, copyString("ntos", 4), OBJ_VAL(newNative(ntosNative)));
     tableSet(&module->table, copyString("ston", 4), OBJ_VAL(newNative(stonNative)));
     tableSet(&module->table, copyString("typeOf", 6), OBJ_VAL(newNative(typeOfNative)));
+    tableSet(&module->table, copyString("toString", 8), OBJ_VAL(newNative(toStringNative)));
 
     pop();
     return module;
