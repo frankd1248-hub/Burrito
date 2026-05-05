@@ -216,7 +216,10 @@ static Token string() {
         buf[count++] = advance();
     }
 
-    if (isAtEnd()) free(buf); return errorToken("Unterminated string.");
+    if (isAtEnd()) {
+        free(buf); 
+        return errorToken("Unterminated string.");
+    }
 
     advance();
     
