@@ -1,0 +1,8 @@
+
+
+fn message() {
+    print("Hello, world!");
+}
+
+decl ptr = message;
+ptr();

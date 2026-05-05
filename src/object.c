@@ -168,26 +168,6 @@ static void printFunction(ObjFunction* function, FILE* f) {
     fprintf(f, "<fn %s>", function->name->chars);
 }
 
-static void printString(ObjString* string, FILE* f) {
-    for (int i = 0; i < string->length; i++) {
-        if (string->chars[i] == '\\') {
-            if (i == string->length - 1) {
-                fputc('\\', f);
-                continue;
-            }
-
-            switch (string->chars[++i]) {
-                case 'n':  fputc('\n', f); break;
-                case 't':  fputc('\t', f); break;
-                case '"':  fputc('"', f);  break;
-                case '\\': fputc('\\', f); break;
-            }
-        } else {
-            fputc(string->chars[i], f);
-        }
-    }
-}
-
 static char* ResourceTypeLookup[3];
 
 void initLookup() {
@@ -228,7 +208,7 @@ void printObject(Value value, FILE* f) {
             fprintf(f, "<resource %s>", ResourceTypeLookup[AS_RESOURCE(value)->type]);
             break;
         case OBJ_STRING:
-            printString(AS_STRING(value), f);
+            fprintf(f, "%s", AS_CSTRING(value));
             break;
         case OBJ_UPVALUE:
             fprintf(f, "upvalue");

@@ -554,7 +554,8 @@ static void ternary(bool canAssign) {
 static void and_(bool);
 
 static void string(bool canAssign) {
-    emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
+    emitConstant(OBJ_VAL(copyString(parser.previous.start, parser.previous.length)));
+    free(parser.previous.start);
 }
 
 static void emitGet(int arg, uint8_t instruction, bool longOp) {
@@ -1515,12 +1516,12 @@ static void tryStatement() {
 
     emitByte(OP_END_TRY);
     int successJump = emitJump(OP_JUMP);
-    patchJump(errorJump);
     consume(TOKEN_CATCH, "Expect 'catch' after try.");
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'catch'.");
     consume(TOKEN_IDENTIFIER, "Expect variable name.");
 
     beginScope();
+    patchJump(errorJump);
     addLocal(parser.previous);
     markInitialized();
 

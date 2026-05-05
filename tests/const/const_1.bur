@@ -4,6 +4,8 @@
 const message = "Hello, world!";
 print(message);
 
-message = "Hello";
+try {
+    message = "Hello";
+} catch(e) print(e);
 
 print(message);

@@ -1,0 +1,3 @@
+
+print(io.readFile("./README.md"));
+io.appendFile("./output.text", "Hello I am under the water please help me");

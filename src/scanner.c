@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "common.h"
@@ -185,17 +186,42 @@ static Token number() {
 }
 
 static Token string() {
+    char* buf = malloc(sizeof(char) * 8);
+    int capacity = 8, count = 0;
 
-    while (peek() != '"' && !isAtEnd()) {
-        if (peek() == '\n') scanner.line++;
-        advance();
+    char c;
+    while ((c = peek()) != '"' && !isAtEnd()) {
+        if (count + 1 >= capacity) {
+            capacity *= 2;
+            buf = realloc(buf, sizeof(char) * capacity);
+        }
+
+        if (c == '\n') scanner.line++;
+
+        if (c == '\\') { // Escape character
+            advance();
+            c = advance();;
+
+            switch (c) {
+                case 'n': buf[count++] = '\n';  break;
+                case 't': buf[count++] = '\t';  break;
+                case 'b': buf[count++] = '\b';  break;
+                case '"': buf[count++] = '"';   break;
+                case '\\': buf[count++] = '\\'; break;
+                default: free(buf); return errorToken("Invalid escape character");
+            }
+            continue;
+        }
+
+        buf[count++] = advance();
     }
 
     if (isAtEnd()) return errorToken("Unterminated string.");
 
     advance();
     
-    return makeToken(TOKEN_STRING);
+    Token tk = {TOKEN_STRING, buf, count, scanner.line};
+    return tk;
 }
 
 Token scanToken() {
