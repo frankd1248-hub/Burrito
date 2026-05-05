@@ -93,6 +93,14 @@ ObjNative* newNative(NativeFn function) {
     return native;
 }
 
+ObjResource* newResource(ResourceType type, void* resource, DestroyFn destroy) {
+    ObjResource* res = ALLOCATE_OBJ(ObjResource, OBJ_RESOURCE);
+    res->type = type;
+    res->handle = resource;
+    res->destroy = destroy;
+    return res;
+}
+
 static ObjString* allocateString(char* chars, int length, uint32_t hash) {
     ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
     string->length = length;
