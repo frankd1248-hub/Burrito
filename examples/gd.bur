@@ -1,0 +1,743 @@
+//=============================================
+//   Geometry Dash — Default & Ship Modes
+//   Written in Burrito
+//=============================================
+
+// --- Constants ---
+
+const SCREEN_W      = 800;
+const SCREEN_H      = 500;
+const FPS           = 60;
+
+const GROUND_Y      = 420;
+const GROUND_H      = 80;
+const CEIL_Y        = 0;
+
+// Player
+const PLAYER_W      = 30;
+const PLAYER_H      = 30;
+const PLAYER_X      = 120;
+
+// Cube (default) mode
+const GRAVITY       = 2000.0;
+const JUMP_VY       = -620.0;
+const TERMINAL_VY   = 900.0;
+const JUMP_BUFFER   = 0.08;    // seconds of jump-input buffering
+
+// Ship mode
+const SHIP_THRUST   = -1900.0;
+const SHIP_GRAVITY  = 2500.0;
+const SHIP_TERMINAL = 600.0;
+
+// Level
+const SCROLL_SPEED  = 300.0;
+const CHUNK_W       = 800;
+const MAX_OBSTACLES = 24;
+const MAX_PORTALS   = 4;
+
+// Colors — GD palette
+const COL_SKY_R     = 30;
+const COL_SKY_G     = 30;
+const COL_SKY_B     = 50;
+
+const COL_GROUND_R  = 20;
+const COL_GROUND_G  = 20;
+const COL_GROUND_B  = 35;
+
+const COL_PLAYER_R  = 0;
+const COL_PLAYER_G  = 200;
+const COL_PLAYER_B  = 255;
+
+const COL_SPIKE_R   = 220;
+const COL_SPIKE_G   = 60;
+const COL_SPIKE_B   = 60;
+
+const COL_BLOCK_R   = 80;
+const COL_BLOCK_G   = 80;
+const COL_BLOCK_B   = 160;
+
+const COL_PORTAL_R  = 80;
+const COL_PORTAL_G  = 255;
+const COL_PORTAL_B  = 120;
+
+const COL_SHIP_PR   = 255;
+const COL_SHIP_PG   = 180;
+const COL_SHIP_PB   = 0;
+
+// --- Init ---
+
+graphics.init(SCREEN_W, SCREEN_H, "Geometry Dash");
+graphics.targetFPS(FPS);
+
+// ============================================================
+// Obstacle layout: stored as parallel arrays
+// type: 0 = spike, 1 = block, 2 = double-block column
+// x: world x position
+// y: top-y of obstacle (for blocks), or base y (spikes)
+// w, h: dimensions
+// ============================================================
+
+decl obsType = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+decl obsX    = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+decl obsY    = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+decl obsW    = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+decl obsH    = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+decl obsActive = {false, false, false, false, false, false,
+                  false, false, false, false, false, false,
+                  false, false, false, false, false, false,
+                  false, false, false, false, false, false};
+
+// Portals — switch between cube/ship
+// portalType: 0 = cube portal, 1 = ship portal
+decl portalX      = {0.0, 0.0, 0.0, 0.0};
+decl portalType   = {0, 0, 0, 0};
+decl portalActive = {false, false, false, false};
+
+// --- State ---
+
+decl playerY    = GROUND_Y - PLAYER_H;
+decl playerVY   = 0.0;
+decl rotation   = 0.0;      // cube rotation degrees
+decl onGround   = false;
+decl onBlock    = false;    // standing on a block top
+decl blockTopY  = 0.0;
+
+decl mode       = 0;        // 0 = cube, 1 = ship
+decl alive      = true;
+decl started    = false;
+decl score      = 0;        // distance in chunks passed
+decl best       = 0;
+decl worldX     = 0.0;      // camera/scroll offset
+
+decl spacePrev  = false;
+decl jumpBuffer = 0.0;      // jump buffering timer
+decl deathTimer = 0.0;
+
+// Particles (death explosion)
+const MAX_PART  = 16;
+decl partX      = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+decl partY      = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+decl partVX     = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+decl partVY     = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+decl partLife   = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+decl partActive = {false,false,false,false,false,false,false,false,
+                   false,false,false,false,false,false,false,false};
+
+// Background grid scroll
+decl bgOffset = 0.0;
+
+// Next spawn position for procedural generation
+decl nextSpawnX = 700.0;
+decl chunkSeed  = 1.0;
+
+// ============================================================
+// Helpers
+// ============================================================
+
+fn rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+    return ax < bx + bw and
+           ax + aw > bx and
+           ay < by + bh and
+           ay + ah > by;
+}
+
+fn spawnParticles(px, py) {
+    for (decl i = 0; i < MAX_PART; i++) {
+        decl angle = (i / MAX_PART) * 6.2832;
+        decl speed = 80.0 + math.rand() * 180.0;
+        partX[i]      = px;
+        partY[i]       = py;
+        partVX[i]     = math.cos(angle) * speed;
+        partVY[i]     = math.sin(angle) * speed - 100.0;
+        partLife[i]   = 0.4 + math.rand() * 0.3;
+        partActive[i] = true;
+    }
+}
+
+// Pseudo-random from seed
+fn nextRand(s) {
+    return math.abs(math.sin(s * 127.1 + 311.7) * 43758.5453) - math.floor(math.abs(math.sin(s * 127.1 + 311.7) * 43758.5453));
+}
+
+// Place an obstacle into first free slot
+fn placeObs(t, wx, wy, ww, wh) {
+    for (decl i = 0; i < MAX_OBSTACLES; i++) {
+        if (!obsActive[i]) {
+            obsType[i]   = t;
+            obsX[i]      = wx;
+            obsY[i]      = wy;
+            obsW[i]      = ww;
+            obsH[i]      = wh;
+            obsActive[i] = true;
+            break;
+        }
+    }
+}
+
+// Place a portal into first free slot
+fn placePortal(wx, pt) {
+    for (decl i = 0; i < MAX_PORTALS; i++) {
+        if (!portalActive[i]) {
+            portalX[i]      = wx;
+            portalType[i]   = pt;
+            portalActive[i] = true;
+            break;
+        }
+    }
+}
+
+fn spawnChunk(startX) {
+    // Pattern varies by chunk number
+    decl pattern = math.floor(nextRand(chunkSeed) * 5.0);
+    chunkSeed = chunkSeed + 1.0;
+
+    decl baseY  = GROUND_Y; // top of ground
+
+    if (pattern == 0) {
+        // Single spike
+        placeObs(0, startX + 100, baseY, 30, 30);
+    }
+    if (pattern == 1) {
+        // Two spikes apart
+        placeObs(0, startX + 80,  baseY, 30, 30);
+        placeObs(0, startX + 260, baseY, 30, 30);
+    }
+    if (pattern == 2) {
+        // A block to jump over
+        placeObs(1, startX + 120, baseY - 40, 40, 40);
+    }
+    if (pattern == 3) {
+        // Block with spike on top
+        placeObs(1, startX + 130, baseY - 40, 40, 40);
+        placeObs(0, startX + 137, baseY - 150, 26, 30);
+    }
+    if (pattern == 4) {
+        // Three spikes in a row
+        placeObs(0, startX + 60,  baseY, 30, 30);
+        placeObs(0, startX + 90, baseY, 30, 30);
+        placeObs(0, startX + 120, baseY, 30, 30);
+    }
+
+    // Every 3 chunks, insert a mode portal
+    decl portalChance = nextRand(chunkSeed + 77.3);
+    chunkSeed = chunkSeed + 0.5;
+    if (portalChance < 0.3) {
+        // Toggle mode: 0 if currently in ship chunk, else 1
+        decl pt = 1 - mode;   // will be approximate — gameplay evaluates at runtime
+        placePortal(startX + 350, pt);
+    }
+}
+
+// Init first few chunks
+fn initLevel() {
+    nextSpawnX = 700.0;
+    chunkSeed  = 42.0;
+    // Clear all obstacles
+    for (decl i = 0; i < MAX_OBSTACLES; i++) {
+        obsActive[i] = false;
+    }
+    for (decl i = 0; i < MAX_PORTALS; i++) {
+        portalActive[i] = false;
+    }
+    // Spawn initial chunks
+    spawnChunk(700.0);
+    nextSpawnX = 1300.0;
+    spawnChunk(nextSpawnX);
+    nextSpawnX = 1900.0;
+}
+
+fn killPlayer() {
+    alive      = false;
+    deathTimer = 0.0;
+    spawnParticles(PLAYER_X, playerY + PLAYER_H / 2);
+}
+
+fn resetGame() {
+    if (score > best) best = score;
+    playerY    = GROUND_Y - PLAYER_H;
+    playerVY   = 0.0;
+    rotation   = 0.0;
+    onGround   = false;
+    onBlock    = false;
+    mode       = 0;
+    alive      = true;
+    started    = false;
+    score      = 0;
+    worldX     = 0.0;
+    bgOffset   = 0.0;
+    jumpBuffer = 0.0;
+    deathTimer = 0.0;
+    spacePrev  = false;
+    for (decl i = 0; i < MAX_PART; i++) {
+        partActive[i] = false;
+    }
+    initLevel();
+}
+
+// ============================================================
+// Draw helpers
+// ============================================================
+
+fn drawSpike(wx, baseY, sw, sh) {
+    // Triangle spike: draw as three lines from tip to base corners
+    decl tipX = wx + sw / 2;
+    decl tipY = baseY - sh;
+    decl blX  = wx;
+    decl blY  = baseY;
+    decl brX  = wx + sw;
+    decl brY  = baseY;
+    graphics.drawLine(COL_SPIKE_R, COL_SPIKE_G, COL_SPIKE_B, tipX, tipY, blX, blY);
+    graphics.drawLine(COL_SPIKE_R, COL_SPIKE_G, COL_SPIKE_B, tipX, tipY, brX, brY);
+    graphics.drawLine(COL_SPIKE_R, COL_SPIKE_G, COL_SPIKE_B, blX,  blY,  brX, brY);
+    // Fill with a slightly smaller rect for body
+    graphics.drawRect(COL_SPIKE_R - 20, COL_SPIKE_G, COL_SPIKE_B - 20,
+                      wx + 3, baseY - sh + 8, sw - 6, sh - 8);
+}
+
+fn drawBlock(bx, by, bw, bh) {
+    graphics.drawRect(COL_BLOCK_R, COL_BLOCK_G, COL_BLOCK_B, bx, by, bw, bh);
+    // Highlight top edge
+    graphics.drawRect(120, 120, 220, bx, by, bw, 3);
+    // Darker bottom edge
+    graphics.drawRect(40, 40, 90, bx, by + bh - 3, bw, 3);
+    // Inner detail
+    graphics.drawRect(60, 60, 130, bx + 4, by + 4, bw - 8, bh - 8);
+}
+
+fn drawCubePlayer(px, py, rot) {
+    // Simplified cube: just draw a square + inner rotated quad suggestion
+    graphics.drawRect(COL_PLAYER_R, COL_PLAYER_G, COL_PLAYER_B, px, py, PLAYER_W, PLAYER_H);
+    // Inner square (rotated visual feel via lines)
+    decl cx = px + PLAYER_W / 2;
+    decl cy = py + PLAYER_H / 2;
+    decl hs = 8;
+    graphics.drawRect(0, 255, 220, cx - hs, cy - hs, hs * 2, hs * 2);
+    // Outline
+    graphics.drawLine(0, 240, 255, px, py, px + PLAYER_W, py);
+    graphics.drawLine(0, 240, 255, px + PLAYER_W, py, px + PLAYER_W, py + PLAYER_H);
+    graphics.drawLine(0, 240, 255, px + PLAYER_W, py + PLAYER_H, px, py + PLAYER_H);
+    graphics.drawLine(0, 240, 255, px, py + PLAYER_H, px, py);
+    // Rotation indicator line from center to edge
+    decl rad = rot * 0.017453;
+    decl lx2 = cx + math.cos(rad) * 12.0;
+    decl ly2 = cy + math.sin(rad) * 12.0;
+    graphics.drawLine(255, 255, 255, cx, cy, lx2, ly2);
+}
+
+fn drawShipPlayer(px, py) {
+    // Ship: a horizontal arrow/diamond shape
+    decl cx = px + PLAYER_W / 2;
+    decl cy = py + PLAYER_H / 2;
+    // Body
+    graphics.drawRect(COL_SHIP_PR, COL_SHIP_PG, COL_SHIP_PB,
+                      px, py + 8, PLAYER_W + 10, PLAYER_H - 16);
+    // Nose
+    graphics.drawRect(255, 220, 50, px + PLAYER_W + 6, cy - 5, 10, 10);
+    // Cockpit
+    graphics.drawRect(100, 220, 255, px + 6, cy - 6, 14, 12);
+    // Thruster flame (flicker)
+    decl flameLen = 10.0 + math.sin(time.clock() * 30.0) * 6.0;
+    graphics.drawRect(255, 120, 0,  px - flameLen, cy - 4, flameLen + 2, 8);
+    graphics.drawRect(255, 220, 80, px - flameLen + 4, cy - 2, flameLen - 4, 4);
+    // Wings
+    graphics.drawRect(COL_SHIP_PR - 40, COL_SHIP_PG - 40, 0,
+                      px + 4, py,                     PLAYER_W - 4, 10);
+    graphics.drawRect(COL_SHIP_PR - 40, COL_SHIP_PG - 40, 0,
+                      px + 4, py + PLAYER_H - 10,    PLAYER_W - 4, 10);
+}
+
+fn drawPortal(wx, pt) {
+    // Draw a glowing portal rectangle
+    decl ph = 100;
+    decl py = GROUND_Y - ph;
+    if (pt == 0) {
+        // Cube portal — blue
+        graphics.drawRect(30, 100, 255, wx, py, 12, ph);
+        graphics.drawRect(80, 160, 255, wx + 2, py + 2, 8, ph - 4);
+        graphics.drawText("CUBE", 30, 100, 255, wx - 10, py - 20, 14);
+    } else {
+        // Ship portal — green
+        graphics.drawRect(30, 255, 100, wx, py, 12, ph);
+        graphics.drawRect(80, 255, 160, wx + 2, py + 2, 8, ph - 4);
+        graphics.drawText("SHIP", 30, 255, 100, wx - 10, py - 20, 14);
+    }
+}
+
+// ============================================================
+// Init
+// ============================================================
+
+initLevel();
+
+decl dt = 0.0;
+
+// ============================================================
+// Main loop
+// ============================================================
+
+while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
+
+    dt = graphics.getDeltaTime();
+    if (dt > 0.05) dt = 0.05;
+
+    decl spaceNow  = game.isKeyDown(game.KEY_SPACE) or
+                     game.isKeyDown(game.KEY_UP)    or
+                     game.isKeyDown(game.KEY_W);
+    decl justPress = spaceNow and !spacePrev;
+    spacePrev      = spaceNow;
+
+    // ---- UPDATE ----
+
+    if (alive) {
+        if (!started) {
+            if (justPress) {
+                started = true;
+            }
+        } else {
+
+            // Scroll world
+            worldX   = worldX + SCROLL_SPEED * dt;
+            bgOffset = bgOffset + SCROLL_SPEED * dt;
+            if (bgOffset > 80) bgOffset = bgOffset - 80;
+
+            // Score: every 300 units scrolled = 1 point
+            score = math.floor(worldX / 300);
+
+            // Spawn new chunks as the camera advances
+            if (worldX + SCREEN_W + 200 > nextSpawnX) {
+                spawnChunk(nextSpawnX);
+                nextSpawnX = nextSpawnX + 600.0;
+            }
+
+            // Despawn off-screen obstacles
+            for (decl i = 0; i < MAX_OBSTACLES; i++) {
+                if (obsActive[i] and obsX[i] - worldX + obsW[i] < -50) {
+                    obsActive[i] = false;
+                }
+            }
+            for (decl i = 0; i < MAX_PORTALS; i++) {
+                if (portalActive[i] and portalX[i] - worldX < -50) {
+                    portalActive[i] = false;
+                }
+            }
+
+            // Check portals
+            for (decl i = 0; i < MAX_PORTALS; i++) {
+                if (portalActive[i]) {
+                    decl screenPX = portalX[i] - worldX;
+                    if (PLAYER_X + PLAYER_W > screenPX and PLAYER_X < screenPX + 14) {
+                        mode = portalType[i];
+                        // Reset vertical velocity on mode switch
+                        playerVY = 0.0;
+                    }
+                }
+            }
+
+            // --- Cube mode physics ---
+            if (mode == 0) {
+                // Jump buffering
+                if (justPress) jumpBuffer = JUMP_BUFFER;
+                if (jumpBuffer > 0) jumpBuffer = jumpBuffer - dt;
+
+                // Apply gravity
+                playerVY = playerVY + GRAVITY * dt;
+                if (playerVY > TERMINAL_VY) playerVY = TERMINAL_VY;
+
+                playerY = playerY + playerVY * dt;
+
+                // Ground collision
+                onGround = false;
+                if (playerY + PLAYER_H >= GROUND_Y) {
+                    playerY  = GROUND_Y - PLAYER_H;
+                    playerVY = 0.0;
+                    onGround = true;
+                }
+
+                // Block top collision (stand on blocks)
+                onBlock = false;
+                for (decl i = 0; i < MAX_OBSTACLES; i++) {
+                    if (obsActive[i] and obsType[i] == 1) {
+                        decl bsx = obsX[i] - worldX;
+                        decl bsy = obsY[i];
+                        // Only if player is above block top and falling onto it
+                        if (playerVY >= 0 and
+                            PLAYER_X + PLAYER_W > bsx + 2 and
+                            PLAYER_X < bsx + obsW[i] - 2 and
+                            playerY + PLAYER_H >= bsy and
+                            playerY + PLAYER_H <= bsy + 12) {
+                            playerY  = bsy - PLAYER_H;
+                            playerVY = 0.0;
+                            onBlock  = true;
+                            blockTopY = bsy;
+                        }
+                    }
+                }
+
+                // Ceiling
+                if (playerY < CEIL_Y) {
+                    playerY  = CEIL_Y;
+                    playerVY = 0.0;
+                }
+
+                // Jump
+                if (jumpBuffer > 0 and (onGround or onBlock)) {
+                    playerVY   = JUMP_VY;
+                    onGround   = false;
+                    onBlock    = false;
+                    jumpBuffer = 0.0;
+                }
+
+                // Rotate cube while in air
+                if (!onGround and !onBlock) {
+                    rotation = rotation + 360.0 * dt;
+                } else {
+                    // Snap to nearest 90° on landing
+                    rotation = math.floor(rotation / 90.0) * 90.0;
+                }
+
+            } else {
+                // --- Ship mode physics ---
+                if (spaceNow) {
+                    playerVY = playerVY + SHIP_THRUST * dt;
+                } else {
+                    playerVY = playerVY + SHIP_GRAVITY * dt;
+                }
+
+                if (playerVY < -SHIP_TERMINAL) playerVY = -SHIP_TERMINAL;
+                if (playerVY > SHIP_TERMINAL)  playerVY = SHIP_TERMINAL;
+
+                playerY = playerY + playerVY * dt;
+
+                // Ground
+                if (playerY + PLAYER_H >= GROUND_Y) {
+                    playerY  = GROUND_Y - PLAYER_H;
+                    playerVY = 0.0;
+                }
+
+                // Ceiling
+                if (playerY < CEIL_Y) {
+                    playerY  = CEIL_Y;
+                    playerVY = 0.0;
+                }
+
+                // No rotation in ship mode
+                rotation = 0.0;
+            }
+
+            // --- Collision with obstacles ---
+            for (decl i = 0; i < MAX_OBSTACLES; i++) {
+                if (obsActive[i]) {
+                    decl osx = obsX[i] - worldX;
+                    decl osy = obsY[i];
+
+                    if (obsType[i] == 0) {
+                        // Spike: tight hitbox inside triangle
+                        decl hitXMin = osx + 6;
+                        decl hitXMax = osx + obsW[i] - 6;
+                        decl hitYMin = osy - obsH[i] + 10;
+                        decl hitYMax = osy;
+                        if (rectsOverlap(PLAYER_X + 4, playerY + 4, PLAYER_W - 8, PLAYER_H - 8,
+                                         hitXMin, hitYMin, hitXMax - hitXMin, hitYMax - hitYMin)) {
+                            killPlayer();
+                        }
+                    } else {
+                        // Block: side collision = death, top = land (handled above for cube)
+                        if (mode == 1) {
+                            // In ship mode, any block collision = death
+                            if (rectsOverlap(PLAYER_X + 3, playerY + 3, PLAYER_W - 6, PLAYER_H - 6,
+                                             osx, osy, obsW[i], obsH[i])) {
+                                killPlayer();
+                            }
+                        } else {
+                            // Cube: side/bottom collision = death
+                            decl overlapX = rectsOverlap(PLAYER_X + 3, playerY + 3,
+                                                         PLAYER_W - 6, PLAYER_H - 6,
+                                                         osx, osy, obsW[i], obsH[i]);
+                            if (overlapX) {
+                                // If player is not landing on top
+                                decl onTop = (playerY + PLAYER_H <= osy + 6) and playerVY >= 0;
+                                if (!onTop) {
+                                    killPlayer();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    } else {
+        // Dead: update particles, wait for restart
+        deathTimer = deathTimer + dt;
+        for (decl i = 0; i < MAX_PART; i++) {
+            if (partActive[i]) {
+                partVY[i] = partVY[i] + 800.0 * dt;
+                partX[i]  = partX[i] + partVX[i] * dt;
+                partY[i]  = partY[i] + partVY[i] * dt;
+                partLife[i] = partLife[i] - dt;
+                if (partLife[i] <= 0) partActive[i] = false;
+            }
+        }
+        if (deathTimer > 1.2 and justPress) {
+            resetGame();
+        }
+    }
+
+    // Update particles while alive too (none should be active, but guard anyway)
+
+    // ---- DRAW ----
+
+    graphics.beginDraw();
+
+    // Sky background
+    graphics.clearColor(COL_SKY_R, COL_SKY_G, COL_SKY_B);
+
+    // Scrolling background grid lines (parallax)
+    decl gridOff = math.floor(bgOffset) % 80;
+    decl gx = -gridOff;
+    while (gx < SCREEN_W + 80) {
+        graphics.drawLine(40, 40, 70, gx, 0, gx, GROUND_Y);
+        gx = gx + 80;
+    }
+    decl gy = 0;
+    while (gy < GROUND_Y) {
+        graphics.drawLine(40, 40, 70, 0, gy, SCREEN_W, gy);
+        gy = gy + 80;
+    }
+
+    // Ground
+    graphics.drawRect(COL_GROUND_R, COL_GROUND_G, COL_GROUND_B,
+                      0, GROUND_Y, SCREEN_W, GROUND_H);
+    // Ground top edge highlight
+    graphics.drawRect(80, 80, 160, 0, GROUND_Y, SCREEN_W, 3);
+    // Ground tile marks
+    decl tileX = math.floor(bgOffset) % 40;
+    while (tileX < SCREEN_W) {
+        graphics.drawLine(50, 50, 90, tileX, GROUND_Y + 4, tileX, GROUND_Y + 14);
+        tileX = tileX + 40;
+    }
+
+    // Draw portals
+    for (decl i = 0; i < MAX_PORTALS; i++) {
+        if (portalActive[i]) {
+            drawPortal(portalX[i] - worldX, portalType[i]);
+        }
+    }
+
+    // Draw obstacles
+    for (decl i = 0; i < MAX_OBSTACLES; i++) {
+        if (obsActive[i]) {
+            decl sx = obsX[i] - worldX;
+            if (sx > -60 and sx < SCREEN_W + 10) {
+                if (obsType[i] == 0) {
+                    drawSpike(sx, obsY[i], obsW[i], obsH[i]);
+                } else {
+                    drawBlock(sx, obsY[i], obsW[i], obsH[i]);
+                }
+            }
+        }
+    }
+
+    // Draw player (or death particles)
+    if (alive) {
+        if (mode == 0) {
+            drawCubePlayer(PLAYER_X, playerY, rotation);
+        } else {
+            drawShipPlayer(PLAYER_X, playerY);
+        }
+
+        // Mode indicator trail
+        decl trailAlpha = 120;
+        for (decl t = 1; t < 4; t++) {
+            decl tx = PLAYER_X - t * 10;
+            if (mode == 0) {
+                graphics.drawRect(0, trailAlpha, 200,
+                                  tx, playerY + PLAYER_H - 5, 6, 5);
+            } else {
+                graphics.drawRect(200, trailAlpha, 0,
+                                  tx, playerY + PLAYER_H / 2 - 2, 6, 4);
+            }
+        }
+    }
+
+    // Death particles
+    for (decl i = 0; i < MAX_PART; i++) {
+        if (partActive[i]) {
+            decl alpha = math.floor(partLife[i] * 300);
+            if (alpha > 255) alpha = 255;
+            graphics.drawRect(alpha, alpha / 2, 0,
+                              partX[i] - 4, partY[i] - 4, 8, 8);
+        }
+    }
+
+    // HUD — Score
+    graphics.drawText("Score: " + cast.ntos(score), 0, 0, 0,
+                      13, 13, 22);
+    graphics.drawText("Score: " + cast.ntos(score), 255, 255, 100,
+                      11, 11, 22);
+
+    graphics.drawText("Best:  " + cast.ntos(best), 0, 0, 0,
+                      13, 41, 18);
+    graphics.drawText("Best:  " + cast.ntos(best), 180, 220, 255,
+                      11, 39, 18);
+
+    // Mode indicator
+    decl modeStr = "CUBE";
+    if (mode == 1) modeStr = "SHIP";
+    graphics.drawText(modeStr, 0, 0, 0,          SCREEN_W - 71, 13, 18);
+    graphics.drawText(modeStr, COL_PORTAL_R, COL_PORTAL_G, COL_PORTAL_B,
+                      SCREEN_W - 73, 11, 18);
+
+    // Title / waiting screen
+    if (!started and alive) {
+        decl panX = SCREEN_W / 2 - 190;
+        decl panY = SCREEN_H / 2 - 80;
+        graphics.drawRect(0,  0,  0,  panX,     panY,     380, 140);
+        graphics.drawRect(20, 20, 40, panX + 2, panY + 2, 376, 136);
+
+        graphics.drawText("GEOMETRY DASH",   255, 200, 0,
+                          panX + 30, panY + 16, 32);
+        graphics.drawText("SPACE / UP  to jump or thrust",
+                          200, 220, 255,
+                          panX + 28, panY + 68, 18);
+        graphics.drawText("Cube: jump over obstacles",
+                          180, 180, 255,
+                          panX + 48, panY + 92, 16);
+        graphics.drawText("Ship: hold to fly up, release to fall",
+                          180, 255, 180,
+                          panX + 20, panY + 112, 15);
+    }
+
+    // Game over
+    if (!alive) {
+        decl panX = SCREEN_W / 2 - 170;
+        decl panY = SCREEN_H / 2 - 80;
+        graphics.drawRect(0,  0,  0,  panX,     panY,     340, 150);
+        graphics.drawRect(40, 20, 20, panX + 2, panY + 2, 336, 146);
+
+        graphics.drawText("GAME OVER",   255, 60,  60,
+                          panX + 60, panY + 14, 36);
+        graphics.drawText("Score: " + cast.ntos(score), 255, 255, 255,
+                          panX + 80, panY + 66, 24);
+        graphics.drawText("Best:  " + cast.ntos(best),  255, 220, 80,
+                          panX + 80, panY + 96, 24);
+
+        if (deathTimer > 1.2) {
+            graphics.drawText("SPACE to retry", 180, 220, 255,
+                              panX + 88, panY + 124, 18);
+        }
+    }
+
+    graphics.endDraw();
+}
+
+graphics.closeWindow();

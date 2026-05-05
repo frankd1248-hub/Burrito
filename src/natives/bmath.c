@@ -266,6 +266,18 @@ static bool log10Native(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool absNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_NUMBER(args[0])) {
+        *result = OBJ_VAL(copyString("abs() expects one number argument.", 34));
+        return false;
+    }
+#endif
+
+    *result = NUMBER_VAL(fabs(AS_NUMBER(args[0])));
+    return true;
+}
+
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
     tableSet(&module->table, copyString(name, length), OBJ_VAL(newNative(fn)));
 }
@@ -297,6 +309,8 @@ ObjModule* buildMathModule() {
     addNative(module, "floor", 5, floorNative);
     addNative(module, "ceil", 4, ceilNative);
     addNative(module, "round", 5, roundNative);
+
+    addNative(module, "abs", 3, absNative);
 
     addNative(module, "rand", 4, randNative);
     addNative(module, "randRange", 9, randRangeNative);
