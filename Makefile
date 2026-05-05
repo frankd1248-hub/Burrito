@@ -21,12 +21,9 @@ debug:
 	gcc -fsanitize=address -g3 -O0 ./src/*.c ./src/natives/*.c -o ./dist/burrito -lm -lraylib
 
 asm_:
-	for file in src/*.c; do \
+	for file in src/*.c src/natives/*.c; do \
 		base=$$(basename $$file .c); \
-		gcc -O3 -S -fverbose-asm -march=native -masm=intel $$file -o ./asm/$$base.S; \
-	for file in src/natives/*.c; do \
-		base=$$(basename $$file .c); \
-		gcc -O3 -S -fverbose-asm -march=native -masm=intel $$file -o ./asm/$$base.S; \
+		gcc -O3 -march=x86-64-v2 -mtune=generic -S -masm=intel -fverbose-asm $$file -o ./asm/$$base.S -lm -lraylib; \
 	done
 
 testsuite:
