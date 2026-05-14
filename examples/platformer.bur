@@ -54,22 +54,21 @@ class Block {
     }
 }
 
-decl levelGeometry[50]; // Will hold an array of Blocks
+decl levelGeometry; // Will hold an array of Blocks
 decl geomCount = 0;
 decl player = Player;
-decl spawnPoint[2];
+decl spawnPoint;
 decl shouldRespawn = false;
 decl p = Player();
 
 // Track whether the player has reached the goal
 decl levelComplete = false;
 decl currentLevel = 0;
-decl maxLevel = 0;
+decl maxLevel = 1;
 
 fn setupLevel(count) {
     levelComplete = false;
     if (count == 0) {
-        geomCount = 7;
         spawnPoint = {80, HEIGHT * 0.9 - 70};
         levelGeometry = {
             Block(0, HEIGHT * 0.9, WIDTH * 0.2, HEIGHT * 0.1, false, false),
@@ -80,6 +79,14 @@ fn setupLevel(count) {
             Block(700, HEIGHT * 0.9 - 200, 60, 20, true, false),
             Block(WIDTH - 100, HEIGHT * 0.9 - 50, 50, 50, false, true)
         };
+        geomCount = levelGeometry.length;
+    } else if (count == 1) {
+        spawnPoint = {80, HEIGHT * 0.9 - 70};
+        levelGeometry = {
+            Block(0, HEIGHT * 0.9, WIDTH, HEIGHT * 0.1, false, false),
+            Block(WIDTH - 100, HEIGHT * 0.9 - 50, 50, 50, false, true)
+        };
+        geomCount = levelGeometry.length;
     } else {
         geomCount = 0;
         spawnPoint = {0, 0};
@@ -113,7 +120,7 @@ fn drawLevel() {
     for (decl i = 0; i < geomCount; i++) {
         decl b = levelGeometry[i];
         graphics.drawRect(
-            getRed(b), getGreen(b), getBlue(b),
+            {getRed(b), getGreen(b), getBlue(b)},
             b.x, b.y, b.w, b.h
         );
     }
@@ -312,34 +319,34 @@ fn updatePlayer(pl, blocks, dt) {
 
 fn drawPlayer(x, y) {
     y -= 5;
-    graphics.drawRect(210, 170, 100, x + 10, y + 18, 60, 52);
-    graphics.drawRect(210, 170, 100, x + 14, y + 14, 52, 8);
-    graphics.drawRect(195, 155,  88, x + 14, y + 68, 52, 6);
-    graphics.drawRect(210, 170, 100, x + 6,  y + 22, 8,  44);
-    graphics.drawRect(210, 170, 100, x + 66, y + 22, 8,  44);
-    graphics.drawRect(180, 140,  76, x + 6,  y + 22, 6,  44);
-    graphics.drawRect(180, 140,  76, x + 68, y + 22, 6,  44);
-    graphics.drawRect(235, 200, 130, x + 18, y + 16, 44, 5);
-    graphics.drawLine(185, 148, 82, x + 14, y + 22, x + 22, y + 68);
-    graphics.drawLine(185, 148, 82, x + 66, y + 22, x + 58, y + 68);
-    graphics.drawRect(240, 235, 210, x + 18, y + 15, 6, 4);
-    graphics.drawRect(240, 235, 210, x + 28, y + 14, 5, 4);
-    graphics.drawRect(240, 235, 210, x + 38, y + 15, 6, 4);
-    graphics.drawRect(240, 235, 210, x + 50, y + 14, 5, 4);
-    graphics.drawRect( 55,  35,  20, x + 22, y + 18, 8, 5);
-    graphics.drawRect( 55,  35,  20, x + 34, y + 17, 7, 5);
-    graphics.drawRect( 55,  35,  20, x + 46, y + 18, 8, 5);
-    graphics.drawRect(210,  50,  40, x + 20, y + 14, 5, 4);
-    graphics.drawRect(210,  50,  40, x + 42, y + 14, 5, 4);
-    graphics.drawRect(210,  50,  40, x + 57, y + 15, 5, 4);
-    graphics.drawRect( 60, 160,  60, x + 17, y + 22, 46, 4);
-    graphics.drawRect( 80, 180,  70, x + 19, y + 22, 6, 4);
-    graphics.drawRect( 80, 180,  70, x + 30, y + 22, 6, 4);
-    graphics.drawRect( 80, 180,  70, x + 41, y + 22, 6, 4);
-    graphics.drawRect( 80, 180,  70, x + 52, y + 22, 6, 4);
-    graphics.drawRect(240, 200,  60, x + 17, y + 26, 46, 3);
-    graphics.drawRect(190, 150,  80, x + 20, y + 66, 40, 6);
-    graphics.drawRect(175, 135,  65, x + 24, y + 69, 32, 4);
+    graphics.drawRect({210, 170, 100}, x + 10, y + 18, 60, 52);
+    graphics.drawRect({210, 170, 100}, x + 14, y + 14, 52, 8);
+    graphics.drawRect({195, 155,  88}, x + 14, y + 68, 52, 6);
+    graphics.drawRect({210, 170, 100}, x + 6,  y + 22, 8,  44);
+    graphics.drawRect({210, 170, 100}, x + 66, y + 22, 8,  44);
+    graphics.drawRect({180, 140,  76}, x + 6,  y + 22, 6,  44);
+    graphics.drawRect({180, 140,  76}, x + 68, y + 22, 6,  44);
+    graphics.drawRect({235, 200, 130}, x + 18, y + 16, 44, 5);
+    graphics.drawLine({185, 148,  82}, x + 14, y + 22, x + 22, y + 68);
+    graphics.drawLine({185, 148,  82}, x + 66, y + 22, x + 58, y + 68);
+    graphics.drawRect({240, 235, 210}, x + 18, y + 15, 6, 4);
+    graphics.drawRect({240, 235, 210}, x + 28, y + 14, 5, 4);
+    graphics.drawRect({240, 235, 210}, x + 38, y + 15, 6, 4);
+    graphics.drawRect({240, 235, 210}, x + 50, y + 14, 5, 4);
+    graphics.drawRect({ 55,  35,  20}, x + 22, y + 18, 8, 5);
+    graphics.drawRect({ 55,  35,  20}, x + 34, y + 17, 7, 5);
+    graphics.drawRect({ 55,  35,  20}, x + 46, y + 18, 8, 5);
+    graphics.drawRect({210,  50,  40}, x + 20, y + 14, 5, 4);
+    graphics.drawRect({210,  50,  40}, x + 42, y + 14, 5, 4);
+    graphics.drawRect({210,  50,  40}, x + 57, y + 15, 5, 4);
+    graphics.drawRect({ 60, 160,  60}, x + 17, y + 22, 46, 4);
+    graphics.drawRect({ 80, 180,  70}, x + 19, y + 22, 6, 4);
+    graphics.drawRect({ 80, 180,  70}, x + 30, y + 22, 6, 4);
+    graphics.drawRect({ 80, 180,  70}, x + 41, y + 22, 6, 4);
+    graphics.drawRect({ 80, 180,  70}, x + 52, y + 22, 6, 4);
+    graphics.drawRect({240, 200,  60}, x + 17, y + 26, 46, 3);
+    graphics.drawRect({190, 150,  80}, x + 20, y + 66, 40, 6);
+    graphics.drawRect({175, 135,  65}, x + 24, y + 69, 32, 4);
 }
 
 
@@ -367,13 +374,13 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
     drawPlayer(p.x, p.y);
 
     if (levelComplete) {
-        graphics.drawRect(0, 0, 0, WIDTH / 2 - 200, HEIGHT / 2 - 60, 400, 140);
-        graphics.drawRect(20, 60, 20, WIDTH / 2 - 198, HEIGHT / 2 - 58, 396, 136);
-        graphics.drawText("LEVEL COMPLETE!", 80, 255, 120,
+        graphics.drawRect({0, 0, 0}, WIDTH / 2 - 200, HEIGHT / 2 - 60, 400, 140);
+        graphics.drawRect({20, 60, 20}, WIDTH / 2 - 198, HEIGHT / 2 - 58, 396, 136);
+        graphics.drawText("LEVEL COMPLETE!", {80, 255, 120},
                           WIDTH / 2 - 172, HEIGHT / 2 - 42, 36);
-        graphics.drawText("ENTER to play again", 180, 220, 255,
+        graphics.drawText("ENTER to play again", {180, 220, 255},
                           WIDTH / 2 - 132, HEIGHT / 2 + 16, 22);
-        graphics.drawText("RIGHT to go to next level", 180, 220, 255,
+        graphics.drawText("RIGHT to go to next level", {180, 220, 255},
                           WIDTH / 2 - 132, HEIGHT / 2 + 40, 22);
     }
 

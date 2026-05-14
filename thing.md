@@ -7,9 +7,9 @@ Here's a comprehensive list organized by module, with a focus on what would make
 
 ## `bio` (I/O)
 - [x] `readLine()` — read a line from stdin
-- [ ] `readFile(path)` — read entire file as string
-- [ ] `writeFile(path, content)` — write string to file
-- [ ] `appendFile(path, content)` — append to file
+- [x] `readFile(path)` — read entire file as string
+- [x] `writeFile(path, content)` — write string to file
+- [x] `appendFile(path, content)` — append to file
 - [ ] `fileExists(path)` — returns bool
 - [ ] `deleteFile(path)` — delete a file
 - [ ] `readDir(path)` — returns array of filenames in directory
@@ -55,7 +55,6 @@ Here's a comprehensive list organized by module, with a focus on what would make
 ---
 
 ## `barray` (Arrays)
-- [ ] `length(arr)`
 - [ ] `push(arr, val)` / `pop(arr)`
 - [ ] `shift(arr)` / `unshift(arr, val)` — front operations
 - [ ] `insert(arr, i, val)` / `remove(arr, i)`

@@ -1255,21 +1255,10 @@ static void varDeclaration() {
 
     int global = parseVariable("Expect variable name.");
 
-    if (match(TOKEN_LEFT_BRACKET)) {
-        expression();        // parse the size — this is what was missing
-        hasArraySize = true;
-        consume(TOKEN_RIGHT_BRACKET, "Expect ']' after size.");
-    }
-
     if (match(TOKEN_EQUAL)) {
-        if (hasArraySize) emitByte(OP_POP);
         expression();
     } else {
-        if (hasArraySize) {
-            emitByte(OP_ARRAY_NEW);  // size already on stack, ARRAY_NEW consumes it
-        } else {
-            emitByte(OP_NULL);
-        }
+        emitByte(OP_NULL);
     }
     consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
 

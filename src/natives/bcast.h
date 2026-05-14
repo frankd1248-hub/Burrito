@@ -1,5 +1,5 @@
 #ifndef burrito_cast_h
-#define burrito_cast_H
+#define burrito_cast_h
 
 #include "../object.h"
 #include "nativeFlags.h"

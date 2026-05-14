@@ -249,7 +249,7 @@ void collectGarbage() {
     size_t before = vm.bytesAllocated;
 #endif
 
-    printf("GC Collect\n");
+    // printf("GC Collect\n");
 
     markRoots();
     traceReferences();

@@ -77,7 +77,7 @@ decl invCount   = TOTAL_INVADERS;
 const MAX_BOMBS = 8;
 decl bombX    = {0, 0, 0, 0, 0, 0, 0, 0};
 decl bombY    = {0, 0, 0, 0, 0, 0, 0, 0};
-decl bombActive[8] = {false, false, false, false, false, false, false, false};
+decl bombActive = {false, false, false, false, false, false, false, false};
 
 // Barriers - HP per barrier
 decl barrierHP = {BARRIER_HP, BARRIER_HP, BARRIER_HP, BARRIER_HP};
@@ -391,25 +391,25 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
     graphics.clearColor(0, 0, 0);
 
     // HUD
-    graphics.drawText("SCORE: " + cast.ntos(score), 255, 255, 255, 10, 10, 18);
-    graphics.drawText("LIVES: " + cast.ntos(lives), 255, 255, 255, SCREEN_W - 110, 10, 18);
+    graphics.drawText("SCORE: " + cast.ntos(score), {255, 255, 255}, 10, 10, 18);
+    graphics.drawText("LIVES: " + cast.ntos(lives), {255, 255, 255}, SCREEN_W - 110, 10, 18);
 
     // Ground line
-    graphics.drawRect(80, 80, 80, 0, SCREEN_H - 20, SCREEN_W, 2);
+    graphics.drawRect({80, 80, 80}, 0, SCREEN_H - 20, SCREEN_W, 2);
 
     // Player (draw as a simple ship shape using three rects)
     if (playerAlive) {
         // Body
-        graphics.drawRect(0, 255, 0, playerX + 4, playerY + 8, PLAYER_W - 8, PLAYER_H - 8);
+        graphics.drawRect({0, 255, 0}, playerX + 4, playerY + 8, PLAYER_W - 8, PLAYER_H - 8);
         // Cannon
-        graphics.drawRect(0, 255, 0, playerX + PLAYER_W / 2 - 3, playerY, 6, 10);
+        graphics.drawRect({0, 255, 0}, playerX + PLAYER_W / 2 - 3, playerY, 6, 10);
         // Wings
-        graphics.drawRect(0, 255, 0, playerX, playerY + 10, PLAYER_W, PLAYER_H - 10);
+        graphics.drawRect({0, 255, 0}, playerX, playerY + 10, PLAYER_W, PLAYER_H - 10);
     }
 
     // Player bullet
     if (bulletActive) {
-        graphics.drawRect(255, 255, 0, bulletX, bulletY, BULLET_W, BULLET_H);
+        graphics.drawRect({255, 255, 0}, bulletX, bulletY, BULLET_W, BULLET_H);
     }
 
     // Invaders
@@ -421,26 +421,26 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
 
                 if (row == 0) {
                     // Top row: Y-shape (worth 30)
-                    graphics.drawRect(255, 100, 100, ix + 4,  iy,      8, 6);
-                    graphics.drawRect(255, 100, 100, ix + 20, iy,      8, 6);
-                    graphics.drawRect(255, 100, 100, ix + 10, iy + 6,  12, 6);
-                    graphics.drawRect(255, 100, 100, ix + 12, iy + 12, 8, 8);
-                    graphics.drawRect(255, 100, 100, ix,      iy + 14, 8, 6);
-                    graphics.drawRect(255, 100, 100, ix + 24, iy + 14, 8, 6);
+                    graphics.drawRect({255, 100, 100}, ix + 4,  iy,      8, 6);
+                    graphics.drawRect({255, 100, 100}, ix + 20, iy,      8, 6);
+                    graphics.drawRect({255, 100, 100}, ix + 10, iy + 6,  12, 6);
+                    graphics.drawRect({255, 100, 100}, ix + 12, iy + 12, 8, 8);
+                    graphics.drawRect({255, 100, 100}, ix,      iy + 14, 8, 6);
+                    graphics.drawRect({255, 100, 100}, ix + 24, iy + 14, 8, 6);
                 } else {
                     if (row < 3) {
                         // Middle rows: crab shape (worth 20)
-                        graphics.drawRect(200, 200, 255, ix + 8,  iy,      16, 6);
-                        graphics.drawRect(200, 200, 255, ix + 4,  iy + 6,  24, 6);
-                        graphics.drawRect(200, 200, 255, ix,      iy + 12, 32, 6);
-                        graphics.drawRect(200, 200, 255, ix + 4,  iy + 14, 8, 6);
-                        graphics.drawRect(200, 200, 255, ix + 20, iy + 14, 8, 6);
+                        graphics.drawRect({200, 200, 255}, ix + 8,  iy,      16, 6);
+                        graphics.drawRect({200, 200, 255}, ix + 4,  iy + 6,  24, 6);
+                        graphics.drawRect({200, 200, 255}, ix,      iy + 12, 32, 6);
+                        graphics.drawRect({200, 200, 255}, ix + 4,  iy + 14, 8, 6);
+                        graphics.drawRect({200, 200, 255}, ix + 20, iy + 14, 8, 6);
                     } else {
                         // Bottom rows: squid shape (worth 10)
-                        graphics.drawRect(100, 255, 100, ix + 10, iy,      12, 8);
-                        graphics.drawRect(100, 255, 100, ix + 4,  iy + 8,  24, 6);
-                        graphics.drawRect(100, 255, 100, ix,      iy + 14, 10, 6);
-                        graphics.drawRect(100, 255, 100, ix + 22, iy + 14, 10, 6);
+                        graphics.drawRect({100, 255, 100}, ix + 10, iy,      12, 8);
+                        graphics.drawRect({100, 255, 100}, ix + 4,  iy + 8,  24, 6);
+                        graphics.drawRect({100, 255, 100}, ix,      iy + 14, 10, 6);
+                        graphics.drawRect({100, 255, 100}, ix + 22, iy + 14, 10, 6);
                     }
                 }
             }
@@ -450,7 +450,7 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
     // Enemy bombs
     for (decl i = 0; i < MAX_BOMBS; i++) {
         if (bombActive[i]) {
-            graphics.drawRect(255, 80, 80, bombX[i], bombY[i], BOMB_W, BOMB_H);
+            graphics.drawRect({255, 80, 80}, bombX[i], bombY[i], BOMB_W, BOMB_H);
         }
     }
 
@@ -461,15 +461,15 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
             // Fade colour based on HP: full HP = green, low = yellow
             decl green = 80 + 175 * barrierHP[i] / BARRIER_HP;
             decl red = 255 - green;
-            graphics.drawRect(red, green, 0, bx, BARRIER_Y, BARRIER_W, BARRIER_H);
+            graphics.drawRect({red, green, 0}, bx, BARRIER_Y, BARRIER_W, BARRIER_H);
         }
     }
 
     // UFO
     if (ufoAlive) {
-        graphics.drawRect(255, 0, 200, ufoX, 20, UFO_W, UFO_H);
-        graphics.drawCircle(255, 100, 200, ufoX + UFO_W / 2, 20, 9);
-        graphics.drawText("?", 255, 255, 255, ufoX + 18, 22, 14);
+        graphics.drawRect({255, 0, 200}, ufoX, 20, UFO_W, UFO_H);
+        graphics.drawCircle({255, 100, 200}, ufoX + UFO_W / 2, 20, 9);
+        graphics.drawText("?", {255, 255, 255}, ufoX + 18, 22, 14);
     }
 
     graphics.endDraw();
@@ -483,14 +483,14 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
     graphics.clearColor(0, 0, 0);
 
     if (victory) {
-        graphics.drawText("YOU WIN!", 0, 255, 0, SCREEN_W / 2 - 80, SCREEN_H / 2 - 40, 40);
+        graphics.drawText("YOU WIN!", {0, 255, 0}, SCREEN_W / 2 - 80, SCREEN_H / 2 - 40, 40);
     } else {
-        graphics.drawText("GAME OVER", 255, 40, 40, SCREEN_W / 2 - 100, SCREEN_H / 2 - 40, 40);
+        graphics.drawText("GAME OVER", {255, 40, 40}, SCREEN_W / 2 - 120, SCREEN_H / 2 - 40, 40);
     }
 
-    graphics.drawText("FINAL SCORE: " + cast.ntos(score), 255, 255, 255,
+    graphics.drawText("FINAL SCORE: " + cast.ntos(score), {255, 255, 255},
                       SCREEN_W / 2 - 110, SCREEN_H / 2 + 20, 24);
-    graphics.drawText("Press ESC to quit", 150, 150, 150,
+    graphics.drawText("Press ESC to quit", {150, 150, 150},
                       SCREEN_W / 2 - 100, SCREEN_H / 2 + 70, 18);
 
     graphics.endDraw();

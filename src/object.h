@@ -60,10 +60,9 @@ struct Obj {
 typedef struct {
     Obj obj;
     int size;
+    int capacity;
     Value* values;
 } ObjArray;
-
-
 
 typedef struct {
     Obj obj;

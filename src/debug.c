@@ -162,8 +162,6 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
             return byteInstruction("OP_ARRAY_INIT", chunk, offset, out);
         case OP_ARRAY_INIT_LONG:
             return longByteInstruction("OP_ARRAY_INIT_LONG", chunk, offset, out);
-        case OP_ARRAY_NEW:
-            return simpleInstruction("OP_ARRAY_NEW", offset, out);
         case OP_EQUAL:
             return simpleInstruction("OP_EQUAL", offset, out);
         case OP_GREATER:
@@ -198,6 +196,8 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
             return simpleInstruction("OP_NEGATE", offset, out);
         case OP_PRINT:
             return byteInstruction("OP_PRINT", chunk, offset, out);
+        case OP_DUP:
+            return simpleInstruction("OP_DUP", offset, out);
         case OP_JUMP:
             return jumpInstruction("OP_JUMP", 1, chunk, offset, out);
         case OP_JUMP_IF_FALSE:

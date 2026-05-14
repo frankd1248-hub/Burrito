@@ -221,10 +221,10 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
     graphics.clearColor(112, 196, 206);
 
     // Background hills (decorative)
-    graphics.drawRect(106, 190, 100, 0,   360, 220, 70);
-    graphics.drawRect(106, 190, 100, 180, 370, 180, 60);
-    graphics.drawRect(106, 190, 100, 460, 355, 280, 75);
-    graphics.drawRect(106, 190, 100, 600, 365, 200, 65);
+    graphics.drawRect({106, 190, 100}, 0,   360, 220, 70);
+    graphics.drawRect({106, 190, 100}, 180, 370, 180, 60);
+    graphics.drawRect({106, 190, 100}, 460, 355, 280, 75);
+    graphics.drawRect({106, 190, 100}, 600, 365, 200, 65);
 
     // Pipes
     for (decl i = 0; i < MAX_PIPES; i++) {
@@ -235,31 +235,31 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
             decl botH = GROUND_Y - botY;
 
             // Top pipe body
-            graphics.drawRect(84,  168, 60, px, 0, PIPE_W, topH);
+            graphics.drawRect({84,  168, 60}, px, 0, PIPE_W, topH);
             // Top pipe highlight
-            graphics.drawRect(120, 200, 90, px + 5, 0, 10, topH);
+            graphics.drawRect({120, 200, 90}, px + 5, 0, 10, topH);
             // Top pipe cap
-            graphics.drawRect(84,  168, 60, px - 4, topH - PIPE_CAP_H, PIPE_CAP_W, PIPE_CAP_H);
-            graphics.drawRect(120, 200, 90, px,     topH - PIPE_CAP_H, 10, PIPE_CAP_H);
+            graphics.drawRect({84,  168, 60}, px - 4, topH - PIPE_CAP_H, PIPE_CAP_W, PIPE_CAP_H);
+            graphics.drawRect({120, 200, 90}, px,     topH - PIPE_CAP_H, 10, PIPE_CAP_H);
 
             // Bottom pipe body
-            graphics.drawRect(84,  168, 60, px, botY, PIPE_W, botH);
+            graphics.drawRect({84,  168, 60}, px, botY, PIPE_W, botH);
             // Bottom pipe highlight
-            graphics.drawRect(120, 200, 90, px + 5, botY, 10, botH);
+            graphics.drawRect({120, 200, 90}, px + 5, botY, 10, botH);
             // Bottom pipe cap
-            graphics.drawRect(84,  168, 60, px - 4, botY, PIPE_CAP_W, PIPE_CAP_H);
-            graphics.drawRect(120, 200, 90, px,     botY, 10, PIPE_CAP_H);
+            graphics.drawRect({84,  168, 60}, px - 4, botY, PIPE_CAP_W, PIPE_CAP_H);
+            graphics.drawRect({120, 200, 90}, px,     botY, 10, PIPE_CAP_H);
         }
     }
 
     // Ground
-    graphics.drawRect(220, 180, 90,  0, GROUND_Y,      SCREEN_W, 18);
-    graphics.drawRect(160, 120, 50,  0, GROUND_Y + 18, SCREEN_W, GROUND_H - 18);
+    graphics.drawRect({220, 180, 90},  0, GROUND_Y,      SCREEN_W, 18);
+    graphics.drawRect({160, 120, 50},  0, GROUND_Y + 18, SCREEN_W, GROUND_H - 18);
 
     // Ground detail stripes
     decl stripeX = 0;
     while (stripeX < SCREEN_W) {
-        graphics.drawRect(140, 100, 40, stripeX, GROUND_Y + 20, 30, 8);
+        graphics.drawRect({140, 100, 40}, stripeX, GROUND_Y + 20, 30, 8);
         stripeX += 80;
     }
 
@@ -276,38 +276,38 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
     }
 
     // Body
-    graphics.drawRect(tiltColor_r, tiltColor_g, 0,   bx,          by,      BIRD_W,     BIRD_H);
+    graphics.drawRect({tiltColor_r, tiltColor_g, 0},   bx,          by,      BIRD_W,     BIRD_H);
     // Wing (flapping: offset using sine)
     decl wingY = by + 12 + math.sin(wingAngle) * 5;
     if (!alive) wingY = by + 16;
-    graphics.drawRect(tiltColor_r, tiltColor_g - 30, 0, bx + 4, wingY, 16, 8);
+    graphics.drawRect({tiltColor_r, tiltColor_g - 30, 0}, bx + 4, wingY, 16, 8);
     // Belly highlight
-    graphics.drawRect(255, 245, 150,                 bx + 2,      by + 12, BIRD_W - 8, BIRD_H - 14);
+    graphics.drawRect({255, 245, 150},                 bx + 2,      by + 12, BIRD_W - 8, BIRD_H - 14);
     // Eye white
-    graphics.drawCircle(255, 255, 255,               bx + BIRD_W - 8, by + 7, 5);
+    graphics.drawCircle({255, 255, 255},               bx + BIRD_W - 8, by + 7, 5);
     // Pupil
-    graphics.drawCircle(30,  30,  30,                bx + BIRD_W - 7, by + 8, 2);
+    graphics.drawCircle({30,  30,  30},                bx + BIRD_W - 7, by + 8, 2);
     // Beak
-    graphics.drawRect(255, 140, 0,                   bx + BIRD_W - 1, by + 10, 10, 6);
-    graphics.drawRect(255, 140, 0,                   bx + BIRD_W - 1, by + 16, 8,  4);
+    graphics.drawRect({255, 140, 0},                   bx + BIRD_W - 1, by + 10, 10, 6);
+    graphics.drawRect({255, 140, 0},                   bx + BIRD_W - 1, by + 16, 8,  4);
 
     // Score (while playing)
     if (started and alive) {
         // Drop shadow
-        graphics.drawText(cast.ntos(score), 0,   0,   0,   SCREEN_W / 2 - 17, 33, 40);
-        graphics.drawText(cast.ntos(score), 255, 255, 255, SCREEN_W / 2 - 20, 30, 40);
+        graphics.drawText(cast.ntos(score), {0,   0,   0},   SCREEN_W / 2 - 17, 33, 40);
+        graphics.drawText(cast.ntos(score), {255, 255, 255}, SCREEN_W / 2 - 20, 30, 40);
     }
 
     // Title screen
     if (!started and alive) {
-        graphics.drawRect(0, 0, 0,       SCREEN_W / 2 - 175, 155, 350, 115);
-        graphics.drawRect(30, 30, 30,    SCREEN_W / 2 - 173, 157, 346, 111);
-        graphics.drawText("FLAPPY BIRD",    255, 220, 50,
+        graphics.drawRect({0, 0, 0},       SCREEN_W / 2 - 175, 155, 350, 115);
+        graphics.drawRect({30, 30, 30},    SCREEN_W / 2 - 173, 157, 346, 111);
+        graphics.drawText("FLAPPY BIRD",    {255, 220, 50},
                           SCREEN_W / 2 - 155, 165, 38);
-        graphics.drawText("SPACE / UP to flap", 200, 230, 255,
+        graphics.drawText("SPACE / UP to flap", {200, 230, 255},
                           SCREEN_W / 2 - 148, 215, 22);
         if (best > 0) {
-            graphics.drawText("Best: " + cast.ntos(best), 255, 220, 100,
+            graphics.drawText("Best: " + cast.ntos(best), {255, 220, 100},
                               SCREEN_W / 2 - 60, 248, 20);
         }
     }
@@ -317,18 +317,18 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
         decl panelX = SCREEN_W / 2 - 175;
         decl panelY = SCREEN_H / 2 - 90;
 
-        graphics.drawRect(0,  0,  0,   panelX,     panelY,     350, 160);
-        graphics.drawRect(40, 40, 40,  panelX + 2, panelY + 2, 346, 156);
+        graphics.drawRect({0,  0,  0},   panelX,     panelY,     350, 160);
+        graphics.drawRect({40, 40, 40},  panelX + 2, panelY + 2, 346, 156);
 
-        graphics.drawText("GAME OVER",  255, 80,  80,
+        graphics.drawText("GAME OVER",  {255, 80,  80},
                           SCREEN_W / 2 - 105, panelY + 14,  36);
-        graphics.drawText("Score: " + cast.ntos(score), 255, 255, 255,
+        graphics.drawText("Score: " + cast.ntos(score), {255, 255, 255},
                           SCREEN_W / 2 - 65,  panelY + 64,  26);
-        graphics.drawText("Best:  " + cast.ntos(best),  255, 220, 100,
+        graphics.drawText("Best:  " + cast.ntos(best),  {255, 220, 100},
                           SCREEN_W / 2 - 65,  panelY + 96,  26);
 
         if (deathTimer > 1.0) {
-            graphics.drawText("SPACE to restart", 180, 220, 255,
+            graphics.drawText("SPACE to restart", {180, 220, 255},
                               SCREEN_W / 2 - 108, panelY + 132, 20);
         }
     }

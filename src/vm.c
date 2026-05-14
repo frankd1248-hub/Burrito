@@ -431,7 +431,6 @@ static InterpretResult run() {
         [OP_SET_UPVALUE]       = &&op_OP_SET_UPVALUE,
         [OP_ARRAY_INIT]        = &&op_OP_ARRAY_INIT,
         [OP_ARRAY_INIT_LONG]   = &&op_OP_ARRAY_INIT_LONG,
-        [OP_ARRAY_NEW]         = &&op_OP_ARRAY_NEW,
         [OP_EQUAL]             = &&op_OP_EQUAL,
         [OP_GREATER]           = &&op_OP_GREATER,
         [OP_LESS]              = &&op_OP_LESS,
@@ -511,17 +510,14 @@ static InterpretResult run() {
         Value constant = READ_CONSTANT();
         push(constant);
         DISPATCH();
-    }
-    CASE(OP_CONSTANT_LONG): {
+    } CASE(OP_CONSTANT_LONG): {
         Value constant = READ_CONSTANT_LONG();
         push(constant);
         DISPATCH();
-    }
-    CASE(OP_ZERO): {
+    } CASE(OP_ZERO): {
         push(NUMBER_VAL(0.0));
         DISPATCH();
-    }
-    CASE(OP_ONE): {
+    } CASE(OP_ONE): {
         push(NUMBER_VAL(1.0));
         DISPATCH();
     }
@@ -534,24 +530,19 @@ static InterpretResult run() {
         uint8_t slot = READ_BYTE();
         push(frame->slots[slot]);
         DISPATCH();
-    }
-    CASE(OP_GET_LOCAL_LONG): {
+    } CASE(OP_GET_LOCAL_LONG): {
         int slot = READ_LONG();
         push(frame->slots[slot]);
         DISPATCH();
-    }
-    CASE(OP_SET_LOCAL): {
+    } CASE(OP_SET_LOCAL): {
         uint8_t slot = READ_BYTE();
         frame->slots[slot] = peek(0);
         DISPATCH();
-    }
-    CASE(OP_SET_LOCAL_LONG): {
+    } CASE(OP_SET_LOCAL_LONG): {
         int slot = READ_LONG();
         frame->slots[slot] = peek(0);
         DISPATCH();
-    }
-
-    CASE(OP_GET_GLOBAL): {
+    } CASE(OP_GET_GLOBAL): {
         ObjString* name = READ_STRING();
         Value value;
         if (!tableGet(&vm.globals, name, &value)) {
@@ -561,8 +552,7 @@ static InterpretResult run() {
         }
         push(value);
         DISPATCH();
-    }
-    CASE(OP_GET_GLOBAL_LONG): {
+    } CASE(OP_GET_GLOBAL_LONG): {
         ObjString* name = READ_STRING_LONG();
         Value value;
         if (!tableGet(&vm.globals, name, &value)) {
@@ -573,20 +563,17 @@ static InterpretResult run() {
         }
         push(value);
         DISPATCH();
-    }
-    CASE(OP_DEFINE_GLOBAL): {
+    } CASE(OP_DEFINE_GLOBAL): {
         ObjString* name = READ_STRING();
         tableSet(&vm.globals, name, peek(0));
         pop();
         DISPATCH();
-    }
-    CASE(OP_DEFINE_GLOBAL_LONG): {
+    } CASE(OP_DEFINE_GLOBAL_LONG): {
         ObjString* name = READ_STRING_LONG();
         tableSet(&vm.globals, name, peek(0));
         pop();
         DISPATCH();
-    }
-    CASE(OP_SET_GLOBAL): {
+    } CASE(OP_SET_GLOBAL): {
         ObjString* name = READ_STRING();
         Value isConst;
         if (tableGet(&vm.consts, name, &isConst)) {
@@ -602,8 +589,7 @@ static InterpretResult run() {
         }
         tableSet(&vm.globals, name, peek(0));
         DISPATCH();
-    }
-    CASE(OP_SET_GLOBAL_LONG): {
+    } CASE(OP_SET_GLOBAL_LONG): {
         ObjString* name = READ_STRING_LONG();
         Value isConst;
         if (tableGet(&vm.consts, name, &isConst)) {
@@ -621,23 +607,19 @@ static InterpretResult run() {
         }
         tableSet(&vm.globals, name, peek(0));
         DISPATCH();
-    }
-    CASE(OP_DEFINE_CONST): {
+    } CASE(OP_DEFINE_CONST): {
         ObjString* name = READ_STRING();
         tableSet(&vm.globals, name, peek(0));
         tableSet(&vm.consts, name, BOOL_VAL(true));
         pop();
         DISPATCH();
-    }
-    CASE(OP_DEFINE_CONST_LONG): {
+    } CASE(OP_DEFINE_CONST_LONG): {
         ObjString* name = READ_STRING_LONG();
         tableSet(&vm.globals, name, peek(0));
         tableSet(&vm.consts, name, BOOL_VAL(true));
         pop();
         DISPATCH();
-    }
-
-    CASE(OP_GET_PROPERTY): {
+    } CASE(OP_GET_PROPERTY): {
         if (IS_MODULE(peek(0))) {
             ObjModule* module = AS_MODULE(peek(0));
             ObjString* name = READ_STRING();
@@ -668,7 +650,6 @@ static InterpretResult run() {
                 pop();
                 push(NUMBER_VAL(array->size));
             } else {
-                
                 runtimeError("Undefined property '%s'.", name->chars);
                 if (errorWasHandled) DISPATCH();
                 return INTERPRET_RUNTIME_ERROR;
@@ -680,8 +661,7 @@ static InterpretResult run() {
             return INTERPRET_RUNTIME_ERROR;
         }
         DISPATCH();
-    }
-    CASE(OP_GET_PROPERTY_LONG): {
+    } CASE(OP_GET_PROPERTY_LONG): {
         if (IS_MODULE(peek(0))) {
             ObjModule* module = AS_MODULE(peek(0));
             ObjString* name = READ_STRING_LONG();
@@ -726,9 +706,7 @@ static InterpretResult run() {
             return INTERPRET_RUNTIME_ERROR;
         }
         DISPATCH();
-    }
-
-    CASE(OP_SET_PROPERTY): {
+    } CASE(OP_SET_PROPERTY): {
         if (!IS_INSTANCE(peek(1))) {
             
             runtimeError("Only instances have settable fields.");
@@ -741,8 +719,7 @@ static InterpretResult run() {
         pop();
         push(value);
         DISPATCH();
-    }
-    CASE(OP_SET_PROPERTY_LONG): {
+    } CASE(OP_SET_PROPERTY_LONG): {
         if (!IS_INSTANCE(peek(1))) {
             
             runtimeError("Only instances have settable fields.");
@@ -755,26 +732,20 @@ static InterpretResult run() {
         pop();
         push(value);
         DISPATCH();
-    }
-
-    CASE(OP_GET_SUPER): {
+    } CASE(OP_GET_SUPER): {
         ObjString* name = READ_STRING();
         ObjClass* superclass = AS_CLASS(pop());
         if (!bindMethod(superclass, name)) return INTERPRET_RUNTIME_ERROR;
         DISPATCH();
-    }
-    CASE(OP_GET_SUPER_LONG): {
+    } CASE(OP_GET_SUPER_LONG): {
         ObjString* name = READ_STRING_LONG();
         ObjClass* superclass = AS_CLASS(pop());
         if (!bindMethod(superclass, name)) return INTERPRET_RUNTIME_ERROR;
         DISPATCH();
-    }
-
-    CASE(OP_GET_INDEX): {
+    } CASE(OP_GET_INDEX): {
         Value indexVal = peek(0);
         Value val = peek(1);
         if ((!IS_STRING(val) && !IS_ARRAY(val)) || !IS_NUMBER(indexVal)) {
-            
             runtimeError("Indexing requires string or array and number.");
             if (errorWasHandled) DISPATCH();
             return INTERPRET_RUNTIME_ERROR;
@@ -783,7 +754,6 @@ static InterpretResult run() {
             ObjString* str = AS_STRING(val);
             int index = (int)AS_NUMBER(indexVal);
             if (index < 0 || index >= str->length) {
-                
                 runtimeError("String index out of bounds.");
                 if (errorWasHandled) DISPATCH();
                 return INTERPRET_RUNTIME_ERROR;
@@ -794,8 +764,7 @@ static InterpretResult run() {
         } else {
             ObjArray* arr = AS_ARRAY(val);
             int index = (int)AS_NUMBER(indexVal);
-            if (index < 0 || index >= arr->size) {
-                
+            if (index < 0 || index >= arr->capacity) {
                 runtimeError("Array index out of bounds.");
                 if (errorWasHandled) DISPATCH();
                 return INTERPRET_RUNTIME_ERROR;
@@ -804,8 +773,7 @@ static InterpretResult run() {
             push(arr->values[index]);
         }
         DISPATCH();
-    }
-    CASE(OP_SET_INDEX): {
+    } CASE(OP_SET_INDEX): {
         Value value = pop();
         Value index = pop();
         Value array = pop();
@@ -817,69 +785,46 @@ static InterpretResult run() {
         }
         ObjArray* arr = AS_ARRAY(array);
         int idx = (int)AS_NUMBER(index);
-        if (idx < 0 || idx >= arr->size) {
-            
+        if (idx < 0 || idx >= arr->capacity) {
             runtimeError("Array index out of range.");
             if (errorWasHandled) DISPATCH();
             return INTERPRET_RUNTIME_ERROR;
         }
+        if (idx >= arr->size) {
+            arr->size = idx+1;
+        }
         arr->values[idx] = value;
         push(value);
         DISPATCH();
-    }
-
-    CASE(OP_GET_UPVALUE): {
+    } CASE(OP_GET_UPVALUE): {
         uint8_t slot = READ_BYTE();
         push(*frame->closure->upvalues[slot]->location);
         DISPATCH();
-    }
-    CASE(OP_SET_UPVALUE): {
+    } CASE(OP_SET_UPVALUE): {
         uint8_t slot = READ_BYTE();
         *frame->closure->upvalues[slot]->location = peek(0);
         DISPATCH();
-    }
-
-    CASE(OP_ARRAY_NEW): {
-        Value sizeVal = pop();
-        if (!IS_NUMBER(sizeVal)) {
-            
-            runtimeError("Array size must be a number.");
-            if (errorWasHandled) DISPATCH();
-            return INTERPRET_RUNTIME_ERROR;
-        }
-        int size = (int)AS_NUMBER(sizeVal);
-        if (size < 0) {
-            
-            runtimeError("Array size must be non-negative.");
-            if (errorWasHandled) DISPATCH();
-            return INTERPRET_RUNTIME_ERROR;
-        }
-        ObjArray* arr = newArray(size);
-        for (int i = 0; i < size; i++) arr->values[i] = NULL_VAL;
-        push(OBJ_VAL(arr));
-        DISPATCH();
-    }
-    CASE(OP_ARRAY_INIT): {
+    } CASE(OP_ARRAY_INIT): {
         int count = READ_BYTE();
         ObjArray* array = newArray(count);
         push(OBJ_VAL(array));                                     // root immediately
         for (int i = 0; i < count; i++)
             array->values[i] = vm.stackTop[-1 - count + i];
+        array->size = count;
         vm.stackTop -= count + 1;                                 // remove elements AND the array slot
         push(OBJ_VAL(array));                                     // put array back on top
         DISPATCH();
-    }
-     CASE(OP_ARRAY_INIT_LONG): {
+    } CASE(OP_ARRAY_INIT_LONG): {
         int count = READ_LONG();
         ObjArray* array = newArray(count);
         push(OBJ_VAL(array));                                     // root immediately
         for (int i = 0; i < count; i++)
             array->values[i] = vm.stackTop[-1 - count + i];
+        array->size = count;
         vm.stackTop -= count + 1;                                 // remove elements AND the array slot
         push(OBJ_VAL(array));                                     // put array back on top
         DISPATCH();
-    }
-    CASE(OP_EQUAL): {
+    } CASE(OP_EQUAL): {
         Value b = pop();
         Value a = pop();
         push(BOOL_VAL(valuesEqual(a, b)));
@@ -937,8 +882,7 @@ static InterpretResult run() {
         int32_t val = (int32_t)AS_NUMBER(pop());
         push(NUMBER_VAL((double)(~val)));
         DISPATCH();
-    }
-    CASE(OP_NOT):
+    } CASE(OP_NOT):
         push(BOOL_VAL(isFalsey(pop())));
         DISPATCH();
     CASE(OP_NEGATE): {
@@ -950,9 +894,7 @@ static InterpretResult run() {
         }
         push(NUMBER_VAL(-AS_NUMBER(pop())));
         DISPATCH();
-    }
-
-    CASE(OP_PRINT): {
+    } CASE(OP_PRINT): {
         int argCount = READ_BYTE();
         bool printError = false;
         Value* args = vm.stackTop - argCount;
@@ -1029,34 +971,27 @@ print_end:
         vm.stackTop -= argCount;
         DISPATCH();
     }
-
     CASE(OP_DUP): push(peek(0)); DISPATCH();
-
     CASE(OP_JUMP): {
         uint16_t offset = READ_SHORT();
         frame->ip += offset;
         DISPATCH();
-    }
-    CASE(OP_JUMP_IF_FALSE): {
+    } CASE(OP_JUMP_IF_FALSE): {
         uint16_t offset = READ_SHORT();
         if (isFalsey(peek(0))) frame->ip += offset;
         DISPATCH();
-    }
-    CASE(OP_LOOP): {
+    } CASE(OP_LOOP): {
         uint16_t offset = READ_SHORT();
         frame->ip -= offset;
         DISPATCH();
-    }
-
-    CASE(OP_CALL): {
+    } CASE(OP_CALL): {
         int argCount = READ_BYTE();
         
         if (!callValue(peek(argCount), argCount)) return INTERPRET_RUNTIME_ERROR;
         frame = &vm.frames[vm.frameCount - 1];
         
         DISPATCH();
-    }
-    CASE(OP_INVOKE): {
+    } CASE(OP_INVOKE): {
         ObjString* method = READ_STRING();
         int argCount = READ_BYTE();
         
@@ -1064,8 +999,7 @@ print_end:
         frame = &vm.frames[vm.frameCount - 1];
         
         DISPATCH();
-    }
-    CASE(OP_INVOKE_LONG): {
+    } CASE(OP_INVOKE_LONG): {
         ObjString* method = READ_STRING_LONG();
         int argCount = READ_BYTE();
         
@@ -1073,8 +1007,7 @@ print_end:
         frame = &vm.frames[vm.frameCount - 1];
         
         DISPATCH();
-    }
-    CASE(OP_SUPER_INVOKE): {
+    } CASE(OP_SUPER_INVOKE): {
         ObjString* method = READ_STRING();
         int argCount = READ_BYTE();
         ObjClass* superclass = AS_CLASS(pop());
@@ -1083,8 +1016,7 @@ print_end:
         frame = &vm.frames[vm.frameCount - 1];
         
         DISPATCH();
-    }
-    CASE(OP_SUPER_INVOKE_LONG): {
+    } CASE(OP_SUPER_INVOKE_LONG): {
         ObjString* method = READ_STRING_LONG();
         int argCount = READ_BYTE();
         ObjClass* superclass = AS_CLASS(pop());
@@ -1093,9 +1025,7 @@ print_end:
         frame = &vm.frames[vm.frameCount - 1];
         
         DISPATCH();
-    }
-
-    CASE(OP_CLOSURE): {
+    } CASE(OP_CLOSURE): {
         ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
         ObjClosure* closure = newClosure(function);
         push(OBJ_VAL(closure));
@@ -1107,8 +1037,7 @@ print_end:
                 : frame->closure->upvalues[index];
         }
         DISPATCH();
-    }
-    CASE(OP_CLOSURE_LONG): {
+    } CASE(OP_CLOSURE_LONG): {
         ObjFunction* function = AS_FUNCTION(READ_CONSTANT_LONG());
         ObjClosure* closure = newClosure(function);
         push(OBJ_VAL(closure));
@@ -1120,13 +1049,10 @@ print_end:
                 : frame->closure->upvalues[index];
         }
         DISPATCH();
-    }
-
-    CASE(OP_CLOSE_UPVALUE):
+    } CASE(OP_CLOSE_UPVALUE):
         closeUpvalues(vm.stackTop - 1);
         pop();
         DISPATCH();
-
     CASE(OP_TRY): {
         uint16_t offset = READ_SHORT();
 
@@ -1145,7 +1071,6 @@ print_end:
     CASE(OP_END_TRY):
         vm.handlerCount--;
         DISPATCH();
-
     CASE(OP_RETURN): {
         Value result = pop();
         closeUpvalues(frame->slots);
@@ -1160,14 +1085,12 @@ print_end:
         
         DISPATCH();
     }
-
     CASE(OP_CLASS):
         push(OBJ_VAL(newClass(READ_STRING())));
         DISPATCH();
     CASE(OP_CLASS_LONG):
         push(OBJ_VAL(newClass(READ_STRING_LONG())));
         DISPATCH();
-
     CASE(OP_INHERIT): {
         Value superclass = peek(1);
         if (!IS_CLASS(superclass)) {
@@ -1181,7 +1104,6 @@ print_end:
         pop();
         DISPATCH();
     }
-
     CASE(OP_METHOD):
         defineMethod(READ_STRING());
         DISPATCH();
