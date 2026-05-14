@@ -11,7 +11,9 @@
 #include "btime.h"
 
 static bool exitNative(int argCount, Value* args, Value* result) {
-    exit(AS_NUMBER(args[0]));
+    if (argCount != 0) {
+        exit(AS_NUMBER(args[0]));
+    } exit (0);
 }
 
 static bool hasFieldNative(int argCount, Value* args, Value* result) {
@@ -38,7 +40,10 @@ static bool getFieldNative(int argCount, Value* args, Value* result) {
 
     ObjInstance* instance = AS_INSTANCE(args[0]);
     Value value;
-    tableGet(&instance->fields, AS_STRING(args[1]), &value);
+    if (!tableGet(&instance->fields, AS_STRING(args[1]), &value)) {
+        value = NULL_VAL;
+    }
+    
     *result = value;
     return true;
 }

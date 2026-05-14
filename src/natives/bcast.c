@@ -14,7 +14,12 @@ static bool ntosNative(int argCount, Value* args, Value* result) {
 #endif
 
     double val = AS_NUMBER(args[0]);
-    int size = snprintf(NULL, 0, "%.4lf", val);
+    int size;
+    if (fabs(round(val) - val) < 0.00001) {
+        size = snprintf(NULL, 0, "%ld", (long)round(val));
+    } else {
+        size = snprintf(NULL, 0, "%.4lf", val);
+    }
     char* str = malloc(sizeof(char) * size + 1);
 
     if (str == NULL) {

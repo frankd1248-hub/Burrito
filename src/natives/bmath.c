@@ -28,7 +28,7 @@ static bool checkNumberArguments(char* name, Value* args, Value* result, int cou
 static bool powerNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
     if (argCount != 2) {
-        *result = OBJ_VAL(copyString("power() expects two number arguments.", 30));
+        *result = OBJ_VAL(copyString("power() expects two number arguments.", 37));
         return false;
     }
 

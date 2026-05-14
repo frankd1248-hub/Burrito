@@ -590,14 +590,12 @@ static InterpretResult run() {
         ObjString* name = READ_STRING();
         Value isConst;
         if (tableGet(&vm.consts, name, &isConst)) {
-            
             runtimeError("Attempting to assign to constant '%s'.", name->chars);
             if (errorWasHandled) DISPATCH();
             return INTERPRET_RUNTIME_ERROR;
         }
         Value dummy;
         if (!tableGet(&vm.globals, name, &dummy)) {
-            
             runtimeError("Undefined variable '%s'.", name->chars);
             if (errorWasHandled) DISPATCH();
             return INTERPRET_RUNTIME_ERROR;
@@ -1131,6 +1129,12 @@ print_end:
 
     CASE(OP_TRY): {
         uint16_t offset = READ_SHORT();
+
+        if (vm.handlerCount >= HANDLER_MAX) { 
+            runtimeError("Too many nested try blocks.");
+            exit(1);
+        }
+
         ErrorHandler* handler = &vm.handlerStack[vm.handlerCount++];
         handler->frameCount = vm.frameCount;
         handler->stackTop   = vm.stackTop;

@@ -18,6 +18,7 @@
 typedef struct {
     Token current;
     Token previous;
+    const char* source;
     bool hadError;
     bool panicMode;
 } Parser;
@@ -125,7 +126,7 @@ static Chunk* currentChunk() {
 static void errorAt(Token* token, const char* message) {
     if (parser.panicMode) return;
     parser.panicMode = true;
-    fprintf(stderr, "[line %04d] Error", token->line);
+    fprintf(stderr, "[line %04d, col %02d] Error", token->line, token->column);
 
     if (token->type == TOKEN_EOF) {
         fprintf(stderr, " at end");
@@ -135,6 +136,27 @@ static void errorAt(Token* token, const char* message) {
     }
 
     fprintf(stderr, ": %s\n", message);
+
+    // Print the source line and underline the offending token.
+    // Not available for string tokens (their start points to a heap buffer, not the source).
+    if (token->type != TOKEN_ERROR && token->type != TOKEN_EOF && token->type != TOKEN_STRING) {
+        // Walk back from token->start to find the beginning of the line.
+        const char* lineStart = token->start;
+        while (lineStart > parser.source && lineStart[-1] != '\n') lineStart--;
+
+        // Print the line.
+        const char* lineEnd = token->start + token->length;
+        while (*lineEnd != '\n' && *lineEnd != '\0') lineEnd++;
+        fprintf(stderr, "  %.*s\n", (int)(lineEnd - lineStart), lineStart);
+
+        // Print spaces up to the token, then carets under it.
+        int pad = (int)(token->start - lineStart);
+        fprintf(stderr, "  ");
+        for (int i = 0; i < pad; i++) fprintf(stderr, " ");
+        for (int i = 0; i < token->length; i++) fprintf(stderr, "^");
+        fprintf(stderr, "\n");
+    }
+
     parser.hadError = true;
 }
 
@@ -680,16 +702,20 @@ static void namedVariable(Token name, bool canAssign) {
 
     if (match(TOKEN_PLUS_PLUS)) {
         emitGet(arg, getOp, longOp);
+        emitGet(arg, getOp, longOp);
         emitConstant(NUMBER_VAL(1));
         emitByte(OP_ADD);
         emitSet(arg, setOp, longOp);
+        emitByte(OP_POP);
 
         return;
     } if (match(TOKEN_MINUS_MINUS)) {
         emitGet(arg, getOp, longOp);
+        emitGet(arg, getOp, longOp);
         emitConstant(NUMBER_VAL(1));
         emitByte(OP_SUBTRACT);
         emitSet(arg, setOp, longOp);
+        emitByte(OP_POP);
 
         return;
     }
@@ -1648,6 +1674,7 @@ ObjFunction* compile(const char* source) {
 
     parser.hadError = false;
     parser.panicMode = false;
+    parser.source = source;
 
     advance();
     

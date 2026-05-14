@@ -63,7 +63,7 @@ static bool readLineNative(int argCount, Value* args, Value* result) {
     do {
         c = getchar();
         buf[count++] = c;
-    } while (c != '\n' && c != EOF);
+    } while (c != '\n' && c != EOF && count < 511);
     count--;
     buf[count] = '\0';
 
