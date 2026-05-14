@@ -3,6 +3,7 @@
 #include "natives.h"
 #include "../vm.h"
 
+#include "barray.h"
 #include "bcast.h"
 #include "bgraphics.h"
 #include "bio.h"
@@ -78,6 +79,7 @@ static bool assertNative(int argCount, Value* args, Value* result) {
 }
 
 void defineAllNatives() {
+    defineModule("arrays", buildArrayModule());
     defineModule("cast", buildCastModule());
     defineModule("io", buildIOModule());
     defineModule("math", buildMathModule());
