@@ -1684,7 +1684,13 @@ ObjFunction* compile(const char* source) {
 
     ObjFunction* function = endCompiler();
     freeTable(&compileTimeConsts);
-    return parser.hadError ? NULL : function;
+
+    if (parser.hadError) {
+        free(compiler);
+        return NULL;
+    } else {
+        return function;
+    }
 }
 
 void markCompilerRoots() {
