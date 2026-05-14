@@ -1,0 +1,393 @@
+const WIDTH = 1200;
+const HEIGHT = 720;
+const FPS = 60;
+
+const PLAYER_SPEED_X = 450;
+const PLAYER_SPEED_JUMP = -900;
+const PLAYER_MAX_FALL = 1000;
+
+const PLAYER_DASH_SPEED = 1200;
+const DASH_TIME = 0.16;
+
+const PLAYER_ACCEL_X = 4000;
+
+const GRAVITY = 5500;
+
+// Burrito sprite size (used for collision)
+const PLAYER_W = 80;
+const PLAYER_H = 70;
+
+graphics.init(WIDTH, HEIGHT, "Escape L.I.C.E.");
+graphics.targetFPS(FPS);
+
+class Player {
+    init() {
+        this.x = 0;
+        this.y = 0;
+        this.vx = 0;
+        this.vy = 0;
+        this.isDashing = false;
+        this.dashTimer = 0;
+        this.dashes = 1;
+    }
+
+    spawn(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.isDashing = false;
+        this.dashTimer = 0;
+        this.dashes = 1;
+    }
+}
+
+class Block {
+    init(x, y, w, h, d, g) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+
+        this.isHarmful = d;
+        this.isGoal = g;
+    }
+}
+
+decl levelGeometry[50]; // Will hold an array of Blocks
+decl geomCount = 0;
+decl player = Player;
+decl spawnPoint[2];
+decl shouldRespawn = false;
+decl p = Player();
+
+// Track whether the player has reached the goal
+decl levelComplete = false;
+decl currentLevel = 0;
+decl maxLevel = 0;
+
+fn setupLevel(count) {
+    levelComplete = false;
+    if (count == 0) {
+        geomCount = 7;
+        spawnPoint = {80, HEIGHT * 0.9 - 70};
+        levelGeometry = {
+            Block(0, HEIGHT * 0.9, WIDTH * 0.2, HEIGHT * 0.1, false, false),
+            Block(WIDTH * 0.8, HEIGHT * 0.9, WIDTH * 0.2, HEIGHT * 0.1, false, false),
+            Block(300, HEIGHT * 0.9 - 120, 160, 20, false, false),
+            Block(550, HEIGHT * 0.9 - 200, 150, 20, false, false),
+            Block(800, HEIGHT * 0.9 - 140, 160, 20, false, false),
+            Block(700, HEIGHT * 0.9 - 200, 60, 20, true, false),
+            Block(WIDTH - 100, HEIGHT * 0.9 - 50, 50, 50, false, true)
+        };
+    } else {
+        geomCount = 0;
+        spawnPoint = {0, 0};
+        levelGeometry = {};
+    }
+}
+
+fn getRed(block) {
+    if (!block.isHarmful) {
+        if (block.isGoal) return 0;
+        return 130;
+    }
+    return 204;
+}
+
+fn getGreen(block) {
+    if (!block.isHarmful) {
+        if (block.isGoal) return 200;
+        return 130;
+    }
+    return 0;
+}
+
+fn getBlue(block) {
+    if (!block.isHarmful and !block.isGoal) return 130;
+    return 0;
+}
+
+fn drawLevel() {
+    decl color;
+    for (decl i = 0; i < geomCount; i++) {
+        decl b = levelGeometry[i];
+        graphics.drawRect(
+            getRed(b), getGreen(b), getBlue(b),
+            b.x, b.y, b.w, b.h
+        );
+    }
+}
+
+fn rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+    return ax < bx + bw and
+           ax + aw > bx and
+           ay < by + bh and
+           ay + ah > by;
+}
+
+fn updatePlayer(pl, blocks, dt) {
+    // ── Horizontal input ────────────────────────────────────────
+    decl wantVX = 0;
+
+    if (!pl.isDashing) {
+        if (game.isKeyDown(game.KEY_LEFT) or game.isKeyDown(game.KEY_A)) {
+            wantVX = -PLAYER_SPEED_X;
+        }
+        if (game.isKeyDown(game.KEY_RIGHT) or game.isKeyDown(game.KEY_D)) {
+            wantVX = PLAYER_SPEED_X;
+        }
+    }
+
+    // Accelerate toward wantVX
+    if (!pl.isDashing) {
+        decl diff = wantVX - pl.vx;
+        decl step = PLAYER_ACCEL_X * dt;
+        if (diff > step) {
+            pl.vx = pl.vx + step;
+        } else {
+            if (diff < -step) {
+                pl.vx = pl.vx - step;
+            } else {
+                pl.vx = wantVX;
+            }
+        }
+    }
+
+    if (!pl.isDashing) {
+        pl.vy = pl.vy + (
+            game.isKeyDown(game.KEY_SPACE) or 
+            game.isKeyDown(game.KEY_UP) or 
+            game.isKeyDown(game.KEY_W) ? GRAVITY * 0.45 : GRAVITY) * dt;
+        if (pl.vy > PLAYER_MAX_FALL) pl.vy = PLAYER_MAX_FALL;
+    }
+
+    pl.x = pl.x + pl.vx * dt;
+
+    for (decl i = 0; i < geomCount; i++) {
+        decl b = blocks[i];
+        if (!b.isHarmful and !b.isGoal) {
+            if (rectsOverlap(pl.x, pl.y, PLAYER_W, PLAYER_H,
+                             b.x, b.y, b.w, b.h)) {
+                // Push player out horizontally
+                decl overlapRight = (pl.x + PLAYER_W) - b.x;
+                decl overlapLeft  = (b.x + b.w) - pl.x;
+                if (overlapRight < overlapLeft) {
+                    pl.x = b.x - PLAYER_W;
+                } else {
+                    pl.x = b.x + b.w;
+                }
+                pl.vx = 0;
+            }
+        }
+    }
+
+    if (pl.x < 0) {
+        pl.x = 0;
+        pl.vx = 0;
+    } if (pl.x + PLAYER_W >= WIDTH) {
+        pl.x = WIDTH - PLAYER_W;
+        pl.vx = 0;
+    }
+
+    // ── Move Y, then resolve collisions ─────────────────────────
+    pl.y = pl.y + pl.vy * dt;
+
+    decl onGround = false;
+
+    for (decl i = 0; i < geomCount; i++) {
+        decl b = blocks[i];
+        if (!b.isGoal) {
+            if (rectsOverlap(pl.x, pl.y, PLAYER_W, PLAYER_H,
+                             b.x, b.y, b.w, b.h)) {
+                                
+                decl overlapDown = (pl.y + PLAYER_H) - b.y;
+                decl overlapUp   = (b.y + b.h) - pl.y;
+                if (overlapDown < overlapUp) {
+                    // Landed on top of block
+                    pl.y = b.y - PLAYER_H;
+                    if (pl.vy > 0) pl.vy = 0;
+                    if (b.isHarmful) {
+                        shouldRespawn = true;
+                        return;
+                    }
+                    onGround = true;
+                } else {
+                    // Hit block from below
+                    pl.y = b.y + b.h;
+                    if (b.isHarmful) {
+                        shouldRespawn = true;
+                        return;
+                    }
+                    if (pl.vy < 0) pl.vy = 0;
+                }
+            }
+        }
+    }
+    
+    if (onGround) pl.dashes = 1;
+
+    if (pl.y >= HEIGHT) {
+        shouldRespawn = true;
+        return;
+    }
+
+    if (onGround) {
+        if (game.isKeyDown(game.KEY_UP)    or
+            game.isKeyDown(game.KEY_W)     or
+            game.isKeyDown(game.KEY_SPACE)) {
+            pl.vy = PLAYER_SPEED_JUMP;
+        }
+    }
+
+    if (game.isKeyDown(game.KEY_X) and !pl.isDashing and pl.dashes > 0) {
+        pl.isDashing = true;
+        pl.dashes = pl.dashes - 1;
+        pl.dashTimer = DASH_TIME;
+
+        decl left  = game.isKeyDown(game.KEY_A) or game.isKeyDown(game.KEY_LEFT);
+        decl right = game.isKeyDown(game.KEY_D) or game.isKeyDown(game.KEY_RIGHT);
+        decl down  = game.isKeyDown(game.KEY_S) or game.isKeyDown(game.KEY_DOWN);
+        decl up    = game.isKeyDown(game.KEY_W) or game.isKeyDown(game.KEY_UP);
+
+        decl sqrt = math.power(2, 0.5);
+
+        if (left and (!up and !down)) {
+            pl.vx = -PLAYER_DASH_SPEED;
+        } else if (left and (up or down)) {
+            pl.vx = -PLAYER_DASH_SPEED / sqrt;
+            pl.vy = ((up ? -1 : 1) * (PLAYER_DASH_SPEED / sqrt));
+        } 
+        
+        if (right and (!up and !down)) {
+            pl.vx = PLAYER_DASH_SPEED;
+        } else if (right and (up or down)) {
+            pl.vx = PLAYER_DASH_SPEED / sqrt;
+            pl.vy = ((up ? -1 : 1) * (PLAYER_DASH_SPEED / sqrt));
+        }
+
+        if (!left and !right) {
+            if (up) {
+                pl.vx = 0;
+                pl.vy = -PLAYER_DASH_SPEED;
+            } else if (down) {
+                pl.vx = 0;
+                pl.vy = PLAYER_DASH_SPEED;
+            }
+        }
+
+        if ((left or right) and (!up and !down)) {
+            pl.vy = 0;
+        }
+    }
+
+    for (decl i = 0; i < geomCount; i++) {
+        decl b = blocks[i];
+        if (rectsOverlap(pl.x + 4, pl.y + 4, PLAYER_W - 8, PLAYER_H - 8,
+                         b.x, b.y, b.w, b.h)) {
+            if (b.isHarmful) {
+                shouldRespawn = true;
+                return;
+            }
+            if (b.isGoal) {
+                levelComplete = true;
+                return;
+            }
+        }
+    }
+
+    if (p.isDashing) {
+        p.dashTimer = p.dashTimer - dt;
+        if (p.dashTimer <= 0) {
+            p.isDashing = false;
+            p.dashTimer = 0;
+
+            if (p.vx > PLAYER_SPEED_X) p.vx = PLAYER_SPEED_X;
+            if (p.vx < -PLAYER_SPEED_X) p.vx = -PLAYER_SPEED_X;
+
+            if (p.vy < PLAYER_SPEED_JUMP) p.vy = p.vy * 0.5;
+        }
+    }
+}
+
+fn drawPlayer(x, y) {
+    y -= 5;
+    graphics.drawRect(210, 170, 100, x + 10, y + 18, 60, 52);
+    graphics.drawRect(210, 170, 100, x + 14, y + 14, 52, 8);
+    graphics.drawRect(195, 155,  88, x + 14, y + 68, 52, 6);
+    graphics.drawRect(210, 170, 100, x + 6,  y + 22, 8,  44);
+    graphics.drawRect(210, 170, 100, x + 66, y + 22, 8,  44);
+    graphics.drawRect(180, 140,  76, x + 6,  y + 22, 6,  44);
+    graphics.drawRect(180, 140,  76, x + 68, y + 22, 6,  44);
+    graphics.drawRect(235, 200, 130, x + 18, y + 16, 44, 5);
+    graphics.drawLine(185, 148, 82, x + 14, y + 22, x + 22, y + 68);
+    graphics.drawLine(185, 148, 82, x + 66, y + 22, x + 58, y + 68);
+    graphics.drawRect(240, 235, 210, x + 18, y + 15, 6, 4);
+    graphics.drawRect(240, 235, 210, x + 28, y + 14, 5, 4);
+    graphics.drawRect(240, 235, 210, x + 38, y + 15, 6, 4);
+    graphics.drawRect(240, 235, 210, x + 50, y + 14, 5, 4);
+    graphics.drawRect( 55,  35,  20, x + 22, y + 18, 8, 5);
+    graphics.drawRect( 55,  35,  20, x + 34, y + 17, 7, 5);
+    graphics.drawRect( 55,  35,  20, x + 46, y + 18, 8, 5);
+    graphics.drawRect(210,  50,  40, x + 20, y + 14, 5, 4);
+    graphics.drawRect(210,  50,  40, x + 42, y + 14, 5, 4);
+    graphics.drawRect(210,  50,  40, x + 57, y + 15, 5, 4);
+    graphics.drawRect( 60, 160,  60, x + 17, y + 22, 46, 4);
+    graphics.drawRect( 80, 180,  70, x + 19, y + 22, 6, 4);
+    graphics.drawRect( 80, 180,  70, x + 30, y + 22, 6, 4);
+    graphics.drawRect( 80, 180,  70, x + 41, y + 22, 6, 4);
+    graphics.drawRect( 80, 180,  70, x + 52, y + 22, 6, 4);
+    graphics.drawRect(240, 200,  60, x + 17, y + 26, 46, 3);
+    graphics.drawRect(190, 150,  80, x + 20, y + 66, 40, 6);
+    graphics.drawRect(175, 135,  65, x + 24, y + 69, 32, 4);
+}
+
+
+setupLevel(currentLevel);
+shouldRespawn = true;
+
+while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
+    decl dt = graphics.getDeltaTime();
+    if (dt > 0.05) dt = 0.05;
+
+    if (shouldRespawn) {
+        p.spawn(spawnPoint[0], spawnPoint[1]);
+        shouldRespawn = false;
+        levelComplete = false;
+    }
+
+    if (!levelComplete) {
+        updatePlayer(p, levelGeometry, dt);
+    }
+
+    graphics.beginDraw();
+    graphics.clearColor(30, 30, 46);
+
+    drawLevel();
+    drawPlayer(p.x, p.y);
+
+    if (levelComplete) {
+        graphics.drawRect(0, 0, 0, WIDTH / 2 - 200, HEIGHT / 2 - 60, 400, 140);
+        graphics.drawRect(20, 60, 20, WIDTH / 2 - 198, HEIGHT / 2 - 58, 396, 136);
+        graphics.drawText("LEVEL COMPLETE!", 80, 255, 120,
+                          WIDTH / 2 - 172, HEIGHT / 2 - 42, 36);
+        graphics.drawText("ENTER to play again", 180, 220, 255,
+                          WIDTH / 2 - 132, HEIGHT / 2 + 16, 22);
+        graphics.drawText("RIGHT to go to next level", 180, 220, 255,
+                          WIDTH / 2 - 132, HEIGHT / 2 + 40, 22);
+    }
+
+    if (levelComplete) {
+        if (game.isKeyDown(game.KEY_ENTER)) {
+            setupLevel(currentLevel);
+            shouldRespawn = true;
+        } else if (game.isKeyDown(game.KEY_RIGHT) and currentLevel < maxLevel) {
+            setupLevel(++currentLevel);
+            shouldRespawn = true;
+        }
+    }
+
+    graphics.endDraw();
+}
+
+graphics.closeWindow();

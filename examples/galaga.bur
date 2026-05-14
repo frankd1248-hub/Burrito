@@ -409,45 +409,45 @@ fn fireEnemyBulletFromColumn() {
 // =============================================
 
 fn drawPlayer(px, py) {
-    graphics.drawRect(0, 90, 200,   px + 2,  py + 16, 32, 10);
-    graphics.drawRect(0, 160, 255,  px + 4,  py + 18, 28, 8);
-    graphics.drawRect(0, 200, 255,  px,      py + 18, 4,  6);
-    graphics.drawRect(0, 200, 255,  px + 32, py + 18, 4,  6);
-    graphics.drawRect(0, 220, 255,  px + 12, py + 8,  12, 12);
-    graphics.drawRect(120, 255, 255, px + 15, py + 10, 6,  6);
-    graphics.drawRect(80, 255, 255,  px + 14, py + 2,  8,  6);
-    graphics.drawRect(0, 140, 255,   px + 16, py + 6,  4,  14);
-    graphics.drawRect(255, 180, 0,   px + 10, py + 26, 5,  4);
-    graphics.drawRect(255, 100, 0,   px + 11, py + 28, 3,  3);
-    graphics.drawRect(255, 180, 0,   px + 21, py + 26, 5,  4);
-    graphics.drawRect(255, 100, 0,   px + 22, py + 28, 3,  3);
+    graphics.drawRect({0, 90, 200},   px + 2,  py + 16, 32, 10);
+    graphics.drawRect({0, 160, 255},  px + 4,  py + 18, 28, 8);
+    graphics.drawRect({0, 200, 255},  px,      py + 18, 4,  6);
+    graphics.drawRect({0, 200, 255},  px + 32, py + 18, 4,  6);
+    graphics.drawRect({0, 220, 255},  px + 12, py + 8,  12, 12);
+    graphics.drawRect({120, 255, 255}, px + 15, py + 10, 6,  6);
+    graphics.drawRect({80, 255, 255},  px + 14, py + 2,  8,  6);
+    graphics.drawRect({0, 140, 255},   px + 16, py + 6,  4,  14);
+    graphics.drawRect({255, 180, 0},   px + 10, py + 26, 5,  4);
+    graphics.drawRect({255, 100, 0},   px + 11, py + 28, 3,  3);
+    graphics.drawRect({255, 180, 0},   px + 21, py + 26, 5,  4);
+    graphics.drawRect({255, 100, 0},   px + 22, py + 28, 3,  3);
 }
 
 fn drawBoss(x, y) {
-    graphics.drawRect(200, 20, 80,   x,      y + 6,  28, 10);
-    graphics.drawRect(255, 60, 140,  x + 4,  y + 8,  20, 8);
-    graphics.drawRect(255, 120, 60,  x + 8,  y,      12, 6);
-    graphics.drawRect(255, 160, 40,  x + 10, y + 10, 8,  10);
-    graphics.drawRect(255, 255, 120, x + 11, y + 11, 6,  6);
-    graphics.drawRect(200, 20, 80,   x + 6,  y + 18, 16, 6);
+    graphics.drawRect({200, 20, 80},   x,      y + 6,  28, 10);
+    graphics.drawRect({255, 60, 140},  x + 4,  y + 8,  20, 8);
+    graphics.drawRect({255, 120, 60},  x + 8,  y,      12, 6);
+    graphics.drawRect({255, 160, 40},  x + 10, y + 10, 8,  10);
+    graphics.drawRect({255, 255, 120}, x + 11, y + 11, 6,  6);
+    graphics.drawRect({200, 20, 80},   x + 6,  y + 18, 16, 6);
 }
 
 fn drawButterfly(x, y) {
-    graphics.drawRect(80, 80, 255,   x + 6,  y,      16, 6);
-    graphics.drawRect(40, 40, 200,   x,      y + 6,  28, 8);
-    graphics.drawRect(100, 160, 255, x + 4,  y + 8,  20, 6);
-    graphics.drawRect(200, 200, 255, x + 10, y + 6,  8,  10);
-    graphics.drawRect(255, 255, 255, x + 11, y + 7,  6,  4);
-    graphics.drawRect(80, 80, 255,   x + 8,  y + 16, 12, 6);
+    graphics.drawRect({80, 80, 255},   x + 6,  y,      16, 6);
+    graphics.drawRect({40, 40, 200},   x,      y + 6,  28, 8);
+    graphics.drawRect({100, 160, 255}, x + 4,  y + 8,  20, 6);
+    graphics.drawRect({200, 200, 255}, x + 10, y + 6,  8,  10);
+    graphics.drawRect({255, 255, 255}, x + 11, y + 7,  6,  4);
+    graphics.drawRect({80, 80, 255},   x + 8,  y + 16, 12, 6);
 }
 
 fn drawBee(x, y) {
-    graphics.drawRect(220, 255, 120, x + 6,  y,      16, 6);
-    graphics.drawRect(120, 200, 0,   x + 4,  y + 6,  20, 10);
-    graphics.drawRect(255, 255, 0,   x + 6,  y + 8,  16, 2);
-    graphics.drawRect(255, 255, 0,   x + 6,  y + 12, 16, 2);
-    graphics.drawRect(255, 255, 120, x + 10, y + 7,  8,  6);
-    graphics.drawRect(200, 255, 0,   x + 10, y + 16, 8,  6);
+    graphics.drawRect({220, 255, 120}, x + 6,  y,      16, 6);
+    graphics.drawRect({120, 200, 0},   x + 4,  y + 6,  20, 10);
+    graphics.drawRect({255, 255, 0},   x + 6,  y + 8,  16, 2);
+    graphics.drawRect({255, 255, 0},   x + 6,  y + 12, 16, 2);
+    graphics.drawRect({255, 255, 120}, x + 10, y + 7,  8,  6);
+    graphics.drawRect({200, 255, 0},   x + 10, y + 16, 8,  6);
 }
 
 fn drawEnemy(idx, x, y) {
@@ -476,18 +476,18 @@ fn drawExplosion(x, y, t) {
     // Outer ring: orange → dark
     decl oR = math.floor(255 * frac);
     decl oG = math.floor(140 * frac);
-    graphics.drawRect(oR, oG, 0, x - r1,          y + ENEMY_H / 2 - 3, r1 * 2, 6);
-    graphics.drawRect(oR, oG, 0, x + ENEMY_W / 2 - 3, y - r1,          6, r1 * 2);
+    graphics.drawRect({oR, oG, 0}, x - r1,          y + ENEMY_H / 2 - 3, r1 * 2, 6);
+    graphics.drawRect({oR, oG, 0}, x + ENEMY_W / 2 - 3, y - r1,          6, r1 * 2);
 
     // Inner ring: white → yellow
     decl iG = math.floor(200 + 55 * frac);
-    graphics.drawRect(255, iG, 0, x + ENEMY_W / 2 - r2, y + ENEMY_H / 2 - r2, r2 * 2, r2 * 2);
+    graphics.drawRect({255, iG, 0}, x + ENEMY_W / 2 - r2, y + ENEMY_H / 2 - r2, r2 * 2, r2 * 2);
 
     // Core flash (only first half)
     if (frac > 0.5) {
         decl cf = (frac - 0.5) * 2.0;
         decl cs = math.floor(cf * 255);
-        graphics.drawRect(cs, cs, cs, x + ENEMY_W / 2 - 5, y + ENEMY_H / 2 - 5, 10, 10);
+        graphics.drawRect({cs, cs, cs}, x + ENEMY_W / 2 - 5, y + ENEMY_H / 2 - 5, 10, 10);
     }
 }
 
@@ -516,7 +516,7 @@ fn updateStars(dt) {
 fn drawStars(swayTLocal) {
     for (decl s = 0; s < STAR_COUNT; s++) {
         decl twinkle = math.floor(math.sin(swayTLocal * 2 + s) * 55 + 180);
-        graphics.drawRect(twinkle, twinkle, twinkle, starX[s], math.floor(starY[s]), 2, 2);
+        graphics.drawRect({twinkle, twinkle, twinkle}, starX[s], math.floor(starY[s]), 2, 2);
     }
 }
 
@@ -542,11 +542,11 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
         graphics.clearColor(0, 0, 0);
         drawStars(swayT);
 
-        graphics.drawText("STAGE " + cast.ntos(wave - 1) + " CLEAR!", 0, 255, 80,
+        graphics.drawText("STAGE " + cast.ntos(wave - 1) + " CLEAR!", {0, 255, 80},
                           SCREEN_W / 2 - 150, SCREEN_H / 2 - 30, 36);
-        graphics.drawText("STAGE " + cast.ntos(wave), 255, 255, 80,
+        graphics.drawText("STAGE " + cast.ntos(wave), {255, 255, 80},
                           SCREEN_W / 2 - 80, SCREEN_H / 2 + 20, 26);
-        graphics.drawText("GET READY!", 200, 200, 255,
+        graphics.drawText("GET READY!", {200, 200, 255},
                           SCREEN_W / 2 - 90, SCREEN_H / 2 + 60, 22);
 
         graphics.endDraw();
@@ -804,25 +804,25 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
     drawStars(swayT);
 
     // --- HUD ---
-    graphics.drawText("1UP", 255, 255, 255, 10, 6, 16);
-    graphics.drawText(cast.ntos(score), 255, 255, 80, 10, 24, 22);
+    graphics.drawText("1UP", {255, 255, 255}, 10, 6, 16);
+    graphics.drawText(cast.ntos(score), {255, 255, 80}, 10, 24, 22);
 
-    graphics.drawText("HIGH SCORE", 255, 200, 200, SCREEN_W / 2 - 60, 6, 14);
-    graphics.drawText(cast.ntos(highScore), 255, 200, 200, SCREEN_W / 2 - 20, 22, 18);
+    graphics.drawText("HIGH SCORE", {255, 200, 200}, SCREEN_W / 2 - 60, 6, 14);
+    graphics.drawText(cast.ntos(highScore), {255, 200, 200}, SCREEN_W / 2 - 20, 22, 18);
 
-    graphics.drawText("WAVE " + cast.ntos(wave), 160, 160, 255,
+    graphics.drawText("WAVE " + cast.ntos(wave), {160, 160, 255},
                       SCREEN_W - 110, 6, 16);
 
     // Life icons
     for (decl l = 0; l < lives - 1; l++) {
         decl lx = 14 + l * 32;
         decl ly = SCREEN_H - 24;
-        graphics.drawRect(0, 190, 255, lx,     ly + 8, 22, 10);
-        graphics.drawRect(0, 225, 255, lx + 6, ly + 4, 10, 8);
-        graphics.drawRect(80, 255, 255, lx + 9, ly,    4,  5);
+        graphics.drawRect({0, 190, 255}, lx,     ly + 8, 22, 10);
+        graphics.drawRect({0, 225, 255}, lx + 6, ly + 4, 10, 8);
+        graphics.drawRect({80, 255, 255}, lx + 9, ly,    4,  5);
     }
 
-    graphics.drawLine(80, 80, 180, 0, SCREEN_H - 34, SCREEN_W, SCREEN_H - 34);
+    graphics.drawLine({80, 80, 180}, 0, SCREEN_H - 34, SCREEN_W, SCREEN_H - 34);
 
     // --- FORMATION ENEMIES ---
     for (decl i = 0; i < TOTAL_ENEMIES; i++) {
@@ -851,7 +851,7 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
             decl frac = popTimer[i] / POPUP_DUR;
             decl pR   = 255;
             decl pG   = math.floor(255 * frac);
-            graphics.drawText(cast.ntos(popValue[i]), pR, pG, 0,
+            graphics.drawText(cast.ntos(popValue[i]), {pR, pG, 0},
                               math.floor(popX[i]), math.floor(popY[i]), 14);
         }
     }
@@ -867,28 +867,28 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
         }
     } else {
         if (respTimer > 1.8) {
-            graphics.drawText("! ! !", 255, 60, 60,
-                              SCREEN_W / 2 - 28, playerY - 22, 20);
+            graphics.drawText("! ! !", {255, 60, 60},
+                              SCREEN_W / 2 - 28, playerY - 22, 24);
         }
     }
 
     // --- PLAYER BULLETS ---
     for (decl i = 0; i < MAX_BULLETS; i++) {
         if (pbActive[i]) {
-            graphics.drawRect(255, 200, 0,   pbX[i], pbY[i] + 6, BULLET_W, BULLET_H);
-            graphics.drawRect(255, 255, 120, pbX[i], pbY[i],     BULLET_W, BULLET_H);
+            graphics.drawRect({255, 200, 0},   pbX[i], pbY[i] + 6, BULLET_W, BULLET_H);
+            graphics.drawRect({255, 255, 120}, pbX[i], pbY[i],     BULLET_W, BULLET_H);
         }
     }
 
     // --- ENEMY BULLETS ---
     for (decl i = 0; i < MAX_EBULLETS; i++) {
         if (ebActive[i]) {
-            graphics.drawRect(255, 80, 80, ebX[i], ebY[i], EBULLET_W, EBULLET_H);
+            graphics.drawRect({255, 80, 80}, ebX[i], ebY[i], EBULLET_W, EBULLET_H);
         }
     }
 
     // --- ENEMY COUNT ---
-    graphics.drawText(enemyCountStr, 160, 160, 255, SCREEN_W - 155, 24, 16);
+    graphics.drawText(enemyCountStr, {160, 160, 255}, SCREEN_W - 155, 24, 16);
 
     graphics.endDraw();
 }
@@ -907,25 +907,25 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
     graphics.clearColor(0, 0, 0);
     drawStars(swayT);
 
-    graphics.drawText("GAME OVER", 255, 40, 40,
+    graphics.drawText("GAME OVER", {255, 40, 40},
                       SCREEN_W / 2 - 120, SCREEN_H / 2 - 60, 44);
 
-    graphics.drawText("WAVE REACHED", 255, 255, 255,
+    graphics.drawText("WAVE REACHED", {255, 255, 255},
                       SCREEN_W / 2 - 95, SCREEN_H / 2 + 0, 20);
-    graphics.drawText(cast.ntos(wave), 255, 220, 80,
+    graphics.drawText(cast.ntos(wave), {255, 220, 80},
                       SCREEN_W / 2 - 15, SCREEN_H / 2 + 26, 28);
 
-    graphics.drawText("FINAL SCORE", 255, 255, 255,
+    graphics.drawText("FINAL SCORE", {255, 255, 255},
                       SCREEN_W / 2 - 80, SCREEN_H / 2 + 62, 20);
-    graphics.drawText(cast.ntos(score), 255, 255, 80,
+    graphics.drawText(cast.ntos(score), {255, 255, 80},
                       SCREEN_W / 2 - 40, SCREEN_H / 2 + 88, 30);
 
-    graphics.drawText("HIGH SCORE", 200, 200, 255,
+    graphics.drawText("HIGH SCORE", {200, 200, 255},
                       SCREEN_W / 2 - 75, SCREEN_H / 2 + 126, 18);
-    graphics.drawText(cast.ntos(highScore), 200, 200, 255,
+    graphics.drawText(cast.ntos(highScore), {200, 200, 255},
                       SCREEN_W / 2 - 35, SCREEN_H / 2 + 148, 24);
 
-    graphics.drawText("Press ESC to quit", 140, 140, 140,
+    graphics.drawText("Press ESC to quit", {140, 140, 140},
                       SCREEN_W / 2 - 110, SCREEN_H / 2 + 190, 18);
 
     graphics.endDraw();

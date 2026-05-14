@@ -28,11 +28,13 @@ ObjArray* newArray(int size) {
     ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY);
     array->values = NULL;   // sentinel
     array->size = 0;
+    push(OBJ_VAL(array));
     array->values = ALLOCATE(Value, size);
     array->size = size;
     for (int i = 0; i < size; i++) {
         array->values[i] = NULL_VAL;
     }
+    pop();
     return array;
 }
 

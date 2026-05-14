@@ -9,8 +9,8 @@ const SCREEN_W      = 800;
 const SCREEN_H      = 500;
 const FPS           = 60;
 
-const GRAVITY       = 950.0;
-const FLAP_VY       = -375.0;
+const GRAVITY       = 1600.0;
+const FLAP_VY       = -500.0;
 const TERMINAL_VY   = 600.0;
 
 const PIPE_SPEED    = 210.0;

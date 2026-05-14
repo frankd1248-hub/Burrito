@@ -102,7 +102,7 @@ void initVM() {
     resetStack();
     vm.objects = NULL;
     vm.bytesAllocated = 0;
-    vm.nextGC = 1024 * 1024; // 1 MiB
+    vm.nextGC = 1024 * 1024 * 4; // 4 MiB
 
     vm.handlerCount = 0;
 
@@ -352,7 +352,7 @@ static InterpretResult run() {
 
 #define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
-#define READ_LONG() (frame->ip += 3, (uint32_t)((frame->ip[-3] << 16) | (frame->ip[-2] << 8) | frame->ip[-1]))
+#define READ_LONG() (frame->ip += 3, (uint32_t)(frame->ip[-3] | (frame->ip[-2] << 8) | (frame->ip[-1] << 16)))
 #define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
 #define READ_CONSTANT_LONG() (frame->ip += 3, frame->closure->function->chunk.constants.values[frame->ip[-3] | (frame->ip[-2] << 8) | (frame->ip[-1] << 16)])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
@@ -401,6 +401,8 @@ static InterpretResult run() {
     static void* dispatchTable[] = {
         [OP_CONSTANT]          = &&op_OP_CONSTANT,
         [OP_CONSTANT_LONG]     = &&op_OP_CONSTANT_LONG,
+        [OP_ZERO]              = &&op_OP_ZERO,
+        [OP_ONE]               = &&op_OP_ONE,
         [OP_NULL]              = &&op_OP_NULL,
         [OP_TRUE]              = &&op_OP_TRUE,
         [OP_FALSE]             = &&op_OP_FALSE,
@@ -469,7 +471,7 @@ static InterpretResult run() {
         [OP_METHOD_LONG]       = &&op_OP_METHOD_LONG,
     };
 
-    #define DISPATCH() goto *dispatchTable[READ_BYTE()]
+    #define DISPATCH() goto *dispatchTable[READ_BYTE()];
     #define CASE(op)   op_ ## op
 #else
     #define DISPATCH() continue
@@ -513,6 +515,14 @@ static InterpretResult run() {
     CASE(OP_CONSTANT_LONG): {
         Value constant = READ_CONSTANT_LONG();
         push(constant);
+        DISPATCH();
+    }
+    CASE(OP_ZERO): {
+        push(NUMBER_VAL(0.0));
+        DISPATCH();
+    }
+    CASE(OP_ONE): {
+        push(NUMBER_VAL(1.0));
         DISPATCH();
     }
     CASE(OP_NULL):  push(NULL_VAL);        DISPATCH();
@@ -650,8 +660,6 @@ static InterpretResult run() {
                 pop();
                 push(value);
             } else if (!bindMethod(instance->class_, name)) {
-                
-                runtimeError("Undefined property '%s'.", name->chars);
                 if (errorWasHandled) DISPATCH();
                 return INTERPRET_RUNTIME_ERROR;
             }
@@ -856,22 +864,23 @@ static InterpretResult run() {
     CASE(OP_ARRAY_INIT): {
         int count = READ_BYTE();
         ObjArray* array = newArray(count);
-        for (int i = count - 1; i >= 0; i--)
-            array->values[count - i - 1] = vm.stackTop[-1 - i];
-        vm.stackTop -= count;
-        push(OBJ_VAL(array));
+        push(OBJ_VAL(array));                                     // root immediately
+        for (int i = 0; i < count; i++)
+            array->values[i] = vm.stackTop[-1 - count + i];
+        vm.stackTop -= count + 1;                                 // remove elements AND the array slot
+        push(OBJ_VAL(array));                                     // put array back on top
         DISPATCH();
     }
-    CASE(OP_ARRAY_INIT_LONG): {
+     CASE(OP_ARRAY_INIT_LONG): {
         int count = READ_LONG();
         ObjArray* array = newArray(count);
-        for (int i = count - 1; i >= 0; i--)
-            array->values[count - i - 1] = vm.stackTop[-1 - i];
-        vm.stackTop -= count;
-        push(OBJ_VAL(array));
+        push(OBJ_VAL(array));                                     // root immediately
+        for (int i = 0; i < count; i++)
+            array->values[i] = vm.stackTop[-1 - count + i];
+        vm.stackTop -= count + 1;                                 // remove elements AND the array slot
+        push(OBJ_VAL(array));                                     // put array back on top
         DISPATCH();
     }
-
     CASE(OP_EQUAL): {
         Value b = pop();
         Value a = pop();

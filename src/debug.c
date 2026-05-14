@@ -102,6 +102,10 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
             return constantInstruction("OP_CONSTANT", chunk, offset, out);
         case OP_CONSTANT_LONG:
             return longConstantInstruction("OP_CONSTANT_LONG", chunk, offset, out);
+        case OP_ZERO:
+            return simpleInstruction("OP_ZERO", offset, out);
+        case OP_ONE:
+            return simpleInstruction("OP_ONE", offset, out);
         case OP_NULL:
             return simpleInstruction("OP_NULL", offset, out);
         case OP_TRUE:
@@ -155,9 +159,9 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
         case OP_SET_UPVALUE:
             return byteInstruction("OP_SET_UPVALUE", chunk, offset, out);
         case OP_ARRAY_INIT:
-            return constantInstruction("OP_ARRAY_INIT", chunk, offset, out);
+            return byteInstruction("OP_ARRAY_INIT", chunk, offset, out);
         case OP_ARRAY_INIT_LONG:
-            return longConstantInstruction("OP_ARRAY_INIT_LONG", chunk, offset, out);
+            return longByteInstruction("OP_ARRAY_INIT_LONG", chunk, offset, out);
         case OP_ARRAY_NEW:
             return simpleInstruction("OP_ARRAY_NEW", offset, out);
         case OP_EQUAL:
@@ -207,9 +211,9 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
         case OP_INVOKE_LONG:
             return longInvokeInstruction("OP_INVOKE_LONG", chunk, offset, out);
         case OP_SUPER_INVOKE:
-            return invokeInstruction("OP_INVOKE", chunk, offset, out);
+            return invokeInstruction("OP_SUPER_INVOKE", chunk, offset, out);
         case OP_SUPER_INVOKE_LONG:
-            return longInvokeInstruction("OP_INVOKE_LONG", chunk, offset, out);
+            return longInvokeInstruction("OP_SUPER_INVOKE_LONG", chunk, offset, out);
         case OP_CLOSURE: {
             offset++;
             uint8_t constant = chunk->code[offset++];

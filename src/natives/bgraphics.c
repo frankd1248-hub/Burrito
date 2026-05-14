@@ -6,6 +6,16 @@
 #include "bgraphics.h"
 #include "../vm.h"
 
+static Color readColor(Value arg) {
+    Color color = {
+        (int) AS_NUMBER(AS_ARRAY(arg)->values[0]),
+        (int) AS_NUMBER(AS_ARRAY(arg)->values[1]),
+        (int) AS_NUMBER(AS_ARRAY(arg)->values[2]),
+        AS_ARRAY(arg)->size >= 4 ? (int) AS_NUMBER(AS_ARRAY(arg)->values[3]) : 255,
+    };
+    return color;
+}
+
 static bool gInitNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
     if (argCount != 3 || !IS_NUMBER(args[0]) || !IS_NUMBER(args[1]) || !IS_STRING(args[2])) {
@@ -16,6 +26,7 @@ static bool gInitNative(int argCount, Value* args, Value* result) {
 
     SetTraceLogLevel(LOG_NONE);
     InitWindow((int) AS_NUMBER(args[0]), (int) AS_NUMBER(args[1]), AS_CSTRING(args[2]));
+    InitAudioDevice();
     *result = BOOL_VAL(true);
     return true;
 }
@@ -62,6 +73,7 @@ static bool gCloseWindowNative(int argCount, Value* args, Value* result) {
 
     freeResources();
     CloseWindow();
+    CloseAudioDevice();
     *result = BOOL_VAL(true);
     return true;
 }
@@ -94,7 +106,7 @@ static bool gBeginDrawNative(int argCount, Value* args, Value* result) {
 static bool gEndDrawNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
     if (argCount != 0) {
-        *result = OBJ_VAL(copyString("endDraw() expects no arguments.", 33));
+        *result = OBJ_VAL(copyString("endDraw() expects no arguments.", 31));
         return false;
     }
 #endif
@@ -151,16 +163,20 @@ static bool getEventsNative(int argCount, Value* args, Value* result) {
         InputEvent* e = &eventQueue.events[i];
 
         ObjArray* ev = newArray(4);
+        push(OBJ_VAL(ev));
+
         ev->values[0] = NUMBER_VAL((double)e->type);
         ev->values[1] = NUMBER_VAL((double)e->button);
         ev->values[2] = NUMBER_VAL(e->x);
         ev->values[3] = NUMBER_VAL(e->y);
 
-        outer->values[i] = OBJ_VAL(ev);
+        AS_ARRAY(peek(1))->values[i] = OBJ_VAL(ev);
+
+        pop();
     }
 
+    *result = peek(0);
     pop();
-    *result = OBJ_VAL(outer);
     return true;
 }
 
@@ -178,17 +194,18 @@ static bool gIsKeyDownNative(int argCount, Value* args, Value* result) {
 
 static bool gDrawRectNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
-    if (argCount != 7 || !IS_NUMBER(args[0]) || !IS_NUMBER(args[1]) || !IS_NUMBER(args[2]) || 
-        !IS_NUMBER(args[3]) || !IS_NUMBER(args[4]) || !IS_NUMBER(args[5]) || !IS_NUMBER(args[6])) {
-        *result = OBJ_VAL(copyString("drawRect() expects seven number arguments.", 41));
+    if (argCount != 5 || !IS_ARRAY(args[0]) || !IS_NUMBER(args[1]) || 
+        !IS_NUMBER(args[2]) || !IS_NUMBER(args[3]) || !IS_NUMBER(args[4])) {
+        *result = OBJ_VAL(copyString("drawRect() expects one array and four number arguments.", 55));
         return false;
     }
 #endif
 
-    Color color = {(int) AS_NUMBER(args[0]), (int) AS_NUMBER(args[1]), (int) AS_NUMBER(args[2]), 255};
+    Color color = readColor(args[0]);
+
     DrawRectangle(
-        (int) AS_NUMBER(args[3]), (int) AS_NUMBER(args[4]), 
-        (int) AS_NUMBER(args[5]), (int) AS_NUMBER(args[6]),
+        (int) AS_NUMBER(args[1]), (int) AS_NUMBER(args[2]), 
+        (int) AS_NUMBER(args[3]), (int) AS_NUMBER(args[4]),
         color
     );
     *result = BOOL_VAL(true);
@@ -197,17 +214,18 @@ static bool gDrawRectNative(int argCount, Value* args, Value* result) {
 
 static bool gDrawTextNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
-    if (argCount != 7 || !IS_STRING(args[0]) || !IS_NUMBER(args[1]) || !IS_NUMBER(args[2]) || 
-        !IS_NUMBER(args[3]) || !IS_NUMBER(args[4]) || !IS_NUMBER(args[5]) || !IS_NUMBER(args[6])) {
-        *result = OBJ_VAL(copyString("drawText() expects seven arguments: one string and six numbers.", 63));
+    if (argCount != 5 || !IS_STRING(args[0]) || !IS_ARRAY(args[1]) || 
+        !IS_NUMBER(args[2]) || !IS_NUMBER(args[3]) || !IS_NUMBER(args[4]) ) {
+        *result = OBJ_VAL(copyString("drawText() expects five arguments: one string, one array, and three numbers.", 76));
         return false;
     }
 #endif
 
-    Color color = {(int) AS_NUMBER(args[1]), (int) AS_NUMBER(args[2]), (int) AS_NUMBER(args[3]), 255};
+    Color color = readColor(args[1]);
+
     DrawText(
-        AS_CSTRING(args[0]), (int) AS_NUMBER(args[4]), 
-        (int) AS_NUMBER(args[5]), (int) AS_NUMBER(args[6]), color
+        AS_CSTRING(args[0]), (int) AS_NUMBER(args[2]), 
+        (int) AS_NUMBER(args[3]), (int) AS_NUMBER(args[4]), color
     );
     *result = BOOL_VAL(true);
     return true;
@@ -215,17 +233,18 @@ static bool gDrawTextNative(int argCount, Value* args, Value* result) {
 
 static bool gDrawCircleNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
-    if (argCount != 6 || !IS_NUMBER(args[0]) || !IS_NUMBER(args[1]) || !IS_NUMBER(args[2]) || 
-        !IS_NUMBER(args[3]) || !IS_NUMBER(args[4]) || !IS_NUMBER(args[5])) {
-        *result = OBJ_VAL(copyString("drawCircle() expects six number arguments.", 41));
+    if (argCount != 4 || !IS_ARRAY(args[0]) || !IS_NUMBER(args[1]) || 
+        !IS_NUMBER(args[2]) || !IS_NUMBER(args[3])) {
+        *result = OBJ_VAL(copyString("drawCircle() expects one array and three number arguments.", 58));
         return false;
     }
 #endif
 
-    Color color = {(int) AS_NUMBER(args[0]), (int) AS_NUMBER(args[1]), (int) AS_NUMBER(args[2]), 255};
+    Color color = readColor(args[0]);
+
     DrawCircle(
-        (int) AS_NUMBER(args[3]), (int) AS_NUMBER(args[4]), 
-        (float) AS_NUMBER(args[5]), color
+        (int) AS_NUMBER(args[1]), (int) AS_NUMBER(args[2]), 
+        (float) AS_NUMBER(args[3]), color
     );
     *result = BOOL_VAL(true);
     return true;
@@ -233,16 +252,48 @@ static bool gDrawCircleNative(int argCount, Value* args, Value* result) {
 
 static bool gDrawLineNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
-    if (argCount != 7 || !IS_NUMBER(args[0]) || !IS_NUMBER(args[1]) || !IS_NUMBER(args[2]) || 
-        !IS_NUMBER(args[3]) || !IS_NUMBER(args[4]) || !IS_NUMBER(args[5]) || !IS_NUMBER(args[6])) {
-        *result = OBJ_VAL(copyString("drawLine() expects seven number arguments.", 41));
+    if (argCount != 5 || !IS_ARRAY(args[0]) || !IS_NUMBER(args[1]) || !IS_NUMBER(args[2]) || 
+        !IS_NUMBER(args[3]) || !IS_NUMBER(args[4])) {
+        *result = OBJ_VAL(copyString("drawLine() expects one array and four number arguments.", 55));
         return false;
     }
 #endif
 
-    Color color = {(int) AS_NUMBER(args[0]), (int) AS_NUMBER(args[1]), (int) AS_NUMBER(args[2]), 255};
-    DrawLine((int) AS_NUMBER(args[3]), (int) AS_NUMBER(args[4]), 
-             (int) AS_NUMBER(args[5]), (int) AS_NUMBER(args[6]), color);
+    Color color = readColor(args[0]);
+
+    DrawLine((int) AS_NUMBER(args[1]), (int) AS_NUMBER(args[2]), 
+             (int) AS_NUMBER(args[3]), (int) AS_NUMBER(args[4]), color);
+    *result = BOOL_VAL(true);
+    return true;
+}
+
+static bool gDrawTriangleNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 4 || !IS_ARRAY(args[0]) || !IS_ARRAY(args[1]) ||
+        !IS_ARRAY(args[2]) || !IS_ARRAY(args[3])) {
+        *result = OBJ_VAL(copyString("drawTriangle() takes four array arguments.", 42));
+        return false;
+    }
+#endif
+
+    Color color = readColor(args[0]);
+
+    Vector2 v1 = {
+        AS_NUMBER(AS_ARRAY(args[1])->values[0]),
+        AS_NUMBER(AS_ARRAY(args[1])->values[1])
+    };
+
+    Vector2 v2 = {
+        AS_NUMBER(AS_ARRAY(args[2])->values[0]),
+        AS_NUMBER(AS_ARRAY(args[2])->values[1])
+    };
+
+    Vector2 v3 = {
+        AS_NUMBER(AS_ARRAY(args[3])->values[0]),
+        AS_NUMBER(AS_ARRAY(args[3])->values[1])
+    };
+
+    DrawTriangle(v1, v2, v3, color);
     *result = BOOL_VAL(true);
     return true;
 }
@@ -268,10 +319,9 @@ static bool gloadFontNative(int argCount, Value* args, Value* result) {
 
 static bool gDrawTextExNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
-    if (argCount != 8 || !IS_RESOURCE(args[0]) || !IS_STRING(args[1]) || 
-        !IS_NUMBER(args[2]) || !IS_NUMBER(args[3]) || !IS_NUMBER(args[4]) || 
-        !IS_NUMBER(args[5]) || !IS_NUMBER(args[6]) || !IS_NUMBER(args[7])) {
-        *result = OBJ_VAL(copyString("drawTextEx() expects eight arguments: one font, one string, and six numbers", 75));
+    if (argCount != 6 || !IS_RESOURCE(args[0]) || !IS_STRING(args[1]) || !IS_ARRAY(args[2]) || 
+        !IS_NUMBER(args[3]) || !IS_NUMBER(args[4]) || !IS_NUMBER(args[5])) {
+        *result = OBJ_VAL(copyString("drawTextEx() expects six arguments: one font, one string, one array, and three numbers", 86));
         return false;
     }
 #endif
@@ -282,11 +332,11 @@ static bool gDrawTextExNative(int argCount, Value* args, Value* result) {
     }
 
     Font* font = (Font*) AS_RESOURCE(args[0])->handle;
-    Color color = { (int)AS_NUMBER(args[2]), (int)AS_NUMBER(args[3]), (int)AS_NUMBER(args[4]), 255 };
+    Color color = readColor(args[2]);
 
     DrawTextEx(*font, AS_CSTRING(args[1]),
-               (Vector2){ AS_NUMBER(args[5]), AS_NUMBER(args[6]) },
-               AS_NUMBER(args[7]), 1.0f, color);
+               (Vector2){ AS_NUMBER(args[3]), AS_NUMBER(args[4]) },
+               AS_NUMBER(args[5]), 1.0f, color);
 
     *result = BOOL_VAL(true);
     return true;
@@ -322,7 +372,7 @@ static bool gDrawImageNative(int argCount, Value* args, Value* result) {
     }
 #endif
 
-    if (AS_RESOURCE(args[0])->type != RESOURCE_FONT) {
+    if (AS_RESOURCE(args[0])->type != RESOURCE_IMAGE) {
         *result = OBJ_VAL(copyString("drawImage() expects an image.", 29));
         return false;
     }
@@ -398,10 +448,12 @@ ObjModule** buildGraphicsModules() {
     addNative(grmodule, "clearColor", 10, gClearColorNative);
     addNative(grmodule, "targetFPS", 9, gTargetFPSNative);
     addNative(grmodule, "getDeltaTime", 12, getDeltaTimeNative);
+
     addNative(grmodule, "drawRect", 8, gDrawRectNative);
     addNative(grmodule, "drawText", 8, gDrawTextNative);
     addNative(grmodule, "drawLine", 8, gDrawLineNative);
     addNative(grmodule, "drawCircle", 10, gDrawCircleNative);
+    addNative(grmodule, "drawTriangle", 12, gDrawTriangleNative);
 
     addNative(grmodule, "loadImage", 9, gloadImageNative);
     addNative(grmodule, "drawImage", 9, gDrawImageNative);

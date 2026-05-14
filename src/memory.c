@@ -9,7 +9,7 @@
 #include "debug.h"
 #endif
 
-#define GC_HEAP_GROW_FACTOR 2
+#define GC_HEAP_GROW_FACTOR 8
 
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
     vm.bytesAllocated += newSize - oldSize;
@@ -248,6 +248,8 @@ void collectGarbage() {
     printf("-- gc begin\n");
     size_t before = vm.bytesAllocated;
 #endif
+
+    printf("GC Collect\n");
 
     markRoots();
     traceReferences();

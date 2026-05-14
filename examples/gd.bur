@@ -155,7 +155,7 @@ fn spawnParticles(px, py) {
         decl angle = (i / MAX_PART) * 6.2832;
         decl speed = 80.0 + math.rand() * 180.0;
         partX[i]      = px;
-        partY[i]       = py;
+        partY[i]      = py;
         partVX[i]     = math.cos(angle) * speed;
         partVY[i]     = math.sin(angle) * speed - 100.0;
         partLife[i]   = 0.4 + math.rand() * 0.3;

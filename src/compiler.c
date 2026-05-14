@@ -221,6 +221,13 @@ static int makeConstant(Value value) {
 }
 
 static void emitConstant(Value value) {
+    if (IS_NUMBER(value)) {
+        if (AS_NUMBER(value) == 1) {
+            emitByte(OP_ONE); return;
+        } else if (AS_NUMBER(value) == 0) {
+            emitByte(OP_ZERO); return;
+        }
+    }
     writeConstant(currentChunk(), value, parser.previous.line);
 }
 

@@ -128,4 +128,4 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
 }
 
 graphics.closeWindow();
-print("Score: left -- %d, right -- %d", leftScore, rightScore);
+print("Score: left -- %d, right -- %d\n", leftScore, rightScore);
