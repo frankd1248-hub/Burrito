@@ -272,7 +272,9 @@ static bool sLowerNative(int argCount, Value* args, Value* result) {
 }
 
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
-    tableSet(&module->table, copyString(name, length), OBJ_VAL(newNative(fn)));
+    push(OBJ_VAL(newNative(fn)));
+    tableSet(&module->table, copyString(name, length), peek(0));
+    pop();
 }
 
 ObjModule* buildStringModule() {

@@ -230,6 +230,16 @@ static bool callValue(Value callee, int argCount) {
     return false;
 }
 
+static InterpretResult run();
+
+bool callBurrito(Value callee, int argCount, Value* result) {
+    if (!callValue(callee, argCount)) return false;
+    InterpretResult res = run();
+    if (res != INTERPRET_OK) return false;
+    *result = pop();
+    return true;
+}
+
 static bool invokeFromClass(ObjClass* class_, ObjString* name, int argCount) {
     Value method;
     if (!tableGet(&class_->methods, name, &method)) {
