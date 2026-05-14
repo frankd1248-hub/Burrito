@@ -8,9 +8,7 @@
 #include "memory.h"
 #include "scanner.h"
 
-#ifdef DEBUG_PRINT_CODE
 #include "debug.h"
-#endif
 
 #define MAX_CASES 256
 #define MAX_BREAKS 256
@@ -295,19 +293,19 @@ static ObjFunction* endCompiler() {
     emitReturn();
     ObjFunction* function = current->function;
 
-#ifdef DEBUG_PRINT_CODE
-    if (!parser.hadError) {
-        FILE* f = fopen("output.text", "a");
-        dissassembleChunk(
-            currentChunk(), 
-            function->name != NULL ? function->name->chars : "<script>",
-            f
-        );
-        fprintf(f, "\n\n");
-        fflush(f);
-        fclose(f);
+    if (disassembleFlag){
+        if (!parser.hadError) {
+            FILE* f = fopen("output.text", "a");
+            dissassembleChunk(
+                currentChunk(), 
+                function->name != NULL ? function->name->chars : "<script>",
+                f
+            );
+            fprintf(f, "\n\n");
+            fflush(f);
+            fclose(f);
+        }
     }
-#endif
 
     current = current->enclosing;
     return function;

@@ -1,0 +1,4271 @@
+== eRow ==
+000000     75 OP_GET_GLOBAL       0 'math'
+000002      | OP_GET_LOCAL        1
+000004      | OP_CONSTANT         3 '10'
+000006      | OP_DIVIDE
+000007      | OP_INVOKE        (1 args)    1 'floor'
+000010      | OP_RETURN
+000011     76 OP_NULL
+000012      | OP_RETURN
+
+
+== eCol ==
+000000     79 OP_GET_LOCAL        1
+000002      | OP_CONSTANT         1 '10'
+000004      | OP_MODULUS
+000005      | OP_RETURN
+000006     80 OP_NULL
+000007      | OP_RETURN
+
+
+== formationWidth ==
+000000     83 OP_GET_GLOBAL       0 'ENEMY_COLS'
+000002      | OP_CONSTANT         2 '28'
+000004      | OP_MULTIPLY
+000005      | OP_GET_GLOBAL       3 'ENEMY_COLS'
+000007      | OP_ONE
+000008      | OP_SUBTRACT
+000009      | OP_CONSTANT         5 '18'
+000011      | OP_MULTIPLY
+000012      | OP_ADD
+000013      | OP_RETURN
+000014     84 OP_NULL
+000015      | OP_RETURN
+
+
+== formX ==
+000000     87 OP_GET_GLOBAL       0 'SCREEN_W'
+000002      | OP_GET_GLOBAL       1 'formationWidth'
+000004      | OP_CALL             0
+000006      | OP_SUBTRACT
+000007      | OP_CONSTANT         2 '2'
+000009      | OP_DIVIDE
+000010     88 OP_GET_LOCAL        2
+000012      | OP_GET_LOCAL        1
+000014      | OP_GET_GLOBAL       3 'ENEMY_W'
+000016      | OP_CONSTANT         5 '18'
+000018      | OP_ADD
+000019      | OP_MULTIPLY
+000020      | OP_ADD
+000021      | OP_RETURN
+000022     89 OP_NULL
+000023      | OP_RETURN
+
+
+== formY ==
+000000     92 OP_GET_GLOBAL       0 'FORM_Y0'
+000002      | OP_GET_LOCAL        1
+000004      | OP_GET_GLOBAL       1 'ENEMY_H'
+000006      | OP_CONSTANT         3 '14'
+000008      | OP_ADD
+000009      | OP_MULTIPLY
+000010      | OP_ADD
+000011      | OP_RETURN
+000012     93 OP_NULL
+000013      | OP_RETURN
+
+
+== rectsOverlap ==
+000000     96 OP_GET_LOCAL        1
+000002      | OP_GET_LOCAL        5
+000004      | OP_GET_LOCAL        7
+000006      | OP_ADD
+000007      | OP_LESS
+000008      | OP_JUMP_IF_FALSE    8 -> 44
+000011      | OP_POP
+000012      | OP_GET_LOCAL        1
+000014      | OP_GET_LOCAL        3
+000016      | OP_ADD
+000017      | OP_GET_LOCAL        5
+000019      | OP_GREATER
+000020      | OP_JUMP_IF_FALSE   20 -> 44
+000023      | OP_POP
+000024      | OP_GET_LOCAL        2
+000026      | OP_GET_LOCAL        6
+000028      | OP_GET_LOCAL        8
+000030      | OP_ADD
+000031      | OP_LESS
+000032      | OP_JUMP_IF_FALSE   32 -> 44
+000035      | OP_POP
+000036      | OP_GET_LOCAL        2
+000038      | OP_GET_LOCAL        4
+000040      | OP_ADD
+000041      | OP_GET_LOCAL        6
+000043      | OP_GREATER
+000044      | OP_RETURN
+000045     97 OP_NULL
+000046      | OP_RETURN
+
+
+== scoreForEnemy ==
+000000    100 OP_GET_GLOBAL       0 'eRow'
+000002      | OP_GET_LOCAL        1
+000004      | OP_CALL             1
+000006    101 OP_GET_LOCAL        2
+000008      | OP_JUMP_IF_FALSE    8 -> 49
+000011      | OP_POP
+000012    102 OP_GET_LOCAL        3
+000014      | OP_ZERO
+000015      | OP_EQUAL
+000016      | OP_JUMP_IF_FALSE   16 -> 26
+000019      | OP_POP
+000020      | OP_CONSTANT         1 '400'
+000022      | OP_RETURN
+000023      | OP_JUMP            23 -> 27
+000026      | OP_POP
+000027    103 OP_GET_LOCAL        3
+000029      | OP_CONSTANT         2 '3'
+000031      | OP_LESS
+000032      | OP_JUMP_IF_FALSE   32 -> 42
+000035      | OP_POP
+000036      | OP_CONSTANT         3 '160'
+000038      | OP_RETURN
+000039      | OP_JUMP            39 -> 43
+000042      | OP_POP
+000043    104 OP_CONSTANT         4 '100'
+000045      | OP_RETURN
+000046    105 OP_JUMP            46 -> 84
+000049      | OP_POP
+000050    106 OP_GET_LOCAL        3
+000052      | OP_ZERO
+000053      | OP_EQUAL
+000054      | OP_JUMP_IF_FALSE   54 -> 64
+000057      | OP_POP
+000058      | OP_CONSTANT         5 '160'
+000060      | OP_RETURN
+000061      | OP_JUMP            61 -> 65
+000064      | OP_POP
+000065    107 OP_GET_LOCAL        3
+000067      | OP_CONSTANT         6 '3'
+000069      | OP_LESS
+000070      | OP_JUMP_IF_FALSE   70 -> 80
+000073      | OP_POP
+000074      | OP_CONSTANT         7 '80'
+000076      | OP_RETURN
+000077      | OP_JUMP            77 -> 81
+000080      | OP_POP
+000081    108 OP_CONSTANT         8 '50'
+000083      | OP_RETURN
+000084    110 OP_NULL
+000085      | OP_RETURN
+
+
+== initWave ==
+000000    172 OP_GET_GLOBAL       1 'SCREEN_W'
+000002      | OP_CONSTANT         2 '2'
+000004      | OP_DIVIDE
+000005      | OP_CONSTANT         4 '18'
+000007      | OP_SUBTRACT
+000008      | OP_SET_GLOBAL       0 'playerX'
+000010      | OP_POP
+000011    173 OP_GET_GLOBAL       6 'SCREEN_H'
+000013      | OP_CONSTANT         7 '68'
+000015      | OP_SUBTRACT
+000016      | OP_SET_GLOBAL       5 'playerY'
+000018      | OP_POP
+000019    174 OP_TRUE
+000020      | OP_SET_GLOBAL       8 'playerAlive'
+000022      | OP_POP
+000023    175 OP_ZERO
+000024      | OP_SET_GLOBAL       9 'respTimer'
+000026      | OP_POP
+000027    176 OP_GET_GLOBAL      11 'FIRE_RATE'
+000029      | OP_SET_GLOBAL      10 'fireCool'
+000031      | OP_POP
+000032    177 OP_ZERO
+000033      | OP_SET_GLOBAL      12 'invulnTimer'
+000035      | OP_POP
+000036    178 OP_FALSE
+000037      | OP_SET_GLOBAL      13 'victory'
+000039      | OP_POP
+000040    179 OP_GET_GLOBAL      15 'TOTAL_ENEMIES'
+000042      | OP_SET_GLOBAL      14 'enemyCount'
+000044      | OP_POP
+000045    180 OP_ZERO
+000046      | OP_SET_GLOBAL      16 'swayT'
+000048      | OP_POP
+000049    181 OP_ZERO
+000050      | OP_SET_GLOBAL      17 'diveTimer'
+000052      | OP_POP
+000053    183 OP_TRUE
+000054      | OP_SET_GLOBAL      18 'enemyCountDirty'
+000056      | OP_POP
+000057    185 OP_ZERO
+000058      | OP_GET_LOCAL        1
+000060      | OP_CONSTANT        20 '2'
+000062      | OP_LESS
+000063      | OP_JUMP_IF_FALSE   63 -> 107
+000066      | OP_POP
+000067      | OP_JUMP            67 -> 83
+000070      | OP_GET_LOCAL        1
+000072      | OP_GET_LOCAL        1
+000074      | OP_ONE
+000075      | OP_ADD
+000076      | OP_SET_LOCAL        1
+000078      | OP_POP
+000079      | OP_POP
+000080      | OP_LOOP            80 -> 58
+000083    186 OP_GET_GLOBAL      21 'pbX'
+000085      | OP_GET_LOCAL        1
+000087      | OP_ZERO
+000088      | OP_SET_INDEX
+000089      | OP_POP
+000090    187 OP_GET_GLOBAL      22 'pbY'
+000092      | OP_GET_LOCAL        1
+000094      | OP_ZERO
+000095      | OP_SET_INDEX
+000096      | OP_POP
+000097    188 OP_GET_GLOBAL      23 'pbActive'
+000099      | OP_GET_LOCAL        1
+000101      | OP_FALSE
+000102      | OP_SET_INDEX
+000103      | OP_POP
+000104    189 OP_LOOP           104 -> 70
+000107      | OP_POP
+000108      | OP_POP
+000109    191 OP_ZERO
+000110      | OP_GET_LOCAL        1
+000112      | OP_CONSTANT        25 '50'
+000114      | OP_LESS
+000115      | OP_JUMP_IF_FALSE  115 -> 194
+000118      | OP_POP
+000119      | OP_JUMP           119 -> 135
+000122      | OP_GET_LOCAL        1
+000124      | OP_GET_LOCAL        1
+000126      | OP_ONE
+000127      | OP_ADD
+000128      | OP_SET_LOCAL        1
+000130      | OP_POP
+000131      | OP_POP
+000132      | OP_LOOP           132 -> 110
+000135    192 OP_GET_GLOBAL      26 'eAlive'
+000137      | OP_GET_LOCAL        1
+000139      | OP_TRUE
+000140      | OP_SET_INDEX
+000141      | OP_POP
+000142    193 OP_GET_GLOBAL      27 'eDiving'
+000144      | OP_GET_LOCAL        1
+000146      | OP_FALSE
+000147      | OP_SET_INDEX
+000148      | OP_POP
+000149    194 OP_GET_GLOBAL      28 'eDiveX'
+000151      | OP_GET_LOCAL        1
+000153      | OP_ZERO
+000154      | OP_SET_INDEX
+000155      | OP_POP
+000156    195 OP_GET_GLOBAL      29 'eDiveY'
+000158      | OP_GET_LOCAL        1
+000160      | OP_ZERO
+000161      | OP_SET_INDEX
+000162      | OP_POP
+000163    196 OP_GET_GLOBAL      30 'eTargetX'
+000165      | OP_GET_LOCAL        1
+000167      | OP_ZERO
+000168      | OP_SET_INDEX
+000169      | OP_POP
+000170    197 OP_GET_GLOBAL      31 'eTargetY'
+000172      | OP_GET_LOCAL        1
+000174      | OP_ZERO
+000175      | OP_SET_INDEX
+000176      | OP_POP
+000177    198 OP_GET_GLOBAL      32 'eDivePhase'
+000179      | OP_GET_LOCAL        1
+000181      | OP_ZERO
+000182      | OP_SET_INDEX
+000183      | OP_POP
+000184    199 OP_GET_GLOBAL      33 'eTrackingLocked'
+000186      | OP_GET_LOCAL        1
+000188      | OP_FALSE
+000189      | OP_SET_INDEX
+000190      | OP_POP
+000191    200 OP_LOOP           191 -> 122
+000194      | OP_POP
+000195      | OP_POP
+000196    202 OP_ZERO
+000197      | OP_GET_LOCAL        1
+000199      | OP_CONSTANT        35 '6'
+000201      | OP_LESS
+000202      | OP_JUMP_IF_FALSE  202 -> 246
+000205      | OP_POP
+000206      | OP_JUMP           206 -> 222
+000209      | OP_GET_LOCAL        1
+000211      | OP_GET_LOCAL        1
+000213      | OP_ONE
+000214      | OP_ADD
+000215      | OP_SET_LOCAL        1
+000217      | OP_POP
+000218      | OP_POP
+000219      | OP_LOOP           219 -> 197
+000222    203 OP_GET_GLOBAL      36 'ebX'
+000224      | OP_GET_LOCAL        1
+000226      | OP_ZERO
+000227      | OP_SET_INDEX
+000228      | OP_POP
+000229    204 OP_GET_GLOBAL      37 'ebY'
+000231      | OP_GET_LOCAL        1
+000233      | OP_ZERO
+000234      | OP_SET_INDEX
+000235      | OP_POP
+000236    205 OP_GET_GLOBAL      38 'ebActive'
+000238      | OP_GET_LOCAL        1
+000240      | OP_FALSE
+000241      | OP_SET_INDEX
+000242      | OP_POP
+000243    206 OP_LOOP           243 -> 209
+000246      | OP_POP
+000247      | OP_POP
+000248    208 OP_ZERO
+000249      | OP_GET_LOCAL        1
+000251      | OP_CONSTANT        40 '16'
+000253      | OP_LESS
+000254      | OP_JUMP_IF_FALSE  254 -> 284
+000257      | OP_POP
+000258      | OP_JUMP           258 -> 274
+000261      | OP_GET_LOCAL        1
+000263      | OP_GET_LOCAL        1
+000265      | OP_ONE
+000266      | OP_ADD
+000267      | OP_SET_LOCAL        1
+000269      | OP_POP
+000270      | OP_POP
+000271      | OP_LOOP           271 -> 249
+000274    209 OP_GET_GLOBAL      41 'exActive'
+000276      | OP_GET_LOCAL        1
+000278      | OP_FALSE
+000279      | OP_SET_INDEX
+000280      | OP_POP
+000281    210 OP_LOOP           281 -> 261
+000284      | OP_POP
+000285      | OP_POP
+000286    212 OP_ZERO
+000287      | OP_GET_LOCAL        1
+000289      | OP_CONSTANT        43 '16'
+000291      | OP_LESS
+000292      | OP_JUMP_IF_FALSE  292 -> 322
+000295      | OP_POP
+000296      | OP_JUMP           296 -> 312
+000299      | OP_GET_LOCAL        1
+000301      | OP_GET_LOCAL        1
+000303      | OP_ONE
+000304      | OP_ADD
+000305      | OP_SET_LOCAL        1
+000307      | OP_POP
+000308      | OP_POP
+000309      | OP_LOOP           309 -> 287
+000312    213 OP_GET_GLOBAL      44 'popActive'
+000314      | OP_GET_LOCAL        1
+000316      | OP_FALSE
+000317      | OP_SET_INDEX
+000318      | OP_POP
+000319    214 OP_LOOP           319 -> 299
+000322      | OP_POP
+000323      | OP_POP
+000324    215 OP_NULL
+000325      | OP_RETURN
+
+
+== diffScale ==
+000000    225 OP_ONE
+000001      | OP_GET_GLOBAL       0 'enemyCount'
+000003      | OP_CONSTANT         2 '50'
+000005      | OP_DIVIDE
+000006      | OP_SUBTRACT
+000007    227 OP_GET_GLOBAL       3 'wave'
+000009      | OP_ONE
+000010      | OP_SUBTRACT
+000011      | OP_CONSTANT         4 '0.120000'
+000013      | OP_MULTIPLY
+000014    228 OP_GET_LOCAL        1
+000016      | OP_GET_LOCAL        2
+000018      | OP_ADD
+000019    229 OP_GET_LOCAL        3
+000021      | OP_ONE
+000022      | OP_GREATER
+000023      | OP_JUMP_IF_FALSE   23 -> 34
+000026      | OP_POP
+000027      | OP_ONE
+000028      | OP_SET_LOCAL        3
+000030      | OP_POP
+000031      | OP_JUMP            31 -> 35
+000034      | OP_POP
+000035    230 OP_GET_LOCAL        3
+000037      | OP_RETURN
+000038    231 OP_NULL
+000039      | OP_RETURN
+
+
+== scaledSway ==
+000000    234 OP_GET_GLOBAL       0 'SWAY_AMP'
+000002      | OP_ONE
+000003      | OP_GET_GLOBAL       1 'diffScale'
+000005      | OP_CALL             0
+000007      | OP_CONSTANT         2 '1.500000'
+000009      | OP_MULTIPLY
+000010      | OP_ADD
+000011      | OP_MULTIPLY
+000012      | OP_RETURN
+000013    235 OP_NULL
+000014      | OP_RETURN
+
+
+== scaledDiveSPD ==
+000000    238 OP_GET_GLOBAL       0 'DIVE_SPD'
+000002      | OP_ONE
+000003      | OP_GET_GLOBAL       1 'diffScale'
+000005      | OP_CALL             0
+000007      | OP_CONSTANT         2 '0.800000'
+000009      | OP_MULTIPLY
+000010      | OP_ADD
+000011      | OP_MULTIPLY
+000012      | OP_RETURN
+000013    239 OP_NULL
+000014      | OP_RETURN
+
+
+== scaledEBulletChance ==
+000000    242 OP_GET_GLOBAL       0 'EBULLET_CHANCE'
+000002      | OP_ONE
+000003      | OP_GET_GLOBAL       1 'diffScale'
+000005      | OP_CALL             0
+000007      | OP_CONSTANT         2 '3'
+000009      | OP_MULTIPLY
+000010      | OP_ADD
+000011      | OP_MULTIPLY
+000012      | OP_RETURN
+000013    243 OP_NULL
+000014      | OP_RETURN
+
+
+== scaledDiveInterval ==
+000000    246 OP_GET_GLOBAL       0 'DIVE_INTERVAL'
+000002      | OP_ONE
+000003      | OP_GET_GLOBAL       1 'diffScale'
+000005      | OP_CALL             0
+000007      | OP_CONSTANT         2 '0.500000'
+000009      | OP_MULTIPLY
+000010      | OP_SUBTRACT
+000011      | OP_MULTIPLY
+000012    247 OP_GET_LOCAL        1
+000014      | OP_CONSTANT         3 '1.200000'
+000016      | OP_LESS
+000017      | OP_JUMP_IF_FALSE   17 -> 29
+000020      | OP_POP
+000021      | OP_CONSTANT         4 '1.200000'
+000023      | OP_SET_LOCAL        1
+000025      | OP_POP
+000026      | OP_JUMP            26 -> 30
+000029      | OP_POP
+000030    248 OP_GET_LOCAL        1
+000032      | OP_RETURN
+000033    249 OP_NULL
+000034      | OP_RETURN
+
+
+== countDivers ==
+000000    256 OP_ZERO
+000001    257 OP_ZERO
+000002      | OP_GET_LOCAL        2
+000004      | OP_CONSTANT         1 '50'
+000006      | OP_LESS
+000007      | OP_JUMP_IF_FALSE    7 -> 53
+000010      | OP_POP
+000011      | OP_JUMP            11 -> 27
+000014      | OP_GET_LOCAL        2
+000016      | OP_GET_LOCAL        2
+000018      | OP_ONE
+000019      | OP_ADD
+000020      | OP_SET_LOCAL        2
+000022      | OP_POP
+000023      | OP_POP
+000024      | OP_LOOP            24 -> 2
+000027    258 OP_GET_GLOBAL       2 'eDiving'
+000029      | OP_GET_LOCAL        2
+000031      | OP_GET_INDEX
+000032      | OP_JUMP_IF_FALSE   32 -> 49
+000035      | OP_POP
+000036      | OP_GET_LOCAL        1
+000038      | OP_GET_LOCAL        1
+000040      | OP_ONE
+000041      | OP_ADD
+000042      | OP_SET_LOCAL        1
+000044      | OP_POP
+000045      | OP_POP
+000046      | OP_JUMP            46 -> 50
+000049      | OP_POP
+000050    259 OP_LOOP            50 -> 14
+000053      | OP_POP
+000054      | OP_POP
+000055    260 OP_GET_LOCAL        1
+000057      | OP_RETURN
+000058    261 OP_NULL
+000059      | OP_RETURN
+
+
+== spawnExplosion ==
+000000    264 OP_ZERO
+000001      | OP_GET_LOCAL        3
+000003      | OP_CONSTANT         1 '16'
+000005      | OP_LESS
+000006      | OP_JUMP_IF_FALSE    6 -> 76
+000009      | OP_POP
+000010      | OP_JUMP            10 -> 26
+000013      | OP_GET_LOCAL        3
+000015      | OP_GET_LOCAL        3
+000017      | OP_ONE
+000018      | OP_ADD
+000019      | OP_SET_LOCAL        3
+000021      | OP_POP
+000022      | OP_POP
+000023      | OP_LOOP            23 -> 1
+000026    265 OP_GET_GLOBAL       2 'exActive'
+000028      | OP_GET_LOCAL        3
+000030      | OP_GET_INDEX
+000031      | OP_NOT
+000032      | OP_JUMP_IF_FALSE   32 -> 72
+000035      | OP_POP
+000036    266 OP_GET_GLOBAL       3 'exX'
+000038      | OP_GET_LOCAL        3
+000040      | OP_GET_LOCAL        1
+000042      | OP_SET_INDEX
+000043      | OP_POP
+000044    267 OP_GET_GLOBAL       4 'exY'
+000046      | OP_GET_LOCAL        3
+000048      | OP_GET_LOCAL        2
+000050      | OP_SET_INDEX
+000051      | OP_POP
+000052    268 OP_GET_GLOBAL       5 'exTimer'
+000054      | OP_GET_LOCAL        3
+000056      | OP_GET_GLOBAL       6 'EXPLOSION_DUR'
+000058      | OP_SET_INDEX
+000059      | OP_POP
+000060    269 OP_GET_GLOBAL       7 'exActive'
+000062      | OP_GET_LOCAL        3
+000064      | OP_TRUE
+000065      | OP_SET_INDEX
+000066      | OP_POP
+000067    270 OP_NULL
+000068      | OP_RETURN
+000069    271 OP_JUMP            69 -> 73
+000072      | OP_POP
+000073    272 OP_LOOP            73 -> 13
+000076      | OP_POP
+000077      | OP_POP
+000078    273 OP_NULL
+000079      | OP_RETURN
+
+
+== spawnPopup ==
+000000    276 OP_ZERO
+000001      | OP_GET_LOCAL        4
+000003      | OP_CONSTANT         1 '16'
+000005      | OP_LESS
+000006      | OP_JUMP_IF_FALSE    6 -> 84
+000009      | OP_POP
+000010      | OP_JUMP            10 -> 26
+000013      | OP_GET_LOCAL        4
+000015      | OP_GET_LOCAL        4
+000017      | OP_ONE
+000018      | OP_ADD
+000019      | OP_SET_LOCAL        4
+000021      | OP_POP
+000022      | OP_POP
+000023      | OP_LOOP            23 -> 1
+000026    277 OP_GET_GLOBAL       2 'popActive'
+000028      | OP_GET_LOCAL        4
+000030      | OP_GET_INDEX
+000031      | OP_NOT
+000032      | OP_JUMP_IF_FALSE   32 -> 80
+000035      | OP_POP
+000036    278 OP_GET_GLOBAL       3 'popX'
+000038      | OP_GET_LOCAL        4
+000040      | OP_GET_LOCAL        1
+000042      | OP_SET_INDEX
+000043      | OP_POP
+000044    279 OP_GET_GLOBAL       4 'popY'
+000046      | OP_GET_LOCAL        4
+000048      | OP_GET_LOCAL        2
+000050      | OP_SET_INDEX
+000051      | OP_POP
+000052    280 OP_GET_GLOBAL       5 'popTimer'
+000054      | OP_GET_LOCAL        4
+000056      | OP_GET_GLOBAL       6 'POPUP_DUR'
+000058      | OP_SET_INDEX
+000059      | OP_POP
+000060    281 OP_GET_GLOBAL       7 'popValue'
+000062      | OP_GET_LOCAL        4
+000064      | OP_GET_LOCAL        3
+000066      | OP_SET_INDEX
+000067      | OP_POP
+000068    282 OP_GET_GLOBAL       8 'popActive'
+000070      | OP_GET_LOCAL        4
+000072      | OP_TRUE
+000073      | OP_SET_INDEX
+000074      | OP_POP
+000075    283 OP_NULL
+000076      | OP_RETURN
+000077    284 OP_JUMP            77 -> 81
+000080      | OP_POP
+000081    285 OP_LOOP            81 -> 13
+000084      | OP_POP
+000085      | OP_POP
+000086    286 OP_NULL
+000087      | OP_RETURN
+
+
+== lowestInColumn ==
+000000    290 OP_CONSTANT         0 '-1'
+000002    291 OP_GET_GLOBAL       1 'ENEMY_ROWS'
+000004      | OP_ONE
+000005      | OP_SUBTRACT
+000006      | OP_GET_LOCAL        3
+000008      | OP_ZERO
+000009      | OP_LESS
+000010      | OP_NOT
+000011      | OP_JUMP_IF_FALSE   11 -> 75
+000014      | OP_POP
+000015      | OP_JUMP            15 -> 31
+000018      | OP_GET_LOCAL        3
+000020      | OP_GET_LOCAL        3
+000022      | OP_ONE
+000023      | OP_SUBTRACT
+000024      | OP_SET_LOCAL        3
+000026      | OP_POP
+000027      | OP_POP
+000028      | OP_LOOP            28 -> 6
+000031    292 OP_GET_LOCAL        3
+000033      | OP_CONSTANT         3 '10'
+000035      | OP_MULTIPLY
+000036      | OP_GET_LOCAL        1
+000038      | OP_ADD
+000039    293 OP_GET_GLOBAL       4 'eAlive'
+000041      | OP_GET_LOCAL        4
+000043      | OP_GET_INDEX
+000044      | OP_JUMP_IF_FALSE   44 -> 54
+000047      | OP_POP
+000048      | OP_GET_GLOBAL       5 'eDiving'
+000050      | OP_GET_LOCAL        4
+000052      | OP_GET_INDEX
+000053      | OP_NOT
+000054      | OP_JUMP_IF_FALSE   54 -> 70
+000057      | OP_POP
+000058    294 OP_GET_LOCAL        4
+000060      | OP_SET_LOCAL        2
+000062      | OP_POP
+000063    295 OP_POP
+000064      | OP_JUMP            64 -> 76
+000067    296 OP_JUMP            67 -> 71
+000070      | OP_POP
+000071    297 OP_POP
+000072      | OP_LOOP            72 -> 18
+000075      | OP_POP
+000076      | OP_POP
+000077    298 OP_GET_LOCAL        2
+000079      | OP_RETURN
+000080    299 OP_NULL
+000081      | OP_RETURN
+
+
+== launchDiver ==
+000000    302 OP_GET_GLOBAL       0 'countDivers'
+000002      | OP_CALL             0
+000004      | OP_CONSTANT         2 '3'
+000006      | OP_LESS
+000007      | OP_NOT
+000008      | OP_JUMP_IF_FALSE    8 -> 17
+000011      | OP_POP
+000012      | OP_NULL
+000013      | OP_RETURN
+000014      | OP_JUMP            14 -> 18
+000017      | OP_POP
+000018    304 OP_ZERO
+000019      | OP_GET_LOCAL        2
+000021      | OP_CONSTANT         3 '40'
+000023      | OP_LESS
+000024      | OP_JUMP_IF_FALSE   24 -> 542
+000027      | OP_POP
+000028      | OP_JUMP            28 -> 44
+000031      | OP_GET_LOCAL        2
+000033      | OP_GET_LOCAL        2
+000035      | OP_ONE
+000036      | OP_ADD
+000037      | OP_SET_LOCAL        2
+000039      | OP_POP
+000040      | OP_POP
+000041      | OP_LOOP            41 -> 19
+000044    305 OP_GET_GLOBAL       4 'math'
+000046      | OP_GET_GLOBAL       6 'math'
+000048      | OP_INVOKE        (0 args)    7 'rand'
+000051      | OP_CONSTANT         9 '50'
+000053      | OP_MULTIPLY
+000054      | OP_INVOKE        (1 args)    5 'floor'
+000057    306 OP_GET_LOCAL        3
+000059      | OP_CONSTANT        11 '50'
+000061      | OP_LESS
+000062      | OP_NOT
+000063      | OP_JUMP_IF_FALSE   63 -> 77
+000066      | OP_POP
+000067      | OP_GET_GLOBAL      12 'TOTAL_ENEMIES'
+000069      | OP_ONE
+000070      | OP_SUBTRACT
+000071      | OP_SET_LOCAL        3
+000073      | OP_POP
+000074      | OP_JUMP            74 -> 78
+000077      | OP_POP
+000078    308 OP_GET_GLOBAL      13 'eAlive'
+000080      | OP_GET_LOCAL        3
+000082      | OP_GET_INDEX
+000083      | OP_JUMP_IF_FALSE   83 -> 93
+000086      | OP_POP
+000087      | OP_GET_GLOBAL      14 'eDiving'
+000089      | OP_GET_LOCAL        3
+000091      | OP_GET_INDEX
+000092      | OP_NOT
+000093      | OP_JUMP_IF_FALSE   93 -> 537
+000096      | OP_POP
+000097    309 OP_GET_GLOBAL      15 'eRow'
+000099      | OP_GET_LOCAL        3
+000101      | OP_CALL             1
+000103    310 OP_GET_GLOBAL      16 'eCol'
+000105      | OP_GET_LOCAL        3
+000107      | OP_CALL             1
+000109    312 OP_GET_GLOBAL      17 'eDiving'
+000111      | OP_GET_LOCAL        3
+000113      | OP_TRUE
+000114      | OP_SET_INDEX
+000115      | OP_POP
+000116    313 OP_GET_GLOBAL      18 'eDiveX'
+000118      | OP_GET_LOCAL        3
+000120      | OP_GET_GLOBAL      19 'formX'
+000122      | OP_GET_LOCAL        5
+000124      | OP_CALL             1
+000126      | OP_GET_LOCAL        1
+000128      | OP_ADD
+000129      | OP_SET_INDEX
+000130      | OP_POP
+000131    314 OP_GET_GLOBAL      20 'eDiveY'
+000133      | OP_GET_LOCAL        3
+000135      | OP_GET_GLOBAL      21 'formY'
+000137      | OP_GET_LOCAL        4
+000139      | OP_CALL             1
+000141      | OP_SET_INDEX
+000142      | OP_POP
+000143    315 OP_GET_GLOBAL      22 'eDivePhase'
+000145      | OP_GET_LOCAL        3
+000147      | OP_GET_GLOBAL      23 'math'
+000149      | OP_ZERO
+000150      | OP_CONSTANT        25 '6.283180'
+000152      | OP_INVOKE        (2 args)   24 'randRange'
+000155      | OP_SET_INDEX
+000156      | OP_POP
+000157    316 OP_GET_GLOBAL      26 'eTrackingLocked'
+000159      | OP_GET_LOCAL        3
+000161      | OP_FALSE
+000162      | OP_SET_INDEX
+000163      | OP_POP
+000164    319 OP_GET_GLOBAL      27 'eTargetX'
+000166      | OP_GET_LOCAL        3
+000168      | OP_GET_GLOBAL      28 'playerX'
+000170      | OP_CONSTANT        30 '18'
+000172      | OP_ADD
+000173      | OP_CONSTANT        32 '14'
+000175      | OP_SUBTRACT
+000176      | OP_SET_INDEX
+000177      | OP_POP
+000178    320 OP_GET_GLOBAL      33 'eDiveStartY'
+000180      | OP_GET_LOCAL        3
+000182      | OP_GET_GLOBAL      34 'formY'
+000184      | OP_GET_LOCAL        4
+000186      | OP_CALL             1
+000188      | OP_SET_INDEX
+000189      | OP_POP
+000190    321 OP_GET_GLOBAL      35 'eTargetY'
+000192      | OP_GET_LOCAL        3
+000194      | OP_GET_GLOBAL      36 'playerY'
+000196      | OP_SET_INDEX
+000197      | OP_POP
+000198    324 OP_GET_LOCAL        4
+000200      | OP_ZERO
+000201      | OP_EQUAL
+000202      | OP_JUMP_IF_FALSE  202 -> 529
+000205      | OP_POP
+000206    326 OP_GET_GLOBAL      37 'ENEMY_COLS'
+000208      | OP_GET_LOCAL        5
+000210      | OP_ADD
+000211      | OP_ONE
+000212      | OP_SUBTRACT
+000213    327 OP_GET_GLOBAL      38 'ENEMY_COLS'
+000215      | OP_GET_LOCAL        5
+000217      | OP_ADD
+000218      | OP_ONE
+000219      | OP_ADD
+000220    329 OP_GET_LOCAL        6
+000222      | OP_CONSTANT        40 '10'
+000224      | OP_LESS
+000225      | OP_NOT
+000226      | OP_JUMP_IF_FALSE  226 -> 265
+000229      | OP_POP
+000230      | OP_GET_LOCAL        6
+000232      | OP_CONSTANT        42 '20'
+000234      | OP_LESS
+000235      | OP_JUMP_IF_FALSE  235 -> 265
+000238      | OP_POP
+000239    330 OP_GET_GLOBAL      43 'eAlive'
+000241      | OP_GET_LOCAL        6
+000243      | OP_GET_INDEX
+000244      | OP_JUMP_IF_FALSE  244 -> 265
+000247      | OP_POP
+000248      | OP_GET_GLOBAL      44 'eDiving'
+000250      | OP_GET_LOCAL        6
+000252      | OP_GET_INDEX
+000253      | OP_NOT
+000254      | OP_JUMP_IF_FALSE  254 -> 265
+000257      | OP_POP
+000258      | OP_GET_GLOBAL      45 'countDivers'
+000260      | OP_CALL             0
+000262      | OP_CONSTANT        47 '3'
+000264      | OP_LESS
+000265      | OP_JUMP_IF_FALSE  265 -> 371
+000268      | OP_POP
+000269    331 OP_GET_GLOBAL      48 'eDiving'
+000271      | OP_GET_LOCAL        6
+000273      | OP_TRUE
+000274      | OP_SET_INDEX
+000275      | OP_POP
+000276    332 OP_GET_GLOBAL      49 'eDiveX'
+000278      | OP_GET_LOCAL        6
+000280      | OP_GET_GLOBAL      50 'formX'
+000282      | OP_GET_GLOBAL      51 'eCol'
+000284      | OP_GET_LOCAL        6
+000286      | OP_CALL             1
+000288      | OP_CALL             1
+000290      | OP_GET_LOCAL        1
+000292      | OP_ADD
+000293      | OP_SET_INDEX
+000294      | OP_POP
+000295    333 OP_GET_GLOBAL      52 'eDiveY'
+000297      | OP_GET_LOCAL        6
+000299      | OP_GET_GLOBAL      53 'formY'
+000301      | OP_ONE
+000302      | OP_CALL             1
+000304      | OP_SET_INDEX
+000305      | OP_POP
+000306    334 OP_GET_GLOBAL      54 'eDivePhase'
+000308      | OP_GET_LOCAL        6
+000310      | OP_GET_GLOBAL      55 'math'
+000312      | OP_ZERO
+000313      | OP_CONSTANT        57 '6.283180'
+000315      | OP_INVOKE        (2 args)   56 'randRange'
+000318      | OP_SET_INDEX
+000319      | OP_POP
+000320    335 OP_GET_GLOBAL      58 'eTrackingLocked'
+000322      | OP_GET_LOCAL        6
+000324      | OP_FALSE
+000325      | OP_SET_INDEX
+000326      | OP_POP
+000327    336 OP_GET_GLOBAL      59 'eDiveStartY'
+000329      | OP_GET_LOCAL        6
+000331      | OP_GET_GLOBAL      60 'formY'
+000333      | OP_GET_GLOBAL      61 'eCol'
+000335      | OP_GET_LOCAL        6
+000337      | OP_CALL             1
+000339      | OP_CALL             1
+000341      | OP_SET_INDEX
+000342      | OP_POP
+000343    337 OP_GET_GLOBAL      62 'eTargetX'
+000345      | OP_GET_LOCAL        6
+000347      | OP_GET_GLOBAL      63 'playerX'
+000349      | OP_CONSTANT        65 '18'
+000351      | OP_ADD
+000352      | OP_CONSTANT        67 '14'
+000354      | OP_SUBTRACT
+000355      | OP_CONSTANT        68 '30'
+000357      | OP_SUBTRACT
+000358      | OP_SET_INDEX
+000359      | OP_POP
+000360    338 OP_GET_GLOBAL      69 'eTargetY'
+000362      | OP_GET_LOCAL        6
+000364      | OP_GET_GLOBAL      70 'playerY'
+000366      | OP_SET_INDEX
+000367      | OP_POP
+000368    339 OP_JUMP           368 -> 372
+000371      | OP_POP
+000372    341 OP_GET_LOCAL        7
+000374      | OP_CONSTANT        72 '10'
+000376      | OP_LESS
+000377      | OP_NOT
+000378      | OP_JUMP_IF_FALSE  378 -> 417
+000381      | OP_POP
+000382      | OP_GET_LOCAL        7
+000384      | OP_CONSTANT        74 '20'
+000386      | OP_LESS
+000387      | OP_JUMP_IF_FALSE  387 -> 417
+000390      | OP_POP
+000391    342 OP_GET_GLOBAL      75 'eAlive'
+000393      | OP_GET_LOCAL        7
+000395      | OP_GET_INDEX
+000396      | OP_JUMP_IF_FALSE  396 -> 417
+000399      | OP_POP
+000400      | OP_GET_GLOBAL      76 'eDiving'
+000402      | OP_GET_LOCAL        7
+000404      | OP_GET_INDEX
+000405      | OP_NOT
+000406      | OP_JUMP_IF_FALSE  406 -> 417
+000409      | OP_POP
+000410      | OP_GET_GLOBAL      77 'countDivers'
+000412      | OP_CALL             0
+000414      | OP_CONSTANT        79 '3'
+000416      | OP_LESS
+000417      | OP_JUMP_IF_FALSE  417 -> 523
+000420      | OP_POP
+000421    343 OP_GET_GLOBAL      80 'eDiving'
+000423      | OP_GET_LOCAL        7
+000425      | OP_TRUE
+000426      | OP_SET_INDEX
+000427      | OP_POP
+000428    344 OP_GET_GLOBAL      81 'eDiveX'
+000430      | OP_GET_LOCAL        7
+000432      | OP_GET_GLOBAL      82 'formX'
+000434      | OP_GET_GLOBAL      83 'eCol'
+000436      | OP_GET_LOCAL        7
+000438      | OP_CALL             1
+000440      | OP_CALL             1
+000442      | OP_GET_LOCAL        1
+000444      | OP_ADD
+000445      | OP_SET_INDEX
+000446      | OP_POP
+000447    345 OP_GET_GLOBAL      84 'eDiveY'
+000449      | OP_GET_LOCAL        7
+000451      | OP_GET_GLOBAL      85 'formY'
+000453      | OP_ONE
+000454      | OP_CALL             1
+000456      | OP_SET_INDEX
+000457      | OP_POP
+000458    346 OP_GET_GLOBAL      86 'eDivePhase'
+000460      | OP_GET_LOCAL        7
+000462      | OP_GET_GLOBAL      87 'math'
+000464      | OP_ZERO
+000465      | OP_CONSTANT        89 '6.283180'
+000467      | OP_INVOKE        (2 args)   88 'randRange'
+000470      | OP_SET_INDEX
+000471      | OP_POP
+000472    347 OP_GET_GLOBAL      90 'eTrackingLocked'
+000474      | OP_GET_LOCAL        7
+000476      | OP_FALSE
+000477      | OP_SET_INDEX
+000478      | OP_POP
+000479    348 OP_GET_GLOBAL      91 'eDiveStartY'
+000481      | OP_GET_LOCAL        7
+000483      | OP_GET_GLOBAL      92 'formY'
+000485      | OP_GET_GLOBAL      93 'eCol'
+000487      | OP_GET_LOCAL        7
+000489      | OP_CALL             1
+000491      | OP_CALL             1
+000493      | OP_SET_INDEX
+000494      | OP_POP
+000495    349 OP_GET_GLOBAL      94 'eTargetX'
+000497      | OP_GET_LOCAL        7
+000499      | OP_GET_GLOBAL      95 'playerX'
+000501      | OP_CONSTANT        97 '18'
+000503      | OP_ADD
+000504      | OP_CONSTANT        99 '14'
+000506      | OP_SUBTRACT
+000507      | OP_CONSTANT       100 '30'
+000509      | OP_ADD
+000510      | OP_SET_INDEX
+000511      | OP_POP
+000512    350 OP_GET_GLOBAL     101 'eTargetY'
+000514      | OP_GET_LOCAL        7
+000516      | OP_GET_GLOBAL     102 'playerY'
+000518      | OP_SET_INDEX
+000519      | OP_POP
+000520    351 OP_JUMP           520 -> 524
+000523      | OP_POP
+000524    352 OP_POP
+000525      | OP_POP
+000526      | OP_JUMP           526 -> 530
+000529      | OP_POP
+000530    354 OP_NULL
+000531      | OP_RETURN
+000532    355 OP_POP
+000533      | OP_POP
+000534      | OP_JUMP           534 -> 538
+000537      | OP_POP
+000538    356 OP_POP
+000539      | OP_LOOP           539 -> 31
+000542      | OP_POP
+000543      | OP_POP
+000544    357 OP_NULL
+000545      | OP_RETURN
+
+
+== activeBullets ==
+000000    360 OP_ZERO
+000001    361 OP_ZERO
+000002      | OP_GET_LOCAL        2
+000004      | OP_CONSTANT         1 '2'
+000006      | OP_LESS
+000007      | OP_JUMP_IF_FALSE    7 -> 53
+000010      | OP_POP
+000011      | OP_JUMP            11 -> 27
+000014      | OP_GET_LOCAL        2
+000016      | OP_GET_LOCAL        2
+000018      | OP_ONE
+000019      | OP_ADD
+000020      | OP_SET_LOCAL        2
+000022      | OP_POP
+000023      | OP_POP
+000024      | OP_LOOP            24 -> 2
+000027    362 OP_GET_GLOBAL       2 'pbActive'
+000029      | OP_GET_LOCAL        2
+000031      | OP_GET_INDEX
+000032      | OP_JUMP_IF_FALSE   32 -> 49
+000035      | OP_POP
+000036      | OP_GET_LOCAL        1
+000038      | OP_GET_LOCAL        1
+000040      | OP_ONE
+000041      | OP_ADD
+000042      | OP_SET_LOCAL        1
+000044      | OP_POP
+000045      | OP_POP
+000046      | OP_JUMP            46 -> 50
+000049      | OP_POP
+000050    363 OP_LOOP            50 -> 14
+000053      | OP_POP
+000054      | OP_POP
+000055    364 OP_GET_LOCAL        1
+000057      | OP_RETURN
+000058    365 OP_NULL
+000059      | OP_RETURN
+
+
+== firePlayerBullet ==
+000000    368 OP_ZERO
+000001      | OP_GET_LOCAL        1
+000003      | OP_CONSTANT         1 '2'
+000005      | OP_LESS
+000006      | OP_JUMP_IF_FALSE    6 -> 74
+000009      | OP_POP
+000010      | OP_JUMP            10 -> 26
+000013      | OP_GET_LOCAL        1
+000015      | OP_GET_LOCAL        1
+000017      | OP_ONE
+000018      | OP_ADD
+000019      | OP_SET_LOCAL        1
+000021      | OP_POP
+000022      | OP_POP
+000023      | OP_LOOP            23 -> 1
+000026    369 OP_GET_GLOBAL       2 'pbActive'
+000028      | OP_GET_LOCAL        1
+000030      | OP_GET_INDEX
+000031      | OP_NOT
+000032      | OP_JUMP_IF_FALSE   32 -> 70
+000035      | OP_POP
+000036    370 OP_GET_GLOBAL       3 'pbX'
+000038      | OP_GET_LOCAL        1
+000040      | OP_GET_GLOBAL       4 'playerX'
+000042      | OP_CONSTANT         6 '18'
+000044      | OP_ADD
+000045      | OP_CONSTANT         8 '2'
+000047      | OP_SUBTRACT
+000048      | OP_SET_INDEX
+000049      | OP_POP
+000050    371 OP_GET_GLOBAL       9 'pbY'
+000052      | OP_GET_LOCAL        1
+000054      | OP_GET_GLOBAL      10 'playerY'
+000056      | OP_SET_INDEX
+000057      | OP_POP
+000058    372 OP_GET_GLOBAL      11 'pbActive'
+000060      | OP_GET_LOCAL        1
+000062      | OP_TRUE
+000063      | OP_SET_INDEX
+000064      | OP_POP
+000065    373 OP_NULL
+000066      | OP_RETURN
+000067    374 OP_JUMP            67 -> 71
+000070      | OP_POP
+000071    375 OP_LOOP            71 -> 13
+000074      | OP_POP
+000075      | OP_POP
+000076    376 OP_NULL
+000077      | OP_RETURN
+
+
+== fireEnemyBulletFromColumn ==
+000000    380 OP_GET_GLOBAL       0 'math'
+000002      | OP_GET_GLOBAL       2 'math'
+000004      | OP_INVOKE        (0 args)    3 'rand'
+000007      | OP_CONSTANT         5 '10'
+000009      | OP_MULTIPLY
+000010      | OP_INVOKE        (1 args)    1 'floor'
+000013    381 OP_GET_LOCAL        1
+000015      | OP_CONSTANT         7 '10'
+000017      | OP_LESS
+000018      | OP_NOT
+000019      | OP_JUMP_IF_FALSE   19 -> 33
+000022      | OP_POP
+000023      | OP_GET_GLOBAL       8 'ENEMY_COLS'
+000025      | OP_ONE
+000026      | OP_SUBTRACT
+000027      | OP_SET_LOCAL        1
+000029      | OP_POP
+000030      | OP_JUMP            30 -> 34
+000033      | OP_POP
+000034    383 OP_GET_GLOBAL       9 'lowestInColumn'
+000036      | OP_GET_LOCAL        1
+000038      | OP_CALL             1
+000040    384 OP_GET_LOCAL        2
+000042      | OP_CONSTANT        10 '-1'
+000044      | OP_EQUAL
+000045      | OP_JUMP_IF_FALSE   45 -> 54
+000048      | OP_POP
+000049      | OP_NULL
+000050      | OP_RETURN
+000051      | OP_JUMP            51 -> 55
+000054      | OP_POP
+000055    386 OP_ZERO
+000056    387 OP_ZERO
+000057    389 OP_GET_GLOBAL      11 'eDiving'
+000059      | OP_GET_LOCAL        2
+000061      | OP_GET_INDEX
+000062      | OP_JUMP_IF_FALSE   62 -> 85
+000065      | OP_POP
+000066    390 OP_GET_GLOBAL      12 'eDiveX'
+000068      | OP_GET_LOCAL        2
+000070      | OP_GET_INDEX
+000071      | OP_SET_LOCAL        3
+000073      | OP_POP
+000074    391 OP_GET_GLOBAL      13 'eDiveY'
+000076      | OP_GET_LOCAL        2
+000078      | OP_GET_INDEX
+000079      | OP_SET_LOCAL        4
+000081      | OP_POP
+000082    392 OP_JUMP            82 -> 112
+000085      | OP_POP
+000086    393 OP_GET_GLOBAL      14 'formX'
+000088      | OP_GET_GLOBAL      15 'eCol'
+000090      | OP_GET_LOCAL        2
+000092      | OP_CALL             1
+000094      | OP_CALL             1
+000096      | OP_SET_LOCAL        3
+000098      | OP_POP
+000099    394 OP_GET_GLOBAL      16 'formY'
+000101      | OP_GET_GLOBAL      17 'eRow'
+000103      | OP_GET_LOCAL        2
+000105      | OP_CALL             1
+000107      | OP_CALL             1
+000109      | OP_SET_LOCAL        4
+000111      | OP_POP
+000112    397 OP_ZERO
+000113      | OP_GET_LOCAL        5
+000115      | OP_CONSTANT        19 '6'
+000117      | OP_LESS
+000118      | OP_JUMP_IF_FALSE  118 -> 189
+000121      | OP_POP
+000122      | OP_JUMP           122 -> 138
+000125      | OP_GET_LOCAL        5
+000127      | OP_GET_LOCAL        5
+000129      | OP_ONE
+000130      | OP_ADD
+000131      | OP_SET_LOCAL        5
+000133      | OP_POP
+000134      | OP_POP
+000135      | OP_LOOP           135 -> 113
+000138    398 OP_GET_GLOBAL      20 'ebActive'
+000140      | OP_GET_LOCAL        5
+000142      | OP_GET_INDEX
+000143      | OP_NOT
+000144      | OP_JUMP_IF_FALSE  144 -> 185
+000147      | OP_POP
+000148    399 OP_GET_GLOBAL      21 'ebX'
+000150      | OP_GET_LOCAL        5
+000152      | OP_GET_LOCAL        3
+000154      | OP_CONSTANT        23 '14'
+000156      | OP_ADD
+000157      | OP_CONSTANT        25 '2'
+000159      | OP_SUBTRACT
+000160      | OP_SET_INDEX
+000161      | OP_POP
+000162    400 OP_GET_GLOBAL      26 'ebY'
+000164      | OP_GET_LOCAL        5
+000166      | OP_GET_LOCAL        4
+000168      | OP_CONSTANT        28 '24'
+000170      | OP_ADD
+000171      | OP_SET_INDEX
+000172      | OP_POP
+000173    401 OP_GET_GLOBAL      29 'ebActive'
+000175      | OP_GET_LOCAL        5
+000177      | OP_TRUE
+000178      | OP_SET_INDEX
+000179      | OP_POP
+000180    402 OP_NULL
+000181      | OP_RETURN
+000182    403 OP_JUMP           182 -> 186
+000185      | OP_POP
+000186    404 OP_LOOP           186 -> 125
+000189      | OP_POP
+000190      | OP_POP
+000191    405 OP_NULL
+000192      | OP_RETURN
+
+
+== drawPlayer ==
+000000    412 OP_GET_GLOBAL       0 'graphics'
+000002      | OP_ZERO
+000003      | OP_CONSTANT         2 '90'
+000005      | OP_CONSTANT         3 '200'
+000007      | OP_ARRAY_INIT       3
+000009      | OP_GET_LOCAL        1
+000011      | OP_CONSTANT         4 '2'
+000013      | OP_ADD
+000014      | OP_GET_LOCAL        2
+000016      | OP_CONSTANT         5 '16'
+000018      | OP_ADD
+000019      | OP_CONSTANT         6 '32'
+000021      | OP_CONSTANT         7 '10'
+000023      | OP_INVOKE        (5 args)    1 'drawRect'
+000026      | OP_POP
+000027    413 OP_GET_GLOBAL       8 'graphics'
+000029      | OP_ZERO
+000030      | OP_CONSTANT        10 '160'
+000032      | OP_CONSTANT        11 '255'
+000034      | OP_ARRAY_INIT       3
+000036      | OP_GET_LOCAL        1
+000038      | OP_CONSTANT        12 '4'
+000040      | OP_ADD
+000041      | OP_GET_LOCAL        2
+000043      | OP_CONSTANT        13 '18'
+000045      | OP_ADD
+000046      | OP_CONSTANT        14 '28'
+000048      | OP_CONSTANT        15 '8'
+000050      | OP_INVOKE        (5 args)    9 'drawRect'
+000053      | OP_POP
+000054    414 OP_GET_GLOBAL      16 'graphics'
+000056      | OP_ZERO
+000057      | OP_CONSTANT        18 '200'
+000059      | OP_CONSTANT        19 '255'
+000061      | OP_ARRAY_INIT       3
+000063      | OP_GET_LOCAL        1
+000065      | OP_GET_LOCAL        2
+000067      | OP_CONSTANT        20 '18'
+000069      | OP_ADD
+000070      | OP_CONSTANT        21 '4'
+000072      | OP_CONSTANT        22 '6'
+000074      | OP_INVOKE        (5 args)   17 'drawRect'
+000077      | OP_POP
+000078    415 OP_GET_GLOBAL      23 'graphics'
+000080      | OP_ZERO
+000081      | OP_CONSTANT        25 '200'
+000083      | OP_CONSTANT        26 '255'
+000085      | OP_ARRAY_INIT       3
+000087      | OP_GET_LOCAL        1
+000089      | OP_CONSTANT        27 '32'
+000091      | OP_ADD
+000092      | OP_GET_LOCAL        2
+000094      | OP_CONSTANT        28 '18'
+000096      | OP_ADD
+000097      | OP_CONSTANT        29 '4'
+000099      | OP_CONSTANT        30 '6'
+000101      | OP_INVOKE        (5 args)   24 'drawRect'
+000104      | OP_POP
+000105    416 OP_GET_GLOBAL      31 'graphics'
+000107      | OP_ZERO
+000108      | OP_CONSTANT        33 '220'
+000110      | OP_CONSTANT        34 '255'
+000112      | OP_ARRAY_INIT       3
+000114      | OP_GET_LOCAL        1
+000116      | OP_CONSTANT        35 '12'
+000118      | OP_ADD
+000119      | OP_GET_LOCAL        2
+000121      | OP_CONSTANT        36 '8'
+000123      | OP_ADD
+000124      | OP_CONSTANT        37 '12'
+000126      | OP_CONSTANT        38 '12'
+000128      | OP_INVOKE        (5 args)   32 'drawRect'
+000131      | OP_POP
+000132    417 OP_GET_GLOBAL      39 'graphics'
+000134      | OP_CONSTANT        41 '120'
+000136      | OP_CONSTANT        42 '255'
+000138      | OP_CONSTANT        43 '255'
+000140      | OP_ARRAY_INIT       3
+000142      | OP_GET_LOCAL        1
+000144      | OP_CONSTANT        44 '15'
+000146      | OP_ADD
+000147      | OP_GET_LOCAL        2
+000149      | OP_CONSTANT        45 '10'
+000151      | OP_ADD
+000152      | OP_CONSTANT        46 '6'
+000154      | OP_CONSTANT        47 '6'
+000156      | OP_INVOKE        (5 args)   40 'drawRect'
+000159      | OP_POP
+000160    418 OP_GET_GLOBAL      48 'graphics'
+000162      | OP_CONSTANT        50 '80'
+000164      | OP_CONSTANT        51 '255'
+000166      | OP_CONSTANT        52 '255'
+000168      | OP_ARRAY_INIT       3
+000170      | OP_GET_LOCAL        1
+000172      | OP_CONSTANT        53 '14'
+000174      | OP_ADD
+000175      | OP_GET_LOCAL        2
+000177      | OP_CONSTANT        54 '2'
+000179      | OP_ADD
+000180      | OP_CONSTANT        55 '8'
+000182      | OP_CONSTANT        56 '6'
+000184      | OP_INVOKE        (5 args)   49 'drawRect'
+000187      | OP_POP
+000188    419 OP_GET_GLOBAL      57 'graphics'
+000190      | OP_ZERO
+000191      | OP_CONSTANT        59 '140'
+000193      | OP_CONSTANT        60 '255'
+000195      | OP_ARRAY_INIT       3
+000197      | OP_GET_LOCAL        1
+000199      | OP_CONSTANT        61 '16'
+000201      | OP_ADD
+000202      | OP_GET_LOCAL        2
+000204      | OP_CONSTANT        62 '6'
+000206      | OP_ADD
+000207      | OP_CONSTANT        63 '4'
+000209      | OP_CONSTANT        64 '14'
+000211      | OP_INVOKE        (5 args)   58 'drawRect'
+000214      | OP_POP
+000215    420 OP_GET_GLOBAL      65 'graphics'
+000217      | OP_CONSTANT        67 '255'
+000219      | OP_CONSTANT        68 '180'
+000221      | OP_ZERO
+000222      | OP_ARRAY_INIT       3
+000224      | OP_GET_LOCAL        1
+000226      | OP_CONSTANT        69 '10'
+000228      | OP_ADD
+000229      | OP_GET_LOCAL        2
+000231      | OP_CONSTANT        70 '26'
+000233      | OP_ADD
+000234      | OP_CONSTANT        71 '5'
+000236      | OP_CONSTANT        72 '4'
+000238      | OP_INVOKE        (5 args)   66 'drawRect'
+000241      | OP_POP
+000242    421 OP_GET_GLOBAL      73 'graphics'
+000244      | OP_CONSTANT        75 '255'
+000246      | OP_CONSTANT        76 '100'
+000248      | OP_ZERO
+000249      | OP_ARRAY_INIT       3
+000251      | OP_GET_LOCAL        1
+000253      | OP_CONSTANT        77 '11'
+000255      | OP_ADD
+000256      | OP_GET_LOCAL        2
+000258      | OP_CONSTANT        78 '28'
+000260      | OP_ADD
+000261      | OP_CONSTANT        79 '3'
+000263      | OP_CONSTANT        80 '3'
+000265      | OP_INVOKE        (5 args)   74 'drawRect'
+000268      | OP_POP
+000269    422 OP_GET_GLOBAL      81 'graphics'
+000271      | OP_CONSTANT        83 '255'
+000273      | OP_CONSTANT        84 '180'
+000275      | OP_ZERO
+000276      | OP_ARRAY_INIT       3
+000278      | OP_GET_LOCAL        1
+000280      | OP_CONSTANT        85 '21'
+000282      | OP_ADD
+000283      | OP_GET_LOCAL        2
+000285      | OP_CONSTANT        86 '26'
+000287      | OP_ADD
+000288      | OP_CONSTANT        87 '5'
+000290      | OP_CONSTANT        88 '4'
+000292      | OP_INVOKE        (5 args)   82 'drawRect'
+000295      | OP_POP
+000296    423 OP_GET_GLOBAL      89 'graphics'
+000298      | OP_CONSTANT        91 '255'
+000300      | OP_CONSTANT        92 '100'
+000302      | OP_ZERO
+000303      | OP_ARRAY_INIT       3
+000305      | OP_GET_LOCAL        1
+000307      | OP_CONSTANT        93 '22'
+000309      | OP_ADD
+000310      | OP_GET_LOCAL        2
+000312      | OP_CONSTANT        94 '28'
+000314      | OP_ADD
+000315      | OP_CONSTANT        95 '3'
+000317      | OP_CONSTANT        96 '3'
+000319      | OP_INVOKE        (5 args)   90 'drawRect'
+000322      | OP_POP
+000323    424 OP_NULL
+000324      | OP_RETURN
+
+
+== drawBoss ==
+000000    427 OP_GET_GLOBAL       0 'graphics'
+000002      | OP_CONSTANT         2 '200'
+000004      | OP_CONSTANT         3 '20'
+000006      | OP_CONSTANT         4 '80'
+000008      | OP_ARRAY_INIT       3
+000010      | OP_GET_LOCAL        1
+000012      | OP_GET_LOCAL        2
+000014      | OP_CONSTANT         5 '6'
+000016      | OP_ADD
+000017      | OP_CONSTANT         6 '28'
+000019      | OP_CONSTANT         7 '10'
+000021      | OP_INVOKE        (5 args)    1 'drawRect'
+000024      | OP_POP
+000025    428 OP_GET_GLOBAL       8 'graphics'
+000027      | OP_CONSTANT        10 '255'
+000029      | OP_CONSTANT        11 '60'
+000031      | OP_CONSTANT        12 '140'
+000033      | OP_ARRAY_INIT       3
+000035      | OP_GET_LOCAL        1
+000037      | OP_CONSTANT        13 '4'
+000039      | OP_ADD
+000040      | OP_GET_LOCAL        2
+000042      | OP_CONSTANT        14 '8'
+000044      | OP_ADD
+000045      | OP_CONSTANT        15 '20'
+000047      | OP_CONSTANT        16 '8'
+000049      | OP_INVOKE        (5 args)    9 'drawRect'
+000052      | OP_POP
+000053    429 OP_GET_GLOBAL      17 'graphics'
+000055      | OP_CONSTANT        19 '255'
+000057      | OP_CONSTANT        20 '120'
+000059      | OP_CONSTANT        21 '60'
+000061      | OP_ARRAY_INIT       3
+000063      | OP_GET_LOCAL        1
+000065      | OP_CONSTANT        22 '8'
+000067      | OP_ADD
+000068      | OP_GET_LOCAL        2
+000070      | OP_CONSTANT        23 '12'
+000072      | OP_CONSTANT        24 '6'
+000074      | OP_INVOKE        (5 args)   18 'drawRect'
+000077      | OP_POP
+000078    430 OP_GET_GLOBAL      25 'graphics'
+000080      | OP_CONSTANT        27 '255'
+000082      | OP_CONSTANT        28 '160'
+000084      | OP_CONSTANT        29 '40'
+000086      | OP_ARRAY_INIT       3
+000088      | OP_GET_LOCAL        1
+000090      | OP_CONSTANT        30 '10'
+000092      | OP_ADD
+000093      | OP_GET_LOCAL        2
+000095      | OP_CONSTANT        31 '10'
+000097      | OP_ADD
+000098      | OP_CONSTANT        32 '8'
+000100      | OP_CONSTANT        33 '10'
+000102      | OP_INVOKE        (5 args)   26 'drawRect'
+000105      | OP_POP
+000106    431 OP_GET_GLOBAL      34 'graphics'
+000108      | OP_CONSTANT        36 '255'
+000110      | OP_CONSTANT        37 '255'
+000112      | OP_CONSTANT        38 '120'
+000114      | OP_ARRAY_INIT       3
+000116      | OP_GET_LOCAL        1
+000118      | OP_CONSTANT        39 '11'
+000120      | OP_ADD
+000121      | OP_GET_LOCAL        2
+000123      | OP_CONSTANT        40 '11'
+000125      | OP_ADD
+000126      | OP_CONSTANT        41 '6'
+000128      | OP_CONSTANT        42 '6'
+000130      | OP_INVOKE        (5 args)   35 'drawRect'
+000133      | OP_POP
+000134    432 OP_GET_GLOBAL      43 'graphics'
+000136      | OP_CONSTANT        45 '200'
+000138      | OP_CONSTANT        46 '20'
+000140      | OP_CONSTANT        47 '80'
+000142      | OP_ARRAY_INIT       3
+000144      | OP_GET_LOCAL        1
+000146      | OP_CONSTANT        48 '6'
+000148      | OP_ADD
+000149      | OP_GET_LOCAL        2
+000151      | OP_CONSTANT        49 '18'
+000153      | OP_ADD
+000154      | OP_CONSTANT        50 '16'
+000156      | OP_CONSTANT        51 '6'
+000158      | OP_INVOKE        (5 args)   44 'drawRect'
+000161      | OP_POP
+000162    433 OP_NULL
+000163      | OP_RETURN
+
+
+== drawButterfly ==
+000000    436 OP_GET_GLOBAL       0 'graphics'
+000002      | OP_CONSTANT         2 '80'
+000004      | OP_CONSTANT         3 '80'
+000006      | OP_CONSTANT         4 '255'
+000008      | OP_ARRAY_INIT       3
+000010      | OP_GET_LOCAL        1
+000012      | OP_CONSTANT         5 '6'
+000014      | OP_ADD
+000015      | OP_GET_LOCAL        2
+000017      | OP_CONSTANT         6 '16'
+000019      | OP_CONSTANT         7 '6'
+000021      | OP_INVOKE        (5 args)    1 'drawRect'
+000024      | OP_POP
+000025    437 OP_GET_GLOBAL       8 'graphics'
+000027      | OP_CONSTANT        10 '40'
+000029      | OP_CONSTANT        11 '40'
+000031      | OP_CONSTANT        12 '200'
+000033      | OP_ARRAY_INIT       3
+000035      | OP_GET_LOCAL        1
+000037      | OP_GET_LOCAL        2
+000039      | OP_CONSTANT        13 '6'
+000041      | OP_ADD
+000042      | OP_CONSTANT        14 '28'
+000044      | OP_CONSTANT        15 '8'
+000046      | OP_INVOKE        (5 args)    9 'drawRect'
+000049      | OP_POP
+000050    438 OP_GET_GLOBAL      16 'graphics'
+000052      | OP_CONSTANT        18 '100'
+000054      | OP_CONSTANT        19 '160'
+000056      | OP_CONSTANT        20 '255'
+000058      | OP_ARRAY_INIT       3
+000060      | OP_GET_LOCAL        1
+000062      | OP_CONSTANT        21 '4'
+000064      | OP_ADD
+000065      | OP_GET_LOCAL        2
+000067      | OP_CONSTANT        22 '8'
+000069      | OP_ADD
+000070      | OP_CONSTANT        23 '20'
+000072      | OP_CONSTANT        24 '6'
+000074      | OP_INVOKE        (5 args)   17 'drawRect'
+000077      | OP_POP
+000078    439 OP_GET_GLOBAL      25 'graphics'
+000080      | OP_CONSTANT        27 '200'
+000082      | OP_CONSTANT        28 '200'
+000084      | OP_CONSTANT        29 '255'
+000086      | OP_ARRAY_INIT       3
+000088      | OP_GET_LOCAL        1
+000090      | OP_CONSTANT        30 '10'
+000092      | OP_ADD
+000093      | OP_GET_LOCAL        2
+000095      | OP_CONSTANT        31 '6'
+000097      | OP_ADD
+000098      | OP_CONSTANT        32 '8'
+000100      | OP_CONSTANT        33 '10'
+000102      | OP_INVOKE        (5 args)   26 'drawRect'
+000105      | OP_POP
+000106    440 OP_GET_GLOBAL      34 'graphics'
+000108      | OP_CONSTANT        36 '255'
+000110      | OP_CONSTANT        37 '255'
+000112      | OP_CONSTANT        38 '255'
+000114      | OP_ARRAY_INIT       3
+000116      | OP_GET_LOCAL        1
+000118      | OP_CONSTANT        39 '11'
+000120      | OP_ADD
+000121      | OP_GET_LOCAL        2
+000123      | OP_CONSTANT        40 '7'
+000125      | OP_ADD
+000126      | OP_CONSTANT        41 '6'
+000128      | OP_CONSTANT        42 '4'
+000130      | OP_INVOKE        (5 args)   35 'drawRect'
+000133      | OP_POP
+000134    441 OP_GET_GLOBAL      43 'graphics'
+000136      | OP_CONSTANT        45 '80'
+000138      | OP_CONSTANT        46 '80'
+000140      | OP_CONSTANT        47 '255'
+000142      | OP_ARRAY_INIT       3
+000144      | OP_GET_LOCAL        1
+000146      | OP_CONSTANT        48 '8'
+000148      | OP_ADD
+000149      | OP_GET_LOCAL        2
+000151      | OP_CONSTANT        49 '16'
+000153      | OP_ADD
+000154      | OP_CONSTANT        50 '12'
+000156      | OP_CONSTANT        51 '6'
+000158      | OP_INVOKE        (5 args)   44 'drawRect'
+000161      | OP_POP
+000162    442 OP_NULL
+000163      | OP_RETURN
+
+
+== drawBee ==
+000000    445 OP_GET_GLOBAL       0 'graphics'
+000002      | OP_CONSTANT         2 '220'
+000004      | OP_CONSTANT         3 '255'
+000006      | OP_CONSTANT         4 '120'
+000008      | OP_ARRAY_INIT       3
+000010      | OP_GET_LOCAL        1
+000012      | OP_CONSTANT         5 '6'
+000014      | OP_ADD
+000015      | OP_GET_LOCAL        2
+000017      | OP_CONSTANT         6 '16'
+000019      | OP_CONSTANT         7 '6'
+000021      | OP_INVOKE        (5 args)    1 'drawRect'
+000024      | OP_POP
+000025    446 OP_GET_GLOBAL       8 'graphics'
+000027      | OP_CONSTANT        10 '120'
+000029      | OP_CONSTANT        11 '200'
+000031      | OP_ZERO
+000032      | OP_ARRAY_INIT       3
+000034      | OP_GET_LOCAL        1
+000036      | OP_CONSTANT        12 '4'
+000038      | OP_ADD
+000039      | OP_GET_LOCAL        2
+000041      | OP_CONSTANT        13 '6'
+000043      | OP_ADD
+000044      | OP_CONSTANT        14 '20'
+000046      | OP_CONSTANT        15 '10'
+000048      | OP_INVOKE        (5 args)    9 'drawRect'
+000051      | OP_POP
+000052    447 OP_GET_GLOBAL      16 'graphics'
+000054      | OP_CONSTANT        18 '255'
+000056      | OP_CONSTANT        19 '255'
+000058      | OP_ZERO
+000059      | OP_ARRAY_INIT       3
+000061      | OP_GET_LOCAL        1
+000063      | OP_CONSTANT        20 '6'
+000065      | OP_ADD
+000066      | OP_GET_LOCAL        2
+000068      | OP_CONSTANT        21 '8'
+000070      | OP_ADD
+000071      | OP_CONSTANT        22 '16'
+000073      | OP_CONSTANT        23 '2'
+000075      | OP_INVOKE        (5 args)   17 'drawRect'
+000078      | OP_POP
+000079    448 OP_GET_GLOBAL      24 'graphics'
+000081      | OP_CONSTANT        26 '255'
+000083      | OP_CONSTANT        27 '255'
+000085      | OP_ZERO
+000086      | OP_ARRAY_INIT       3
+000088      | OP_GET_LOCAL        1
+000090      | OP_CONSTANT        28 '6'
+000092      | OP_ADD
+000093      | OP_GET_LOCAL        2
+000095      | OP_CONSTANT        29 '12'
+000097      | OP_ADD
+000098      | OP_CONSTANT        30 '16'
+000100      | OP_CONSTANT        31 '2'
+000102      | OP_INVOKE        (5 args)   25 'drawRect'
+000105      | OP_POP
+000106    449 OP_GET_GLOBAL      32 'graphics'
+000108      | OP_CONSTANT        34 '255'
+000110      | OP_CONSTANT        35 '255'
+000112      | OP_CONSTANT        36 '120'
+000114      | OP_ARRAY_INIT       3
+000116      | OP_GET_LOCAL        1
+000118      | OP_CONSTANT        37 '10'
+000120      | OP_ADD
+000121      | OP_GET_LOCAL        2
+000123      | OP_CONSTANT        38 '7'
+000125      | OP_ADD
+000126      | OP_CONSTANT        39 '8'
+000128      | OP_CONSTANT        40 '6'
+000130      | OP_INVOKE        (5 args)   33 'drawRect'
+000133      | OP_POP
+000134    450 OP_GET_GLOBAL      41 'graphics'
+000136      | OP_CONSTANT        43 '200'
+000138      | OP_CONSTANT        44 '255'
+000140      | OP_ZERO
+000141      | OP_ARRAY_INIT       3
+000143      | OP_GET_LOCAL        1
+000145      | OP_CONSTANT        45 '10'
+000147      | OP_ADD
+000148      | OP_GET_LOCAL        2
+000150      | OP_CONSTANT        46 '16'
+000152      | OP_ADD
+000153      | OP_CONSTANT        47 '8'
+000155      | OP_CONSTANT        48 '6'
+000157      | OP_INVOKE        (5 args)   42 'drawRect'
+000160      | OP_POP
+000161    451 OP_NULL
+000162      | OP_RETURN
+
+
+== drawEnemy ==
+000000    454 OP_GET_GLOBAL       0 'eRow'
+000002      | OP_GET_LOCAL        1
+000004      | OP_CALL             1
+000006    455 OP_GET_LOCAL        4
+000008      | OP_ZERO
+000009      | OP_EQUAL
+000010      | OP_JUMP_IF_FALSE   10 -> 26
+000013      | OP_POP
+000014    456 OP_GET_GLOBAL       1 'drawBoss'
+000016      | OP_GET_LOCAL        2
+000018      | OP_GET_LOCAL        3
+000020      | OP_CALL             2
+000022      | OP_POP
+000023    457 OP_JUMP            23 -> 58
+000026      | OP_POP
+000027    458 OP_GET_LOCAL        4
+000029      | OP_CONSTANT         2 '3'
+000031      | OP_LESS
+000032      | OP_JUMP_IF_FALSE   32 -> 48
+000035      | OP_POP
+000036    459 OP_GET_GLOBAL       3 'drawButterfly'
+000038      | OP_GET_LOCAL        2
+000040      | OP_GET_LOCAL        3
+000042      | OP_CALL             2
+000044      | OP_POP
+000045    460 OP_JUMP            45 -> 58
+000048      | OP_POP
+000049    461 OP_GET_GLOBAL       4 'drawBee'
+000051      | OP_GET_LOCAL        2
+000053      | OP_GET_LOCAL        3
+000055      | OP_CALL             2
+000057      | OP_POP
+000058    464 OP_NULL
+000059      | OP_RETURN
+
+
+== drawExplosion ==
+000000    469 OP_GET_LOCAL        3
+000002      | OP_CONSTANT         1 '0.350000'
+000004      | OP_DIVIDE
+000005    470 OP_ONE
+000006      | OP_GET_LOCAL        4
+000008      | OP_SUBTRACT
+000009    473 OP_GET_GLOBAL       2 'math'
+000011      | OP_GET_LOCAL        5
+000013      | OP_CONSTANT         4 '22'
+000015      | OP_MULTIPLY
+000016      | OP_INVOKE        (1 args)    3 'floor'
+000019    474 OP_GET_GLOBAL       5 'math'
+000021      | OP_GET_LOCAL        5
+000023      | OP_CONSTANT         7 '14'
+000025      | OP_MULTIPLY
+000026      | OP_INVOKE        (1 args)    6 'floor'
+000029    477 OP_GET_GLOBAL       8 'math'
+000031      | OP_CONSTANT        10 '255'
+000033      | OP_GET_LOCAL        4
+000035      | OP_MULTIPLY
+000036      | OP_INVOKE        (1 args)    9 'floor'
+000039    478 OP_GET_GLOBAL      11 'math'
+000041      | OP_CONSTANT        13 '140'
+000043      | OP_GET_LOCAL        4
+000045      | OP_MULTIPLY
+000046      | OP_INVOKE        (1 args)   12 'floor'
+000049    479 OP_GET_GLOBAL      14 'graphics'
+000051      | OP_GET_LOCAL        8
+000053      | OP_GET_LOCAL        9
+000055      | OP_ZERO
+000056      | OP_ARRAY_INIT       3
+000058      | OP_GET_LOCAL        1
+000060      | OP_GET_LOCAL        6
+000062      | OP_SUBTRACT
+000063      | OP_GET_LOCAL        2
+000065      | OP_CONSTANT        17 '12'
+000067      | OP_ADD
+000068      | OP_CONSTANT        18 '3'
+000070      | OP_SUBTRACT
+000071      | OP_GET_LOCAL        6
+000073      | OP_CONSTANT        19 '2'
+000075      | OP_MULTIPLY
+000076      | OP_CONSTANT        20 '6'
+000078      | OP_INVOKE        (5 args)   15 'drawRect'
+000081      | OP_POP
+000082    480 OP_GET_GLOBAL      21 'graphics'
+000084      | OP_GET_LOCAL        8
+000086      | OP_GET_LOCAL        9
+000088      | OP_ZERO
+000089      | OP_ARRAY_INIT       3
+000091      | OP_GET_LOCAL        1
+000093      | OP_CONSTANT        24 '14'
+000095      | OP_ADD
+000096      | OP_CONSTANT        25 '3'
+000098      | OP_SUBTRACT
+000099      | OP_GET_LOCAL        2
+000101      | OP_GET_LOCAL        6
+000103      | OP_SUBTRACT
+000104      | OP_CONSTANT        26 '6'
+000106      | OP_GET_LOCAL        6
+000108      | OP_CONSTANT        27 '2'
+000110      | OP_MULTIPLY
+000111      | OP_INVOKE        (5 args)   22 'drawRect'
+000114      | OP_POP
+000115    483 OP_GET_GLOBAL      28 'math'
+000117      | OP_CONSTANT        30 '200'
+000119      | OP_CONSTANT        31 '55'
+000121      | OP_GET_LOCAL        4
+000123      | OP_MULTIPLY
+000124      | OP_ADD
+000125      | OP_INVOKE        (1 args)   29 'floor'
+000128    484 OP_GET_GLOBAL      32 'graphics'
+000130      | OP_CONSTANT        34 '255'
+000132      | OP_GET_LOCAL       10
+000134      | OP_ZERO
+000135      | OP_ARRAY_INIT       3
+000137      | OP_GET_LOCAL        1
+000139      | OP_CONSTANT        36 '14'
+000141      | OP_ADD
+000142      | OP_GET_LOCAL        7
+000144      | OP_SUBTRACT
+000145      | OP_GET_LOCAL        2
+000147      | OP_CONSTANT        38 '12'
+000149      | OP_ADD
+000150      | OP_GET_LOCAL        7
+000152      | OP_SUBTRACT
+000153      | OP_GET_LOCAL        7
+000155      | OP_CONSTANT        39 '2'
+000157      | OP_MULTIPLY
+000158      | OP_GET_LOCAL        7
+000160      | OP_CONSTANT        40 '2'
+000162      | OP_MULTIPLY
+000163      | OP_INVOKE        (5 args)   33 'drawRect'
+000166      | OP_POP
+000167    487 OP_GET_LOCAL        4
+000169      | OP_CONSTANT        41 '0.500000'
+000171      | OP_GREATER
+000172      | OP_JUMP_IF_FALSE  172 -> 233
+000175      | OP_POP
+000176    488 OP_GET_LOCAL        4
+000178      | OP_CONSTANT        42 '0.500000'
+000180      | OP_SUBTRACT
+000181      | OP_CONSTANT        43 '2'
+000183      | OP_MULTIPLY
+000184    489 OP_GET_GLOBAL      44 'math'
+000186      | OP_GET_LOCAL       11
+000188      | OP_CONSTANT        46 '255'
+000190      | OP_MULTIPLY
+000191      | OP_INVOKE        (1 args)   45 'floor'
+000194    490 OP_GET_GLOBAL      47 'graphics'
+000196      | OP_GET_LOCAL       12
+000198      | OP_GET_LOCAL       12
+000200      | OP_GET_LOCAL       12
+000202      | OP_ARRAY_INIT       3
+000204      | OP_GET_LOCAL        1
+000206      | OP_CONSTANT        50 '14'
+000208      | OP_ADD
+000209      | OP_CONSTANT        51 '5'
+000211      | OP_SUBTRACT
+000212      | OP_GET_LOCAL        2
+000214      | OP_CONSTANT        53 '12'
+000216      | OP_ADD
+000217      | OP_CONSTANT        54 '5'
+000219      | OP_SUBTRACT
+000220      | OP_CONSTANT        55 '10'
+000222      | OP_CONSTANT        56 '10'
+000224      | OP_INVOKE        (5 args)   48 'drawRect'
+000227      | OP_POP
+000228    491 OP_POP
+000229      | OP_POP
+000230      | OP_JUMP           230 -> 234
+000233      | OP_POP
+000234    492 OP_NULL
+000235      | OP_RETURN
+
+
+== updateStars ==
+000000    510 OP_ZERO
+000001      | OP_GET_LOCAL        2
+000003      | OP_CONSTANT         1 '55'
+000005      | OP_LESS
+000006      | OP_JUMP_IF_FALSE    6 -> 80
+000009      | OP_POP
+000010      | OP_JUMP            10 -> 26
+000013      | OP_GET_LOCAL        2
+000015      | OP_GET_LOCAL        2
+000017      | OP_ONE
+000018      | OP_ADD
+000019      | OP_SET_LOCAL        2
+000021      | OP_POP
+000022      | OP_POP
+000023      | OP_LOOP            23 -> 1
+000026    511 OP_GET_GLOBAL       2 'starY'
+000028      | OP_GET_LOCAL        2
+000030      | OP_GET_GLOBAL       3 'starY'
+000032      | OP_GET_LOCAL        2
+000034      | OP_GET_INDEX
+000035      | OP_GET_GLOBAL       4 'starSpd'
+000037      | OP_GET_LOCAL        2
+000039      | OP_GET_INDEX
+000040      | OP_GET_LOCAL        1
+000042      | OP_MULTIPLY
+000043      | OP_ADD
+000044      | OP_SET_INDEX
+000045      | OP_POP
+000046    512 OP_GET_GLOBAL       5 'starY'
+000048      | OP_GET_LOCAL        2
+000050      | OP_GET_INDEX
+000051      | OP_CONSTANT         7 '600'
+000053      | OP_LESS
+000054      | OP_NOT
+000055      | OP_JUMP_IF_FALSE   55 -> 76
+000058      | OP_POP
+000059      | OP_GET_GLOBAL       8 'starY'
+000061      | OP_GET_LOCAL        2
+000063      | OP_GET_GLOBAL       9 'starY'
+000065      | OP_GET_LOCAL        2
+000067      | OP_GET_INDEX
+000068      | OP_CONSTANT        11 '600'
+000070      | OP_SUBTRACT
+000071      | OP_SET_INDEX
+000072      | OP_POP
+000073      | OP_JUMP            73 -> 77
+000076      | OP_POP
+000077    513 OP_LOOP            77 -> 13
+000080      | OP_POP
+000081      | OP_POP
+000082    514 OP_NULL
+000083      | OP_RETURN
+
+
+== drawStars ==
+000000    517 OP_ZERO
+000001      | OP_GET_LOCAL        2
+000003      | OP_CONSTANT         1 '55'
+000005      | OP_LESS
+000006      | OP_JUMP_IF_FALSE    6 -> 87
+000009      | OP_POP
+000010      | OP_JUMP            10 -> 26
+000013      | OP_GET_LOCAL        2
+000015      | OP_GET_LOCAL        2
+000017      | OP_ONE
+000018      | OP_ADD
+000019      | OP_SET_LOCAL        2
+000021      | OP_POP
+000022      | OP_POP
+000023      | OP_LOOP            23 -> 1
+000026    518 OP_GET_GLOBAL       2 'math'
+000028      | OP_GET_GLOBAL       4 'math'
+000030      | OP_GET_LOCAL        1
+000032      | OP_CONSTANT         6 '2'
+000034      | OP_MULTIPLY
+000035      | OP_GET_LOCAL        2
+000037      | OP_ADD
+000038      | OP_INVOKE        (1 args)    5 'sin'
+000041      | OP_CONSTANT         7 '55'
+000043      | OP_MULTIPLY
+000044      | OP_CONSTANT         8 '180'
+000046      | OP_ADD
+000047      | OP_INVOKE        (1 args)    3 'floor'
+000050    519 OP_GET_GLOBAL       9 'graphics'
+000052      | OP_GET_LOCAL        3
+000054      | OP_GET_LOCAL        3
+000056      | OP_GET_LOCAL        3
+000058      | OP_ARRAY_INIT       3
+000060      | OP_GET_GLOBAL      11 'starX'
+000062      | OP_GET_LOCAL        2
+000064      | OP_GET_INDEX
+000065      | OP_GET_GLOBAL      12 'math'
+000067      | OP_GET_GLOBAL      14 'starY'
+000069      | OP_GET_LOCAL        2
+000071      | OP_GET_INDEX
+000072      | OP_INVOKE        (1 args)   13 'floor'
+000075      | OP_CONSTANT        15 '2'
+000077      | OP_CONSTANT        16 '2'
+000079      | OP_INVOKE        (5 args)   10 'drawRect'
+000082      | OP_POP
+000083    520 OP_POP
+000084      | OP_LOOP            84 -> 13
+000087      | OP_POP
+000088      | OP_POP
+000089    521 OP_NULL
+000090      | OP_RETURN
+
+
+== <script> ==
+000000      6 OP_CONSTANT         1 '800'
+000002      | OP_DEFINE_CONST     0 'SCREEN_W'
+000004      7 OP_CONSTANT         3 '600'
+000006      | OP_DEFINE_CONST     2 'SCREEN_H'
+000008      8 OP_CONSTANT         5 '50'
+000010      | OP_DEFINE_CONST     4 'FPS'
+000012     11 OP_CONSTANT         7 '36'
+000014      | OP_DEFINE_CONST     6 'PLAYER_W'
+000016     12 OP_CONSTANT         9 '28'
+000018      | OP_DEFINE_CONST     8 'PLAYER_H'
+000020     13 OP_CONSTANT        11 '320'
+000022      | OP_DEFINE_CONST    10 'PLAYER_SPD'
+000024     14 OP_CONSTANT        13 '0.180000'
+000026      | OP_DEFINE_CONST    12 'FIRE_RATE'
+000028     17 OP_CONSTANT        15 '2'
+000030      | OP_DEFINE_CONST    14 'MAX_BULLETS'
+000032     18 OP_CONSTANT        17 '4'
+000034      | OP_DEFINE_CONST    16 'BULLET_W'
+000036     19 OP_CONSTANT        19 '18'
+000038      | OP_DEFINE_CONST    18 'BULLET_H'
+000040     20 OP_CONSTANT        21 '560'
+000042      | OP_DEFINE_CONST    20 'BULLET_SPD'
+000044     23 OP_CONSTANT        23 '10'
+000046      | OP_DEFINE_CONST    22 'ENEMY_COLS'
+000048     24 OP_CONSTANT        25 '5'
+000050      | OP_DEFINE_CONST    24 'ENEMY_ROWS'
+000052     25 OP_CONSTANT        27 '50'
+000054      | OP_DEFINE_CONST    26 'TOTAL_ENEMIES'
+000056     26 OP_CONSTANT        29 '28'
+000058      | OP_DEFINE_CONST    28 'ENEMY_W'
+000060     27 OP_CONSTANT        31 '24'
+000062      | OP_DEFINE_CONST    30 'ENEMY_H'
+000064     28 OP_CONSTANT        33 '18'
+000066      | OP_DEFINE_CONST    32 'ENEMY_PAD_X'
+000068     29 OP_CONSTANT        35 '14'
+000070      | OP_DEFINE_CONST    34 'ENEMY_PAD_Y'
+000072     30 OP_CONSTANT        37 '91'
+000074      | OP_DEFINE_CONST    36 'FORM_X0'
+000076     31 OP_CONSTANT        39 '55'
+000078      | OP_DEFINE_CONST    38 'FORM_Y0'
+000080     34 OP_CONSTANT        41 '24'
+000082      | OP_DEFINE_CONST    40 'SWAY_AMP'
+000084     35 OP_CONSTANT        43 '0.600000'
+000086      | OP_DEFINE_CONST    42 'SWAY_FREQ'
+000088     38 OP_CONSTANT        45 '3'
+000090      | OP_DEFINE_CONST    44 'MAX_DIVERS'
+000092     39 OP_CONSTANT        47 '3.200000'
+000094      | OP_DEFINE_CONST    46 'DIVE_INTERVAL'
+000096     40 OP_CONSTANT        49 '310'
+000098      | OP_DEFINE_CONST    48 'DIVE_SPD'
+000100     41 OP_CONSTANT        51 '28'
+000102      | OP_DEFINE_CONST    50 'DIVE_WOBBLE'
+000104     42 OP_CONSTANT        53 '4.200000'
+000106      | OP_DEFINE_CONST    52 'DIVE_WOBBLE_F'
+000108     45 OP_CONSTANT        55 '6'
+000110      | OP_DEFINE_CONST    54 'MAX_EBULLETS'
+000112     46 OP_CONSTANT        57 '4'
+000114      | OP_DEFINE_CONST    56 'EBULLET_W'
+000116     47 OP_CONSTANT        59 '14'
+000118      | OP_DEFINE_CONST    58 'EBULLET_H'
+000120     48 OP_CONSTANT        61 '235'
+000122      | OP_DEFINE_CONST    60 'EBULLET_SPD'
+000124     49 OP_CONSTANT        63 '0.004500'
+000126      | OP_DEFINE_CONST    62 'EBULLET_CHANCE'
+000128     52 OP_CONSTANT        65 '2.500000'
+000130      | OP_DEFINE_CONST    64 'RESPAWN_DELAY'
+000132     53 OP_CONSTANT        67 '1.200000'
+000134      | OP_DEFINE_CONST    66 'RESPAWN_INVULN'
+000136     56 OP_CONSTANT        69 '16'
+000138      | OP_DEFINE_CONST    68 'MAX_EXPLOSIONS'
+000140     57 OP_CONSTANT        71 '0.350000'
+000142      | OP_DEFINE_CONST    70 'EXPLOSION_DUR'
+000144     60 OP_CONSTANT        73 '16'
+000146      | OP_DEFINE_CONST    72 'MAX_POPUPS'
+000148     61 OP_CONSTANT        75 '0.700000'
+000150      | OP_DEFINE_CONST    74 'POPUP_DUR'
+000152     67 OP_GET_GLOBAL      76 'graphics'
+000154      | OP_GET_GLOBAL      78 'SCREEN_W'
+000156      | OP_GET_GLOBAL      79 'SCREEN_H'
+000158      | OP_CONSTANT        80 'Galaga'
+000160      | OP_INVOKE        (3 args)   77 'init'
+000163      | OP_POP
+000164     68 OP_GET_GLOBAL      81 'graphics'
+000166      | OP_GET_GLOBAL      83 'FPS'
+000168      | OP_INVOKE        (1 args)   82 'targetFPS'
+000171      | OP_POP
+000172     76 OP_CLOSURE         85 <fn eRow>
+000174      | OP_DEFINE_GLOBAL   84 'eRow'
+000176     80 OP_CLOSURE         87 <fn eCol>
+000178      | OP_DEFINE_GLOBAL   86 'eCol'
+000180     84 OP_CLOSURE         89 <fn formationWidth>
+000182      | OP_DEFINE_GLOBAL   88 'formationWidth'
+000184     89 OP_CLOSURE         91 <fn formX>
+000186      | OP_DEFINE_GLOBAL   90 'formX'
+000188     93 OP_CLOSURE         93 <fn formY>
+000190      | OP_DEFINE_GLOBAL   92 'formY'
+000192     97 OP_CLOSURE         95 <fn rectsOverlap>
+000194      | OP_DEFINE_GLOBAL   94 'rectsOverlap'
+000196    110 OP_CLOSURE         97 <fn scoreForEnemy>
+000198      | OP_DEFINE_GLOBAL   96 'scoreForEnemy'
+000200    118 OP_CONSTANT        99 '3'
+000202      | OP_DEFINE_GLOBAL   98 'lives'
+000204    119 OP_ZERO
+000205      | OP_DEFINE_GLOBAL  100 'score'
+000207    120 OP_ONE
+000208      | OP_DEFINE_GLOBAL  101 'wave'
+000210    121 OP_GET_GLOBAL     103 'cast'
+000212      | OP_GET_GLOBAL     105 'io'
+000214      | OP_CONSTANT       107 './examples/galagasave'
+000216      | OP_INVOKE        (1 args)  106 'readFile'
+000219      | OP_INVOKE        (1 args)  104 'ston'
+000222      | OP_DEFINE_GLOBAL  102 'highScore'
+000224    122 OP_FALSE
+000225      | OP_DEFINE_GLOBAL  108 'gameOver'
+000227    125 OP_ZERO
+000228      | OP_DEFINE_GLOBAL  109 'playerX'
+000230    126 OP_ZERO
+000231      | OP_DEFINE_GLOBAL  110 'playerY'
+000233    127 OP_TRUE
+000234      | OP_DEFINE_GLOBAL  111 'playerAlive'
+000236    128 OP_ZERO
+000237      | OP_DEFINE_GLOBAL  112 'respTimer'
+000239    129 OP_ZERO
+000240      | OP_DEFINE_GLOBAL  113 'fireCool'
+000242    130 OP_ZERO
+000243      | OP_DEFINE_GLOBAL  114 'invulnTimer'
+000245    131 OP_FALSE
+000246      | OP_DEFINE_GLOBAL  115 'victory'
+000248    132 OP_ZERO
+000249      | OP_DEFINE_GLOBAL  116 'enemyCount'
+000251    133 OP_ZERO
+000252      | OP_DEFINE_GLOBAL  117 'swayT'
+000254    134 OP_ZERO
+000255      | OP_DEFINE_GLOBAL  118 'diveTimer'
+000257    136 OP_CONSTANT       120 '2'
+000259      | OP_ARRAY_NEW
+000260      | OP_DEFINE_GLOBAL  119 'pbX'
+000262    137 OP_CONSTANT       122 '2'
+000264      | OP_ARRAY_NEW
+000265      | OP_DEFINE_GLOBAL  121 'pbY'
+000267    138 OP_CONSTANT       124 '2'
+000269      | OP_ARRAY_NEW
+000270      | OP_DEFINE_GLOBAL  123 'pbActive'
+000272    140 OP_CONSTANT       126 '50'
+000274      | OP_ARRAY_NEW
+000275      | OP_DEFINE_GLOBAL  125 'eAlive'
+000277    141 OP_CONSTANT       128 '50'
+000279      | OP_ARRAY_NEW
+000280      | OP_DEFINE_GLOBAL  127 'eDiving'
+000282    142 OP_CONSTANT       130 '50'
+000284      | OP_ARRAY_NEW
+000285      | OP_DEFINE_GLOBAL  129 'eDiveX'
+000287    143 OP_CONSTANT       132 '50'
+000289      | OP_ARRAY_NEW
+000290      | OP_DEFINE_GLOBAL  131 'eDiveY'
+000292    144 OP_CONSTANT       134 '50'
+000294      | OP_ARRAY_NEW
+000295      | OP_DEFINE_GLOBAL  133 'eTargetX'
+000297    145 OP_CONSTANT       136 '50'
+000299      | OP_ARRAY_NEW
+000300      | OP_DEFINE_GLOBAL  135 'eTargetY'
+000302    146 OP_CONSTANT       138 '50'
+000304      | OP_ARRAY_NEW
+000305      | OP_DEFINE_GLOBAL  137 'eDivePhase'
+000307    147 OP_CONSTANT       140 '50'
+000309      | OP_ARRAY_NEW
+000310      | OP_DEFINE_GLOBAL  139 'eDiveStartY'
+000312    148 OP_CONSTANT       142 '50'
+000314      | OP_ARRAY_NEW
+000315      | OP_DEFINE_GLOBAL  141 'eTrackingLocked'
+000317    150 OP_CONSTANT       144 '6'
+000319      | OP_ARRAY_NEW
+000320      | OP_DEFINE_GLOBAL  143 'ebX'
+000322    151 OP_CONSTANT       146 '6'
+000324      | OP_ARRAY_NEW
+000325      | OP_DEFINE_GLOBAL  145 'ebY'
+000327    152 OP_CONSTANT       148 '6'
+000329      | OP_ARRAY_NEW
+000330      | OP_DEFINE_GLOBAL  147 'ebActive'
+000332    155 OP_CONSTANT       150 '16'
+000334      | OP_ARRAY_NEW
+000335      | OP_DEFINE_GLOBAL  149 'exX'
+000337    156 OP_CONSTANT       152 '16'
+000339      | OP_ARRAY_NEW
+000340      | OP_DEFINE_GLOBAL  151 'exY'
+000342    157 OP_CONSTANT       154 '16'
+000344      | OP_ARRAY_NEW
+000345      | OP_DEFINE_GLOBAL  153 'exTimer'
+000347    158 OP_CONSTANT       156 '16'
+000349      | OP_ARRAY_NEW
+000350      | OP_DEFINE_GLOBAL  155 'exActive'
+000352    161 OP_CONSTANT       158 '16'
+000354      | OP_ARRAY_NEW
+000355      | OP_DEFINE_GLOBAL  157 'popX'
+000357    162 OP_CONSTANT       160 '16'
+000359      | OP_ARRAY_NEW
+000360      | OP_DEFINE_GLOBAL  159 'popY'
+000362    163 OP_CONSTANT       162 '16'
+000364      | OP_ARRAY_NEW
+000365      | OP_DEFINE_GLOBAL  161 'popTimer'
+000367    164 OP_CONSTANT       164 '16'
+000369      | OP_ARRAY_NEW
+000370      | OP_DEFINE_GLOBAL  163 'popValue'
+000372    165 OP_CONSTANT       166 '16'
+000374      | OP_ARRAY_NEW
+000375      | OP_DEFINE_GLOBAL  165 'popActive'
+000377    168 OP_CONSTANT       168 ''
+000379      | OP_DEFINE_GLOBAL  167 'enemyCountStr'
+000381    169 OP_TRUE
+000382      | OP_DEFINE_GLOBAL  169 'enemyCountDirty'
+000384    215 OP_CLOSURE        171 <fn initWave>
+000386      | OP_DEFINE_GLOBAL  170 'initWave'
+000388    217 OP_GET_GLOBAL     172 'initWave'
+000390      | OP_CALL             0
+000392      | OP_POP
+000393    231 OP_CLOSURE        174 <fn diffScale>
+000395      | OP_DEFINE_GLOBAL  173 'diffScale'
+000397    235 OP_CLOSURE        176 <fn scaledSway>
+000399      | OP_DEFINE_GLOBAL  175 'scaledSway'
+000401    239 OP_CLOSURE        178 <fn scaledDiveSPD>
+000403      | OP_DEFINE_GLOBAL  177 'scaledDiveSPD'
+000405    243 OP_CLOSURE        180 <fn scaledEBulletChance>
+000407      | OP_DEFINE_GLOBAL  179 'scaledEBulletChance'
+000409    249 OP_CLOSURE        182 <fn scaledDiveInterval>
+000411      | OP_DEFINE_GLOBAL  181 'scaledDiveInterval'
+000413    261 OP_CLOSURE        184 <fn countDivers>
+000415      | OP_DEFINE_GLOBAL  183 'countDivers'
+000417    273 OP_CLOSURE        186 <fn spawnExplosion>
+000419      | OP_DEFINE_GLOBAL  185 'spawnExplosion'
+000421    286 OP_CLOSURE        188 <fn spawnPopup>
+000423      | OP_DEFINE_GLOBAL  187 'spawnPopup'
+000425    299 OP_CLOSURE        190 <fn lowestInColumn>
+000427      | OP_DEFINE_GLOBAL  189 'lowestInColumn'
+000429    357 OP_CLOSURE        192 <fn launchDiver>
+000431      | OP_DEFINE_GLOBAL  191 'launchDiver'
+000433    365 OP_CLOSURE        194 <fn activeBullets>
+000435      | OP_DEFINE_GLOBAL  193 'activeBullets'
+000437    376 OP_CLOSURE        196 <fn firePlayerBullet>
+000439      | OP_DEFINE_GLOBAL  195 'firePlayerBullet'
+000441    405 OP_CLOSURE        198 <fn fireEnemyBulletFromColumn>
+000443      | OP_DEFINE_GLOBAL  197 'fireEnemyBulletFromColumn'
+000445    424 OP_CLOSURE        200 <fn drawPlayer>
+000447      | OP_DEFINE_GLOBAL  199 'drawPlayer'
+000449    433 OP_CLOSURE        202 <fn drawBoss>
+000451      | OP_DEFINE_GLOBAL  201 'drawBoss'
+000453    442 OP_CLOSURE        204 <fn drawButterfly>
+000455      | OP_DEFINE_GLOBAL  203 'drawButterfly'
+000457    451 OP_CLOSURE        206 <fn drawBee>
+000459      | OP_DEFINE_GLOBAL  205 'drawBee'
+000461    464 OP_CLOSURE        208 <fn drawEnemy>
+000463      | OP_DEFINE_GLOBAL  207 'drawEnemy'
+000465    492 OP_CLOSURE        210 <fn drawExplosion>
+000467      | OP_DEFINE_GLOBAL  209 'drawExplosion'
+000469    498 OP_CONSTANT       212 '55'
+000471      | OP_DEFINE_CONST   211 'STAR_COUNT'
+000473    499 OP_CONSTANT       214 '55'
+000475      | OP_ARRAY_NEW
+000476      | OP_DEFINE_GLOBAL  213 'starX'
+000478    500 OP_CONSTANT       216 '55'
+000480      | OP_ARRAY_NEW
+000481      | OP_DEFINE_GLOBAL  215 'starY'
+000483    501 OP_CONSTANT       218 '55'
+000485      | OP_ARRAY_NEW
+000486      | OP_DEFINE_GLOBAL  217 'starSpd'
+000488    503 OP_ZERO
+000489      | OP_GET_LOCAL        1
+000491      | OP_CONSTANT       220 '55'
+000493      | OP_LESS
+000494      | OP_JUMP_IF_FALSE  494 -> 579
+000497      | OP_POP
+000498      | OP_JUMP           498 -> 514
+000501      | OP_GET_LOCAL        1
+000503      | OP_GET_LOCAL        1
+000505      | OP_ONE
+000506      | OP_ADD
+000507      | OP_SET_LOCAL        1
+000509      | OP_POP
+000510      | OP_POP
+000511      | OP_LOOP           511 -> 489
+000514    504 OP_GET_GLOBAL     221 'starX'
+000516      | OP_GET_LOCAL        1
+000518      | OP_GET_GLOBAL     222 'math'
+000520      | OP_GET_GLOBAL     224 'math'
+000522      | OP_INVOKE        (0 args)  225 'rand'
+000525      | OP_CONSTANT       227 '800'
+000527      | OP_MULTIPLY
+000528      | OP_INVOKE        (1 args)  223 'floor'
+000531      | OP_SET_INDEX
+000532      | OP_POP
+000533    505 OP_GET_GLOBAL     228 'starY'
+000535      | OP_GET_LOCAL        1
+000537      | OP_GET_GLOBAL     229 'math'
+000539      | OP_GET_GLOBAL     231 'math'
+000541      | OP_INVOKE        (0 args)  232 'rand'
+000544      | OP_CONSTANT       234 '600'
+000546      | OP_MULTIPLY
+000547      | OP_INVOKE        (1 args)  230 'floor'
+000550      | OP_SET_INDEX
+000551      | OP_POP
+000552    506 OP_GET_GLOBAL     235 'starSpd'
+000554      | OP_GET_LOCAL        1
+000556      | OP_GET_GLOBAL     236 'math'
+000558      | OP_GET_GLOBAL     238 'math'
+000560      | OP_INVOKE        (0 args)  239 'rand'
+000563      | OP_CONSTANT       240 '3'
+000565      | OP_MULTIPLY
+000566      | OP_INVOKE        (1 args)  237 'floor'
+000569      | OP_ONE
+000570      | OP_ADD
+000571      | OP_CONSTANT       241 '120'
+000573      | OP_MULTIPLY
+000574      | OP_SET_INDEX
+000575      | OP_POP
+000576    507 OP_LOOP           576 -> 501
+000579      | OP_POP
+000580      | OP_POP
+000581    514 OP_CLOSURE        243 <fn updateStars>
+000583      | OP_DEFINE_GLOBAL  242 'updateStars'
+000585    521 OP_CLOSURE        245 <fn drawStars>
+000587      | OP_DEFINE_GLOBAL  244 'drawStars'
+000589    527 OP_ZERO
+000590      | OP_DEFINE_GLOBAL  246 'dt'
+000592    528 OP_ZERO
+000593      | OP_DEFINE_GLOBAL  247 'waveTransTimer'
+000595    529 OP_FALSE
+000596      | OP_DEFINE_GLOBAL  248 'showingWaveBanner'
+000598    531 OP_GET_GLOBAL     249 'graphics'
+000600      | OP_INVOKE        (0 args)  250 'windowShouldClose'
+000603      | OP_NOT
+000604      | OP_JUMP_IF_FALSE  604 -> 625
+000607      | OP_POP
+000608      | OP_GET_GLOBAL     251 'game'
+000610      | OP_GET_GLOBAL     253 'game'
+000612      | OP_GET_PROPERTY   254 'KEY_ESCAPE'
+000614      | OP_INVOKE        (1 args)  252 'isKeyDown'
+000617      | OP_NOT
+000618      | OP_JUMP_IF_FALSE  618 -> 625
+000621      | OP_POP
+000622      | OP_GET_GLOBAL     255 'gameOver'
+000624      | OP_NOT
+000625      | OP_JUMP_IF_FALSE  625 -> 4812
+000628      | OP_POP
+000629    533 OP_GET_GLOBAL_LONG  257 'graphics'
+000633      | OP_INVOKE_LONG   (0 args)  258 'getDeltaTime'
+000638      | OP_SET_GLOBAL_LONG  256 'dt'
+000642      | OP_POP
+000643    537 OP_GET_GLOBAL_LONG  259 'showingWaveBanner'
+000647      | OP_JUMP_IF_FALSE  647 -> 966
+000650      | OP_POP
+000651    538 OP_GET_GLOBAL_LONG  260 'waveTransTimer'
+000655      | OP_GET_GLOBAL_LONG  261 'dt'
+000659      | OP_SUBTRACT
+000660      | OP_SET_GLOBAL_LONG  260 'waveTransTimer'
+000664      | OP_POP
+000665    539 OP_GET_GLOBAL_LONG  262 'updateStars'
+000669      | OP_GET_GLOBAL_LONG  263 'dt'
+000673      | OP_CALL             1
+000675      | OP_POP
+000676    541 OP_GET_GLOBAL_LONG  264 'graphics'
+000680      | OP_INVOKE_LONG   (0 args)  265 'beginDraw'
+000685      | OP_POP
+000686    542 OP_GET_GLOBAL_LONG  266 'graphics'
+000690      | OP_ZERO
+000691      | OP_ZERO
+000692      | OP_ZERO
+000693      | OP_INVOKE_LONG   (3 args)  267 'clearColor'
+000698      | OP_POP
+000699    543 OP_GET_GLOBAL_LONG  268 'drawStars'
+000703      | OP_GET_GLOBAL_LONG  269 'swayT'
+000707      | OP_CALL             1
+000709      | OP_POP
+000710    545 OP_GET_GLOBAL_LONG  270 'graphics'
+000714      | OP_CONSTANT_LONG  272 'STAGE '
+000718      | OP_GET_GLOBAL_LONG  273 'cast'
+000722      | OP_GET_GLOBAL_LONG  275 'wave'
+000726      | OP_ONE
+000727      | OP_SUBTRACT
+000728      | OP_INVOKE_LONG   (1 args)  274 'ntos'
+000733      | OP_ADD
+000734      | OP_CONSTANT_LONG  276 ' CLEAR!'
+000738      | OP_ADD
+000739      | OP_ZERO
+000740      | OP_CONSTANT_LONG  277 '255'
+000744      | OP_CONSTANT_LONG  278 '80'
+000748      | OP_ARRAY_INIT       3
+000750    546 OP_GET_GLOBAL_LONG  279 'SCREEN_W'
+000754      | OP_CONSTANT_LONG  280 '2'
+000758      | OP_DIVIDE
+000759      | OP_CONSTANT_LONG  281 '150'
+000763      | OP_SUBTRACT
+000764      | OP_GET_GLOBAL_LONG  282 'SCREEN_H'
+000768      | OP_CONSTANT_LONG  283 '2'
+000772      | OP_DIVIDE
+000773      | OP_CONSTANT_LONG  284 '30'
+000777      | OP_SUBTRACT
+000778      | OP_CONSTANT_LONG  285 '36'
+000782      | OP_INVOKE_LONG   (5 args)  271 'drawText'
+000787      | OP_POP
+000788    547 OP_GET_GLOBAL_LONG  286 'graphics'
+000792      | OP_CONSTANT_LONG  288 'STAGE '
+000796      | OP_GET_GLOBAL_LONG  289 'cast'
+000800      | OP_GET_GLOBAL_LONG  291 'wave'
+000804      | OP_INVOKE_LONG   (1 args)  290 'ntos'
+000809      | OP_ADD
+000810      | OP_CONSTANT_LONG  292 '255'
+000814      | OP_CONSTANT_LONG  293 '255'
+000818      | OP_CONSTANT_LONG  294 '80'
+000822      | OP_ARRAY_INIT       3
+000824    548 OP_GET_GLOBAL_LONG  295 'SCREEN_W'
+000828      | OP_CONSTANT_LONG  296 '2'
+000832      | OP_DIVIDE
+000833      | OP_CONSTANT_LONG  297 '80'
+000837      | OP_SUBTRACT
+000838      | OP_GET_GLOBAL_LONG  298 'SCREEN_H'
+000842      | OP_CONSTANT_LONG  299 '2'
+000846      | OP_DIVIDE
+000847      | OP_CONSTANT_LONG  300 '20'
+000851      | OP_ADD
+000852      | OP_CONSTANT_LONG  301 '26'
+000856      | OP_INVOKE_LONG   (5 args)  287 'drawText'
+000861      | OP_POP
+000862    549 OP_GET_GLOBAL_LONG  302 'graphics'
+000866      | OP_CONSTANT_LONG  304 'GET READY!'
+000870      | OP_CONSTANT_LONG  305 '200'
+000874      | OP_CONSTANT_LONG  306 '200'
+000878      | OP_CONSTANT_LONG  307 '255'
+000882      | OP_ARRAY_INIT       3
+000884    550 OP_GET_GLOBAL_LONG  308 'SCREEN_W'
+000888      | OP_CONSTANT_LONG  309 '2'
+000892      | OP_DIVIDE
+000893      | OP_CONSTANT_LONG  310 '90'
+000897      | OP_SUBTRACT
+000898      | OP_GET_GLOBAL_LONG  311 'SCREEN_H'
+000902      | OP_CONSTANT_LONG  312 '2'
+000906      | OP_DIVIDE
+000907      | OP_CONSTANT_LONG  313 '60'
+000911      | OP_ADD
+000912      | OP_CONSTANT_LONG  314 '22'
+000916      | OP_INVOKE_LONG   (5 args)  303 'drawText'
+000921      | OP_POP
+000922    552 OP_GET_GLOBAL_LONG  315 'graphics'
+000926      | OP_INVOKE_LONG   (0 args)  316 'endDraw'
+000931      | OP_POP
+000932    554 OP_GET_GLOBAL_LONG  317 'waveTransTimer'
+000936      | OP_ZERO
+000937      | OP_GREATER
+000938      | OP_NOT
+000939      | OP_JUMP_IF_FALSE  939 -> 959
+000942      | OP_POP
+000943    555 OP_FALSE
+000944      | OP_SET_GLOBAL_LONG  318 'showingWaveBanner'
+000948      | OP_POP
+000949    556 OP_GET_GLOBAL_LONG  319 'initWave'
+000953      | OP_CALL             0
+000955      | OP_POP
+000956    557 OP_JUMP           956 -> 960
+000959      | OP_POP
+000960    559 OP_LOOP           960 -> 598
+000963    560 OP_JUMP           963 -> 967
+000966      | OP_POP
+000967    564 OP_GET_GLOBAL_LONG  320 'swayT'
+000971      | OP_GET_GLOBAL_LONG  321 'dt'
+000975      | OP_ADD
+000976      | OP_SET_GLOBAL_LONG  320 'swayT'
+000980      | OP_POP
+000981    565 OP_GET_GLOBAL_LONG  322 'fireCool'
+000985      | OP_GET_GLOBAL_LONG  323 'dt'
+000989      | OP_SUBTRACT
+000990      | OP_SET_GLOBAL_LONG  322 'fireCool'
+000994      | OP_POP
+000995    567 OP_GET_GLOBAL_LONG  324 'invulnTimer'
+000999      | OP_ZERO
+001000      | OP_GREATER
+001001      | OP_JUMP_IF_FALSE 1001 -> 1022
+001004      | OP_POP
+001005      | OP_GET_GLOBAL_LONG  325 'invulnTimer'
+001009      | OP_GET_GLOBAL_LONG  326 'dt'
+001013      | OP_SUBTRACT
+001014      | OP_SET_GLOBAL_LONG  325 'invulnTimer'
+001018      | OP_POP
+001019      | OP_JUMP          1019 -> 1023
+001022      | OP_POP
+001023    569 OP_GET_GLOBAL_LONG  327 'updateStars'
+001027      | OP_GET_GLOBAL_LONG  328 'dt'
+001031      | OP_CALL             1
+001033      | OP_POP
+001034    573 OP_GET_GLOBAL_LONG  329 'playerAlive'
+001038      | OP_JUMP_IF_FALSE 1038 -> 1184
+001041      | OP_POP
+001042    574 OP_GET_GLOBAL_LONG  330 'game'
+001046      | OP_GET_GLOBAL_LONG  332 'game'
+001050      | OP_GET_PROPERTY_LONG  333 'KEY_LEFT'
+001054      | OP_INVOKE_LONG   (1 args)  331 'isKeyDown'
+001059      | OP_JUMP_IF_FALSE 1059 -> 1085
+001062      | OP_POP
+001063      | OP_GET_GLOBAL_LONG  334 'playerX'
+001067      | OP_GET_GLOBAL_LONG  335 'PLAYER_SPD'
+001071      | OP_GET_GLOBAL_LONG  336 'dt'
+001075      | OP_MULTIPLY
+001076      | OP_SUBTRACT
+001077      | OP_SET_GLOBAL_LONG  334 'playerX'
+001081      | OP_POP
+001082      | OP_JUMP          1082 -> 1086
+001085      | OP_POP
+001086    575 OP_GET_GLOBAL_LONG  337 'game'
+001090      | OP_GET_GLOBAL_LONG  339 'game'
+001094      | OP_GET_PROPERTY_LONG  340 'KEY_RIGHT'
+001098      | OP_INVOKE_LONG   (1 args)  338 'isKeyDown'
+001103      | OP_JUMP_IF_FALSE 1103 -> 1129
+001106      | OP_POP
+001107      | OP_GET_GLOBAL_LONG  341 'playerX'
+001111      | OP_GET_GLOBAL_LONG  342 'PLAYER_SPD'
+001115      | OP_GET_GLOBAL_LONG  343 'dt'
+001119      | OP_MULTIPLY
+001120      | OP_ADD
+001121      | OP_SET_GLOBAL_LONG  341 'playerX'
+001125      | OP_POP
+001126      | OP_JUMP          1126 -> 1130
+001129      | OP_POP
+001130    576 OP_GET_GLOBAL_LONG  344 'playerX'
+001134      | OP_ZERO
+001135      | OP_LESS
+001136      | OP_JUMP_IF_FALSE 1136 -> 1149
+001139      | OP_POP
+001140      | OP_ZERO
+001141      | OP_SET_GLOBAL_LONG  345 'playerX'
+001145      | OP_POP
+001146      | OP_JUMP          1146 -> 1150
+001149      | OP_POP
+001150    577 OP_GET_GLOBAL_LONG  346 'playerX'
+001154      | OP_CONSTANT_LONG  348 '764'
+001158      | OP_GREATER
+001159      | OP_JUMP_IF_FALSE 1159 -> 1180
+001162      | OP_POP
+001163      | OP_GET_GLOBAL_LONG  350 'SCREEN_W'
+001167      | OP_CONSTANT_LONG  352 '36'
+001171      | OP_SUBTRACT
+001172      | OP_SET_GLOBAL_LONG  349 'playerX'
+001176      | OP_POP
+001177      | OP_JUMP          1177 -> 1181
+001180      | OP_POP
+001181    578 OP_JUMP          1181 -> 1185
+001184      | OP_POP
+001185    580 OP_GET_GLOBAL_LONG  353 'playerAlive'
+001189      | OP_NOT
+001190      | OP_JUMP_IF_FALSE 1190 -> 1269
+001193      | OP_POP
+001194    581 OP_GET_GLOBAL_LONG  354 'respTimer'
+001198      | OP_GET_GLOBAL_LONG  355 'dt'
+001202      | OP_SUBTRACT
+001203      | OP_SET_GLOBAL_LONG  354 'respTimer'
+001207      | OP_POP
+001208    582 OP_GET_GLOBAL_LONG  356 'respTimer'
+001212      | OP_ZERO
+001213      | OP_GREATER
+001214      | OP_NOT
+001215      | OP_JUMP_IF_FALSE 1215 -> 1265
+001218      | OP_POP
+001219    583 OP_TRUE
+001220      | OP_SET_GLOBAL_LONG  357 'playerAlive'
+001224      | OP_POP
+001225    584 OP_GET_GLOBAL_LONG  359 'SCREEN_W'
+001229      | OP_CONSTANT_LONG  360 '2'
+001233      | OP_DIVIDE
+001234      | OP_CONSTANT_LONG  362 '18'
+001238      | OP_SUBTRACT
+001239      | OP_SET_GLOBAL_LONG  358 'playerX'
+001243      | OP_POP
+001244    585 OP_GET_GLOBAL_LONG  364 'RESPAWN_INVULN'
+001248      | OP_SET_GLOBAL_LONG  363 'invulnTimer'
+001252      | OP_POP
+001253    586 OP_GET_GLOBAL_LONG  366 'FIRE_RATE'
+001257      | OP_SET_GLOBAL_LONG  365 'fireCool'
+001261      | OP_POP
+001262    587 OP_JUMP          1262 -> 1266
+001265      | OP_POP
+001266    588 OP_JUMP          1266 -> 1270
+001269      | OP_POP
+001270    591 OP_GET_GLOBAL_LONG  367 'playerAlive'
+001274      | OP_JUMP_IF_FALSE 1274 -> 1321
+001277      | OP_POP
+001278      | OP_GET_GLOBAL_LONG  368 'game'
+001282      | OP_GET_GLOBAL_LONG  370 'game'
+001286      | OP_GET_PROPERTY_LONG  371 'KEY_SPACE'
+001290      | OP_INVOKE_LONG   (1 args)  369 'isKeyDown'
+001295      | OP_JUMP_IF_FALSE 1295 -> 1321
+001298      | OP_POP
+001299    592 OP_GET_GLOBAL_LONG  372 'fireCool'
+001303      | OP_ZERO
+001304      | OP_GREATER
+001305      | OP_NOT
+001306      | OP_JUMP_IF_FALSE 1306 -> 1321
+001309      | OP_POP
+001310      | OP_GET_GLOBAL_LONG  373 'activeBullets'
+001314      | OP_CALL             0
+001316      | OP_CONSTANT_LONG  375 '2'
+001320      | OP_LESS
+001321      | OP_JUMP_IF_FALSE 1321 -> 1344
+001324      | OP_POP
+001325    593 OP_GET_GLOBAL_LONG  376 'firePlayerBullet'
+001329      | OP_CALL             0
+001331      | OP_POP
+001332    594 OP_GET_GLOBAL_LONG  378 'FIRE_RATE'
+001336      | OP_SET_GLOBAL_LONG  377 'fireCool'
+001340      | OP_POP
+001341    595 OP_JUMP          1341 -> 1345
+001344      | OP_POP
+001345    598 OP_ZERO
+001346      | OP_GET_LOCAL        1
+001348      | OP_CONSTANT_LONG  380 '2'
+001352      | OP_LESS
+001353      | OP_JUMP_IF_FALSE 1353 -> 1445
+001356      | OP_POP
+001357      | OP_JUMP          1357 -> 1373
+001360      | OP_GET_LOCAL        1
+001362      | OP_GET_LOCAL        1
+001364      | OP_ONE
+001365      | OP_ADD
+001366      | OP_SET_LOCAL        1
+001368      | OP_POP
+001369      | OP_POP
+001370      | OP_LOOP          1370 -> 1346
+001373    599 OP_GET_GLOBAL_LONG  381 'pbActive'
+001377      | OP_GET_LOCAL        1
+001379      | OP_GET_INDEX
+001380      | OP_JUMP_IF_FALSE 1380 -> 1441
+001383      | OP_POP
+001384    600 OP_GET_GLOBAL_LONG  382 'pbY'
+001388      | OP_GET_LOCAL        1
+001390      | OP_GET_GLOBAL_LONG  383 'pbY'
+001394      | OP_GET_LOCAL        1
+001396      | OP_GET_INDEX
+001397      | OP_CONSTANT_LONG  385 '560'
+001401      | OP_GET_GLOBAL_LONG  386 'dt'
+001405      | OP_MULTIPLY
+001406      | OP_SUBTRACT
+001407      | OP_SET_INDEX
+001408      | OP_POP
+001409    601 OP_GET_GLOBAL_LONG  387 'pbY'
+001413      | OP_GET_LOCAL        1
+001415      | OP_GET_INDEX
+001416      | OP_CONSTANT_LONG  389 '-18'
+001420      | OP_LESS
+001421      | OP_JUMP_IF_FALSE 1421 -> 1437
+001424      | OP_POP
+001425      | OP_GET_GLOBAL_LONG  390 'pbActive'
+001429      | OP_GET_LOCAL        1
+001431      | OP_FALSE
+001432      | OP_SET_INDEX
+001433      | OP_POP
+001434      | OP_JUMP          1434 -> 1438
+001437      | OP_POP
+001438    602 OP_JUMP          1438 -> 1442
+001441      | OP_POP
+001442    603 OP_LOOP          1442 -> 1360
+001445      | OP_POP
+001446      | OP_POP
+001447    607 OP_GET_GLOBAL_LONG  391 'diveTimer'
+001451      | OP_GET_GLOBAL_LONG  392 'dt'
+001455      | OP_ADD
+001456      | OP_SET_GLOBAL_LONG  391 'diveTimer'
+001460      | OP_POP
+001461    608 OP_GET_GLOBAL_LONG  393 'diveTimer'
+001465      | OP_GET_GLOBAL_LONG  394 'scaledDiveInterval'
+001469      | OP_CALL             0
+001471      | OP_LESS
+001472      | OP_NOT
+001473      | OP_JUMP_IF_FALSE 1473 -> 1552
+001476      | OP_POP
+001477    609 OP_ZERO
+001478      | OP_SET_GLOBAL_LONG  395 'diveTimer'
+001482      | OP_POP
+001483    610 OP_GET_GLOBAL_LONG  396 'scaledSway'
+001487      | OP_CALL             0
+001489      | OP_GET_GLOBAL_LONG  397 'math'
+001493      | OP_GET_GLOBAL_LONG  399 'swayT'
+001497      | OP_CONSTANT_LONG  401 '0.600000'
+001501      | OP_MULTIPLY
+001502      | OP_CONSTANT_LONG  402 '6.283180'
+001506      | OP_MULTIPLY
+001507      | OP_INVOKE_LONG   (1 args)  398 'sin'
+001512      | OP_MULTIPLY
+001513    611 OP_GET_GLOBAL_LONG  403 'launchDiver'
+001517      | OP_GET_LOCAL        1
+001519      | OP_CALL             1
+001521      | OP_POP
+001522    612 OP_GET_GLOBAL_LONG  404 'enemyCount'
+001526      | OP_CONSTANT_LONG  405 '25'
+001530      | OP_GREATER
+001531      | OP_JUMP_IF_FALSE 1531 -> 1547
+001534      | OP_POP
+001535      | OP_GET_GLOBAL_LONG  406 'launchDiver'
+001539      | OP_GET_LOCAL        1
+001541      | OP_CALL             1
+001543      | OP_POP
+001544      | OP_JUMP          1544 -> 1548
+001547      | OP_POP
+001548    613 OP_POP
+001549      | OP_JUMP          1549 -> 1553
+001552      | OP_POP
+001553    615 OP_GET_GLOBAL_LONG  407 'scaledSway'
+001557      | OP_CALL             0
+001559      | OP_GET_GLOBAL_LONG  408 'math'
+001563      | OP_GET_GLOBAL_LONG  410 'swayT'
+001567      | OP_CONSTANT_LONG  412 '0.600000'
+001571      | OP_MULTIPLY
+001572      | OP_CONSTANT_LONG  413 '6.283180'
+001576      | OP_MULTIPLY
+001577      | OP_INVOKE_LONG   (1 args)  409 'sin'
+001582      | OP_MULTIPLY
+001583    619 OP_GET_GLOBAL_LONG  414 'scaledDiveSPD'
+001587      | OP_CALL             0
+001589    621 OP_ZERO
+001590      | OP_GET_LOCAL        3
+001592      | OP_CONSTANT_LONG  416 '50'
+001596      | OP_LESS
+001597      | OP_JUMP_IF_FALSE 1597 -> 2394
+001600      | OP_POP
+001601      | OP_JUMP          1601 -> 1617
+001604      | OP_GET_LOCAL        3
+001606      | OP_GET_LOCAL        3
+001608      | OP_ONE
+001609      | OP_ADD
+001610      | OP_SET_LOCAL        3
+001612      | OP_POP
+001613      | OP_POP
+001614      | OP_LOOP          1614 -> 1590
+001617    622 OP_GET_GLOBAL_LONG  417 'eAlive'
+001621      | OP_GET_LOCAL        3
+001623      | OP_GET_INDEX
+001624      | OP_NOT
+001625      | OP_JUMP_IF_FALSE 1625 -> 1631
+001628      | OP_JUMP          1628 -> 1640
+001631      | OP_POP
+001632      | OP_GET_GLOBAL_LONG  418 'eDiving'
+001636      | OP_GET_LOCAL        3
+001638      | OP_GET_INDEX
+001639      | OP_NOT
+001640      | OP_JUMP_IF_FALSE 1640 -> 1650
+001643      | OP_POP
+001644      | OP_LOOP          1644 -> 1604
+001647      | OP_JUMP          1647 -> 1651
+001650      | OP_POP
+001651    626 OP_GET_GLOBAL_LONG  419 'eDiveStartY'
+001655      | OP_GET_LOCAL        3
+001657      | OP_GET_INDEX
+001658      | OP_GET_GLOBAL_LONG  420 'playerY'
+001662      | OP_ADD
+001663      | OP_CONSTANT_LONG  421 '0.500000'
+001667      | OP_MULTIPLY
+001668    628 OP_GET_GLOBAL_LONG  422 'eTrackingLocked'
+001672      | OP_GET_LOCAL        3
+001674      | OP_GET_INDEX
+001675      | OP_NOT
+001676      | OP_JUMP_IF_FALSE 1676 -> 1690
+001679      | OP_POP
+001680      | OP_GET_GLOBAL_LONG  423 'eDiveY'
+001684      | OP_GET_LOCAL        3
+001686      | OP_GET_INDEX
+001687      | OP_GET_LOCAL        4
+001689      | OP_LESS
+001690      | OP_JUMP_IF_FALSE 1690 -> 1731
+001693      | OP_POP
+001694    630 OP_GET_GLOBAL_LONG  424 'eTargetX'
+001698      | OP_GET_LOCAL        3
+001700      | OP_GET_GLOBAL_LONG  425 'playerX'
+001704      | OP_CONSTANT_LONG  427 '18'
+001708      | OP_ADD
+001709      | OP_CONSTANT_LONG  429 '14'
+001713      | OP_SUBTRACT
+001714      | OP_SET_INDEX
+001715      | OP_POP
+001716    631 OP_GET_GLOBAL_LONG  430 'eTargetY'
+001720      | OP_GET_LOCAL        3
+001722      | OP_GET_GLOBAL_LONG  431 'playerY'
+001726      | OP_SET_INDEX
+001727      | OP_POP
+001728    632 OP_JUMP          1728 -> 1741
+001731      | OP_POP
+001732    633 OP_GET_GLOBAL_LONG  432 'eTrackingLocked'
+001736      | OP_GET_LOCAL        3
+001738      | OP_TRUE
+001739      | OP_SET_INDEX
+001740      | OP_POP
+001741    636 OP_GET_GLOBAL_LONG  433 'eTargetX'
+001745      | OP_GET_LOCAL        3
+001747      | OP_GET_INDEX
+001748    637 OP_GET_GLOBAL_LONG  434 'eTargetY'
+001752      | OP_GET_LOCAL        3
+001754      | OP_GET_INDEX
+001755    638 OP_GET_LOCAL        5
+001757      | OP_GET_GLOBAL_LONG  435 'eDiveX'
+001761      | OP_GET_LOCAL        3
+001763      | OP_GET_INDEX
+001764      | OP_SUBTRACT
+001765    639 OP_GET_LOCAL        6
+001767      | OP_GET_GLOBAL_LONG  436 'eDiveY'
+001771      | OP_GET_LOCAL        3
+001773      | OP_GET_INDEX
+001774      | OP_SUBTRACT
+001775    640 OP_GET_GLOBAL_LONG  437 'math'
+001779      | OP_GET_LOCAL        7
+001781      | OP_GET_LOCAL        7
+001783      | OP_MULTIPLY
+001784      | OP_GET_LOCAL        8
+001786      | OP_GET_LOCAL        8
+001788      | OP_MULTIPLY
+001789      | OP_ADD
+001790      | OP_INVOKE_LONG   (1 args)  438 'sqrt'
+001795    642 OP_GET_GLOBAL_LONG  439 'eDivePhase'
+001799      | OP_GET_LOCAL        3
+001801      | OP_GET_GLOBAL_LONG  440 'eDivePhase'
+001805      | OP_GET_LOCAL        3
+001807      | OP_GET_INDEX
+001808      | OP_CONSTANT_LONG  442 '4.200000'
+001812      | OP_GET_GLOBAL_LONG  443 'dt'
+001816      | OP_MULTIPLY
+001817      | OP_ADD
+001818      | OP_SET_INDEX
+001819      | OP_POP
+001820    644 OP_GET_GLOBAL_LONG  444 'eDiveY'
+001824      | OP_GET_LOCAL        3
+001826      | OP_GET_INDEX
+001827      | OP_GET_LOCAL        6
+001829      | OP_LESS
+001830      | OP_JUMP_IF_FALSE 1830 -> 1941
+001833      | OP_POP
+001834    645 OP_GET_LOCAL        9
+001836      | OP_CONSTANT_LONG  445 '0.001000'
+001840      | OP_GREATER
+001841      | OP_JUMP_IF_FALSE 1841 -> 1937
+001844      | OP_POP
+001845    646 OP_GET_LOCAL        7
+001847      | OP_GET_LOCAL        9
+001849      | OP_DIVIDE
+001850    647 OP_GET_LOCAL        8
+001852      | OP_GET_LOCAL        9
+001854      | OP_DIVIDE
+001855    648 OP_GET_GLOBAL_LONG  446 'math'
+001859      | OP_GET_GLOBAL_LONG  448 'eDivePhase'
+001863      | OP_GET_LOCAL        3
+001865      | OP_GET_INDEX
+001866      | OP_INVOKE_LONG   (1 args)  447 'sin'
+001871      | OP_CONSTANT_LONG  450 '28'
+001875      | OP_MULTIPLY
+001876    649 OP_GET_GLOBAL_LONG  451 'eDiveX'
+001880      | OP_GET_LOCAL        3
+001882      | OP_GET_GLOBAL_LONG  452 'eDiveX'
+001886      | OP_GET_LOCAL        3
+001888      | OP_GET_INDEX
+001889      | OP_GET_LOCAL       10
+001891      | OP_GET_LOCAL        2
+001893      | OP_MULTIPLY
+001894      | OP_GET_LOCAL       12
+001896      | OP_ADD
+001897      | OP_GET_GLOBAL_LONG  453 'dt'
+001901      | OP_MULTIPLY
+001902      | OP_ADD
+001903      | OP_SET_INDEX
+001904      | OP_POP
+001905    650 OP_GET_GLOBAL_LONG  454 'eDiveY'
+001909      | OP_GET_LOCAL        3
+001911      | OP_GET_GLOBAL_LONG  455 'eDiveY'
+001915      | OP_GET_LOCAL        3
+001917      | OP_GET_INDEX
+001918      | OP_GET_LOCAL       11
+001920      | OP_GET_LOCAL        2
+001922      | OP_MULTIPLY
+001923      | OP_GET_GLOBAL_LONG  456 'dt'
+001927      | OP_MULTIPLY
+001928      | OP_ADD
+001929      | OP_SET_INDEX
+001930      | OP_POP
+001931    651 OP_POP
+001932      | OP_POP
+001933      | OP_POP
+001934      | OP_JUMP          1934 -> 1938
+001937      | OP_POP
+001938    652 OP_JUMP          1938 -> 1965
+001941      | OP_POP
+001942    653 OP_GET_GLOBAL_LONG  457 'eDiveY'
+001946      | OP_GET_LOCAL        3
+001948      | OP_GET_GLOBAL_LONG  458 'eDiveY'
+001952      | OP_GET_LOCAL        3
+001954      | OP_GET_INDEX
+001955      | OP_GET_LOCAL        2
+001957      | OP_GET_GLOBAL_LONG  459 'dt'
+001961      | OP_MULTIPLY
+001962      | OP_ADD
+001963      | OP_SET_INDEX
+001964      | OP_POP
+001965    657 OP_GET_GLOBAL_LONG  460 'math'
+001969      | OP_INVOKE_LONG   (0 args)  461 'rand'
+001974      | OP_GET_GLOBAL_LONG  462 'scaledEBulletChance'
+001978      | OP_CALL             0
+001980      | OP_LESS
+001981      | OP_JUMP_IF_FALSE 1981 -> 2023
+001984      | OP_POP
+001985    658 OP_GET_GLOBAL_LONG  463 'lowestInColumn'
+001989      | OP_GET_GLOBAL_LONG  464 'eCol'
+001993      | OP_GET_LOCAL        3
+001995      | OP_CALL             1
+001997      | OP_CALL             1
+001999    659 OP_GET_LOCAL       10
+002001      | OP_GET_LOCAL        3
+002003      | OP_EQUAL
+002004      | OP_JUMP_IF_FALSE 2004 -> 2018
+002007      | OP_POP
+002008    660 OP_GET_GLOBAL_LONG  465 'fireEnemyBulletFromColumn'
+002012      | OP_CALL             0
+002014      | OP_POP
+002015    661 OP_JUMP          2015 -> 2019
+002018      | OP_POP
+002019    662 OP_POP
+002020      | OP_JUMP          2020 -> 2024
+002023      | OP_POP
+002024    665 OP_GET_GLOBAL_LONG  466 'eDiveY'
+002028      | OP_GET_LOCAL        3
+002030      | OP_GET_INDEX
+002031      | OP_CONSTANT_LONG  468 '640'
+002035      | OP_GREATER
+002036      | OP_JUMP_IF_FALSE 2036 -> 2042
+002039      | OP_JUMP          2039 -> 2074
+002042      | OP_POP
+002043    666 OP_GET_GLOBAL_LONG  469 'eDiveX'
+002047      | OP_GET_LOCAL        3
+002049      | OP_GET_INDEX
+002050      | OP_CONSTANT_LONG  470 '-40'
+002054      | OP_LESS
+002055      | OP_JUMP_IF_FALSE 2055 -> 2061
+002058      | OP_JUMP          2058 -> 2074
+002061      | OP_POP
+002062    667 OP_GET_GLOBAL_LONG  471 'eDiveX'
+002066      | OP_GET_LOCAL        3
+002068      | OP_GET_INDEX
+002069      | OP_CONSTANT_LONG  473 '840'
+002073      | OP_GREATER
+002074      | OP_JUMP_IF_FALSE 2074 -> 2099
+002077      | OP_POP
+002078    668 OP_GET_GLOBAL_LONG  474 'eDiving'
+002082      | OP_GET_LOCAL        3
+002084      | OP_FALSE
+002085      | OP_SET_INDEX
+002086      | OP_POP
+002087    669 OP_GET_GLOBAL_LONG  475 'eTrackingLocked'
+002091      | OP_GET_LOCAL        3
+002093      | OP_FALSE
+002094      | OP_SET_INDEX
+002095      | OP_POP
+002096    670 OP_JUMP          2096 -> 2100
+002099      | OP_POP
+002100    673 OP_GET_GLOBAL_LONG  476 'playerAlive'
+002104      | OP_JUMP_IF_FALSE 2104 -> 2137
+002107      | OP_POP
+002108      | OP_GET_GLOBAL_LONG  477 'eAlive'
+002112      | OP_GET_LOCAL        3
+002114      | OP_GET_INDEX
+002115      | OP_JUMP_IF_FALSE 2115 -> 2137
+002118      | OP_POP
+002119      | OP_GET_GLOBAL_LONG  478 'eDiving'
+002123      | OP_GET_LOCAL        3
+002125      | OP_GET_INDEX
+002126      | OP_JUMP_IF_FALSE 2126 -> 2137
+002129      | OP_POP
+002130      | OP_GET_GLOBAL_LONG  479 'invulnTimer'
+002134      | OP_ZERO
+002135      | OP_GREATER
+002136      | OP_NOT
+002137      | OP_JUMP_IF_FALSE 2137 -> 2384
+002140      | OP_POP
+002141    674 OP_GET_GLOBAL_LONG  480 'rectsOverlap'
+002145      | OP_GET_GLOBAL_LONG  481 'eDiveX'
+002149      | OP_GET_LOCAL        3
+002151      | OP_GET_INDEX
+002152      | OP_GET_GLOBAL_LONG  482 'eDiveY'
+002156      | OP_GET_LOCAL        3
+002158      | OP_GET_INDEX
+002159      | OP_GET_GLOBAL_LONG  483 'ENEMY_W'
+002163      | OP_GET_GLOBAL_LONG  484 'ENEMY_H'
+002167    675 OP_GET_GLOBAL_LONG  485 'playerX'
+002171      | OP_GET_GLOBAL_LONG  486 'playerY'
+002175      | OP_GET_GLOBAL_LONG  487 'PLAYER_W'
+002179      | OP_GET_GLOBAL_LONG  488 'PLAYER_H'
+002183      | OP_CALL             8
+002185      | OP_JUMP_IF_FALSE 2185 -> 2380
+002188      | OP_POP
+002189    676 OP_GET_GLOBAL_LONG  489 'spawnExplosion'
+002193      | OP_GET_GLOBAL_LONG  490 'eDiveX'
+002197      | OP_GET_LOCAL        3
+002199      | OP_GET_INDEX
+002200      | OP_GET_GLOBAL_LONG  491 'eDiveY'
+002204      | OP_GET_LOCAL        3
+002206      | OP_GET_INDEX
+002207      | OP_CALL             2
+002209      | OP_POP
+002210    677 OP_GET_GLOBAL_LONG  492 'eAlive'
+002214      | OP_GET_LOCAL        3
+002216      | OP_FALSE
+002217      | OP_SET_INDEX
+002218      | OP_POP
+002219    678 OP_GET_GLOBAL_LONG  493 'eDiving'
+002223      | OP_GET_LOCAL        3
+002225      | OP_FALSE
+002226      | OP_SET_INDEX
+002227      | OP_POP
+002228    679 OP_GET_GLOBAL_LONG  494 'enemyCount'
+002232      | OP_GET_GLOBAL_LONG  494 'enemyCount'
+002236      | OP_ONE
+002237      | OP_SUBTRACT
+002238      | OP_SET_GLOBAL_LONG  494 'enemyCount'
+002242      | OP_POP
+002243      | OP_POP
+002244    680 OP_TRUE
+002245      | OP_SET_GLOBAL_LONG  495 'enemyCountDirty'
+002249      | OP_POP
+002250    681 OP_GET_GLOBAL_LONG  496 'score'
+002254      | OP_GET_GLOBAL_LONG  497 'scoreForEnemy'
+002258      | OP_GET_LOCAL        3
+002260      | OP_TRUE
+002261      | OP_CALL             2
+002263      | OP_ADD
+002264      | OP_SET_GLOBAL_LONG  496 'score'
+002268      | OP_POP
+002269    682 OP_GET_GLOBAL_LONG  498 'spawnPopup'
+002273      | OP_GET_GLOBAL_LONG  499 'eDiveX'
+002277      | OP_GET_LOCAL        3
+002279      | OP_GET_INDEX
+002280      | OP_GET_GLOBAL_LONG  500 'eDiveY'
+002284      | OP_GET_LOCAL        3
+002286      | OP_GET_INDEX
+002287      | OP_CONSTANT_LONG  501 '10'
+002291      | OP_SUBTRACT
+002292      | OP_GET_GLOBAL_LONG  502 'scoreForEnemy'
+002296      | OP_GET_LOCAL        3
+002298      | OP_TRUE
+002299      | OP_CALL             2
+002301      | OP_CALL             3
+002303      | OP_POP
+002304    684 OP_FALSE
+002305      | OP_SET_GLOBAL_LONG  503 'playerAlive'
+002309      | OP_POP
+002310    685 OP_GET_GLOBAL_LONG  505 'RESPAWN_DELAY'
+002314      | OP_SET_GLOBAL_LONG  504 'respTimer'
+002318      | OP_POP
+002319    686 OP_GET_GLOBAL_LONG  506 'lives'
+002323      | OP_GET_GLOBAL_LONG  506 'lives'
+002327      | OP_ONE
+002328      | OP_SUBTRACT
+002329      | OP_SET_GLOBAL_LONG  506 'lives'
+002333      | OP_POP
+002334      | OP_POP
+002335    687 OP_GET_GLOBAL_LONG  507 'lives'
+002339      | OP_ZERO
+002340      | OP_GREATER
+002341      | OP_NOT
+002342      | OP_JUMP_IF_FALSE 2342 -> 2355
+002345      | OP_POP
+002346      | OP_TRUE
+002347      | OP_SET_GLOBAL_LONG  508 'gameOver'
+002351      | OP_POP
+002352      | OP_JUMP          2352 -> 2356
+002355      | OP_POP
+002356    688 OP_GET_GLOBAL_LONG  509 'enemyCount'
+002360      | OP_ZERO
+002361      | OP_GREATER
+002362      | OP_NOT
+002363      | OP_JUMP_IF_FALSE 2363 -> 2376
+002366      | OP_POP
+002367      | OP_TRUE
+002368      | OP_SET_GLOBAL_LONG  510 'victory'
+002372      | OP_POP
+002373      | OP_JUMP          2373 -> 2377
+002376      | OP_POP
+002377    689 OP_JUMP          2377 -> 2381
+002380      | OP_POP
+002381    690 OP_JUMP          2381 -> 2385
+002384      | OP_POP
+002385    691 OP_POP
+002386      | OP_POP
+002387      | OP_POP
+002388      | OP_POP
+002389      | OP_POP
+002390      | OP_POP
+002391      | OP_LOOP          2391 -> 1604
+002394      | OP_POP
+002395      | OP_POP
+002396    695 OP_ZERO
+002397      | OP_GET_LOCAL        3
+002399      | OP_CONSTANT_LONG  512 '6'
+002403      | OP_LESS
+002404      | OP_JUMP_IF_FALSE 2404 -> 2636
+002407      | OP_POP
+002408      | OP_JUMP          2408 -> 2424
+002411      | OP_GET_LOCAL        3
+002413      | OP_GET_LOCAL        3
+002415      | OP_ONE
+002416      | OP_ADD
+002417      | OP_SET_LOCAL        3
+002419      | OP_POP
+002420      | OP_POP
+002421      | OP_LOOP          2421 -> 2397
+002424    696 OP_GET_GLOBAL_LONG  513 'ebActive'
+002428      | OP_GET_LOCAL        3
+002430      | OP_GET_INDEX
+002431      | OP_NOT
+002432      | OP_JUMP_IF_FALSE 2432 -> 2442
+002435      | OP_POP
+002436      | OP_LOOP          2436 -> 2411
+002439      | OP_JUMP          2439 -> 2443
+002442      | OP_POP
+002443    698 OP_GET_GLOBAL_LONG  514 'ebY'
+002447      | OP_GET_LOCAL        3
+002449      | OP_GET_GLOBAL_LONG  515 'ebY'
+002453      | OP_GET_LOCAL        3
+002455      | OP_GET_INDEX
+002456      | OP_CONSTANT_LONG  517 '235'
+002460      | OP_GET_GLOBAL_LONG  518 'dt'
+002464      | OP_MULTIPLY
+002465      | OP_ADD
+002466      | OP_SET_INDEX
+002467      | OP_POP
+002468    700 OP_GET_GLOBAL_LONG  519 'ebY'
+002472      | OP_GET_LOCAL        3
+002474      | OP_GET_INDEX
+002475      | OP_CONSTANT_LONG  521 '600'
+002479      | OP_GREATER
+002480      | OP_JUMP_IF_FALSE 2480 -> 2496
+002483      | OP_POP
+002484    701 OP_GET_GLOBAL_LONG  522 'ebActive'
+002488      | OP_GET_LOCAL        3
+002490      | OP_FALSE
+002491      | OP_SET_INDEX
+002492      | OP_POP
+002493    702 OP_JUMP          2493 -> 2633
+002496      | OP_POP
+002497    703 OP_GET_GLOBAL_LONG  523 'playerAlive'
+002501      | OP_JUMP_IF_FALSE 2501 -> 2512
+002504      | OP_POP
+002505      | OP_GET_GLOBAL_LONG  524 'invulnTimer'
+002509      | OP_ZERO
+002510      | OP_GREATER
+002511      | OP_NOT
+002512      | OP_JUMP_IF_FALSE 2512 -> 2632
+002515      | OP_POP
+002516    704 OP_GET_GLOBAL_LONG  525 'rectsOverlap'
+002520      | OP_GET_GLOBAL_LONG  526 'ebX'
+002524      | OP_GET_LOCAL        3
+002526      | OP_GET_INDEX
+002527      | OP_GET_GLOBAL_LONG  527 'ebY'
+002531      | OP_GET_LOCAL        3
+002533      | OP_GET_INDEX
+002534      | OP_GET_GLOBAL_LONG  528 'EBULLET_W'
+002538      | OP_GET_GLOBAL_LONG  529 'EBULLET_H'
+002542    705 OP_GET_GLOBAL_LONG  530 'playerX'
+002546      | OP_GET_GLOBAL_LONG  531 'playerY'
+002550      | OP_GET_GLOBAL_LONG  532 'PLAYER_W'
+002554      | OP_GET_GLOBAL_LONG  533 'PLAYER_H'
+002558      | OP_CALL             8
+002560      | OP_JUMP_IF_FALSE 2560 -> 2628
+002563      | OP_POP
+002564    706 OP_GET_GLOBAL_LONG  534 'ebActive'
+002568      | OP_GET_LOCAL        3
+002570      | OP_FALSE
+002571      | OP_SET_INDEX
+002572      | OP_POP
+002573    707 OP_FALSE
+002574      | OP_SET_GLOBAL_LONG  535 'playerAlive'
+002578      | OP_POP
+002579    708 OP_GET_GLOBAL_LONG  537 'RESPAWN_DELAY'
+002583      | OP_SET_GLOBAL_LONG  536 'respTimer'
+002587      | OP_POP
+002588    709 OP_GET_GLOBAL_LONG  538 'lives'
+002592      | OP_GET_GLOBAL_LONG  538 'lives'
+002596      | OP_ONE
+002597      | OP_SUBTRACT
+002598      | OP_SET_GLOBAL_LONG  538 'lives'
+002602      | OP_POP
+002603      | OP_POP
+002604    710 OP_GET_GLOBAL_LONG  539 'lives'
+002608      | OP_ZERO
+002609      | OP_GREATER
+002610      | OP_NOT
+002611      | OP_JUMP_IF_FALSE 2611 -> 2624
+002614      | OP_POP
+002615      | OP_TRUE
+002616      | OP_SET_GLOBAL_LONG  540 'gameOver'
+002620      | OP_POP
+002621      | OP_JUMP          2621 -> 2625
+002624      | OP_POP
+002625    711 OP_JUMP          2625 -> 2629
+002628      | OP_POP
+002629    712 OP_JUMP          2629 -> 2633
+002632      | OP_POP
+002633    714 OP_LOOP          2633 -> 2411
+002636      | OP_POP
+002637      | OP_POP
+002638    717 OP_GET_GLOBAL_LONG  541 'math'
+002642      | OP_INVOKE_LONG   (0 args)  542 'rand'
+002647      | OP_GET_GLOBAL_LONG  543 'scaledEBulletChance'
+002651      | OP_CALL             0
+002653      | OP_CONSTANT_LONG  544 '0.500000'
+002657      | OP_MULTIPLY
+002658      | OP_LESS
+002659      | OP_JUMP_IF_FALSE 2659 -> 2673
+002662      | OP_POP
+002663    718 OP_GET_GLOBAL_LONG  545 'fireEnemyBulletFromColumn'
+002667      | OP_CALL             0
+002669      | OP_POP
+002670    719 OP_JUMP          2670 -> 2674
+002673      | OP_POP
+002674    723 OP_ZERO
+002675      | OP_GET_LOCAL        3
+002677      | OP_CONSTANT_LONG  547 '2'
+002681      | OP_LESS
+002682      | OP_JUMP_IF_FALSE 2682 -> 3046
+002685      | OP_POP
+002686      | OP_JUMP          2686 -> 2702
+002689      | OP_GET_LOCAL        3
+002691      | OP_GET_LOCAL        3
+002693      | OP_ONE
+002694      | OP_ADD
+002695      | OP_SET_LOCAL        3
+002697      | OP_POP
+002698      | OP_POP
+002699      | OP_LOOP          2699 -> 2675
+002702    724 OP_GET_GLOBAL_LONG  548 'pbActive'
+002706      | OP_GET_LOCAL        3
+002708      | OP_GET_INDEX
+002709      | OP_NOT
+002710      | OP_JUMP_IF_FALSE 2710 -> 2720
+002713      | OP_POP
+002714      | OP_LOOP          2714 -> 2689
+002717      | OP_JUMP          2717 -> 2721
+002720      | OP_POP
+002721    726 OP_ZERO
+002722      | OP_GET_LOCAL        4
+002724      | OP_CONSTANT_LONG  550 '50'
+002728      | OP_LESS
+002729      | OP_JUMP_IF_FALSE 2729 -> 3041
+002732      | OP_POP
+002733      | OP_JUMP          2733 -> 2749
+002736      | OP_GET_LOCAL        4
+002738      | OP_GET_LOCAL        4
+002740      | OP_ONE
+002741      | OP_ADD
+002742      | OP_SET_LOCAL        4
+002744      | OP_POP
+002745      | OP_POP
+002746      | OP_LOOP          2746 -> 2722
+002749    727 OP_GET_GLOBAL_LONG  551 'eAlive'
+002753      | OP_GET_LOCAL        4
+002755      | OP_GET_INDEX
+002756      | OP_NOT
+002757      | OP_JUMP_IF_FALSE 2757 -> 2767
+002760      | OP_POP
+002761      | OP_LOOP          2761 -> 2736
+002764      | OP_JUMP          2764 -> 2768
+002767      | OP_POP
+002768    729 OP_ZERO
+002769    730 OP_ZERO
+002770    732 OP_GET_GLOBAL_LONG  552 'eDiving'
+002774      | OP_GET_LOCAL        4
+002776      | OP_GET_INDEX
+002777      | OP_JUMP_IF_FALSE 2777 -> 2804
+002780      | OP_POP
+002781    733 OP_GET_GLOBAL_LONG  553 'eDiveX'
+002785      | OP_GET_LOCAL        4
+002787      | OP_GET_INDEX
+002788      | OP_SET_LOCAL        5
+002790      | OP_POP
+002791    734 OP_GET_GLOBAL_LONG  554 'eDiveY'
+002795      | OP_GET_LOCAL        4
+002797      | OP_GET_INDEX
+002798      | OP_SET_LOCAL        6
+002800      | OP_POP
+002801    735 OP_JUMP          2801 -> 2842
+002804      | OP_POP
+002805    736 OP_GET_GLOBAL_LONG  555 'formX'
+002809      | OP_GET_GLOBAL_LONG  556 'eCol'
+002813      | OP_GET_LOCAL        4
+002815      | OP_CALL             1
+002817      | OP_CALL             1
+002819      | OP_GET_LOCAL        1
+002821      | OP_ADD
+002822      | OP_SET_LOCAL        5
+002824      | OP_POP
+002825    737 OP_GET_GLOBAL_LONG  557 'formY'
+002829      | OP_GET_GLOBAL_LONG  558 'eRow'
+002833      | OP_GET_LOCAL        4
+002835      | OP_CALL             1
+002837      | OP_CALL             1
+002839      | OP_SET_LOCAL        6
+002841      | OP_POP
+002842    740 OP_GET_GLOBAL_LONG  559 'rectsOverlap'
+002846      | OP_GET_GLOBAL_LONG  560 'pbX'
+002850      | OP_GET_LOCAL        3
+002852      | OP_GET_INDEX
+002853      | OP_GET_GLOBAL_LONG  561 'pbY'
+002857      | OP_GET_LOCAL        3
+002859      | OP_GET_INDEX
+002860      | OP_GET_GLOBAL_LONG  562 'BULLET_W'
+002864      | OP_GET_GLOBAL_LONG  563 'BULLET_H'
+002868      | OP_GET_LOCAL        5
+002870      | OP_GET_LOCAL        6
+002872      | OP_GET_GLOBAL_LONG  564 'ENEMY_W'
+002876      | OP_GET_GLOBAL_LONG  565 'ENEMY_H'
+002880      | OP_CALL             8
+002882      | OP_JUMP_IF_FALSE 2882 -> 3035
+002885      | OP_POP
+002886    741 OP_GET_GLOBAL_LONG  566 'eDiving'
+002890      | OP_GET_LOCAL        4
+002892      | OP_GET_INDEX
+002893    742 OP_GET_GLOBAL_LONG  567 'scoreForEnemy'
+002897      | OP_GET_LOCAL        4
+002899      | OP_GET_LOCAL        7
+002901      | OP_CALL             2
+002903    744 OP_GET_GLOBAL_LONG  568 'spawnExplosion'
+002907      | OP_GET_LOCAL        5
+002909      | OP_GET_LOCAL        6
+002911      | OP_CALL             2
+002913      | OP_POP
+002914    745 OP_GET_GLOBAL_LONG  569 'spawnPopup'
+002918      | OP_GET_LOCAL        5
+002920      | OP_GET_LOCAL        6
+002922      | OP_CONSTANT_LONG  570 '10'
+002926      | OP_SUBTRACT
+002927      | OP_GET_LOCAL        8
+002929      | OP_CALL             3
+002931      | OP_POP
+002932    747 OP_GET_GLOBAL_LONG  571 'pbActive'
+002936      | OP_GET_LOCAL        3
+002938      | OP_FALSE
+002939      | OP_SET_INDEX
+002940      | OP_POP
+002941    748 OP_GET_GLOBAL_LONG  572 'eAlive'
+002945      | OP_GET_LOCAL        4
+002947      | OP_FALSE
+002948      | OP_SET_INDEX
+002949      | OP_POP
+002950    749 OP_GET_GLOBAL_LONG  573 'eDiving'
+002954      | OP_GET_LOCAL        4
+002956      | OP_FALSE
+002957      | OP_SET_INDEX
+002958      | OP_POP
+002959    750 OP_GET_GLOBAL_LONG  574 'eTrackingLocked'
+002963      | OP_GET_LOCAL        4
+002965      | OP_FALSE
+002966      | OP_SET_INDEX
+002967      | OP_POP
+002968    751 OP_GET_GLOBAL_LONG  575 'score'
+002972      | OP_GET_LOCAL        8
+002974      | OP_ADD
+002975      | OP_SET_GLOBAL_LONG  575 'score'
+002979      | OP_POP
+002980    752 OP_GET_GLOBAL_LONG  576 'enemyCount'
+002984      | OP_GET_GLOBAL_LONG  576 'enemyCount'
+002988      | OP_ONE
+002989      | OP_SUBTRACT
+002990      | OP_SET_GLOBAL_LONG  576 'enemyCount'
+002994      | OP_POP
+002995      | OP_POP
+002996    753 OP_TRUE
+002997      | OP_SET_GLOBAL_LONG  577 'enemyCountDirty'
+003001      | OP_POP
+003002    755 OP_GET_GLOBAL_LONG  578 'enemyCount'
+003006      | OP_ZERO
+003007      | OP_GREATER
+003008      | OP_NOT
+003009      | OP_JUMP_IF_FALSE 3009 -> 3022
+003012      | OP_POP
+003013      | OP_TRUE
+003014      | OP_SET_GLOBAL_LONG  579 'victory'
+003018      | OP_POP
+003019      | OP_JUMP          3019 -> 3023
+003022      | OP_POP
+003023    756 OP_POP
+003024      | OP_POP
+003025      | OP_POP
+003026      | OP_POP
+003027      | OP_JUMP          3027 -> 3042
+003030    757 OP_POP
+003031      | OP_POP
+003032      | OP_JUMP          3032 -> 3036
+003035      | OP_POP
+003036    758 OP_POP
+003037      | OP_POP
+003038      | OP_LOOP          3038 -> 2736
+003041      | OP_POP
+003042      | OP_POP
+003043    759 OP_LOOP          3043 -> 2689
+003046      | OP_POP
+003047      | OP_POP
+003048    763 OP_ZERO
+003049      | OP_GET_LOCAL        3
+003051      | OP_CONSTANT_LONG  581 '16'
+003055      | OP_LESS
+003056      | OP_JUMP_IF_FALSE 3056 -> 3141
+003059      | OP_POP
+003060      | OP_JUMP          3060 -> 3076
+003063      | OP_GET_LOCAL        3
+003065      | OP_GET_LOCAL        3
+003067      | OP_ONE
+003068      | OP_ADD
+003069      | OP_SET_LOCAL        3
+003071      | OP_POP
+003072      | OP_POP
+003073      | OP_LOOP          3073 -> 3049
+003076    764 OP_GET_GLOBAL_LONG  582 'exActive'
+003080      | OP_GET_LOCAL        3
+003082      | OP_GET_INDEX
+003083      | OP_JUMP_IF_FALSE 3083 -> 3137
+003086      | OP_POP
+003087    765 OP_GET_GLOBAL_LONG  583 'exTimer'
+003091      | OP_GET_LOCAL        3
+003093      | OP_GET_GLOBAL_LONG  584 'exTimer'
+003097      | OP_GET_LOCAL        3
+003099      | OP_GET_INDEX
+003100      | OP_GET_GLOBAL_LONG  585 'dt'
+003104      | OP_SUBTRACT
+003105      | OP_SET_INDEX
+003106      | OP_POP
+003107    766 OP_GET_GLOBAL_LONG  586 'exTimer'
+003111      | OP_GET_LOCAL        3
+003113      | OP_GET_INDEX
+003114      | OP_ZERO
+003115      | OP_GREATER
+003116      | OP_NOT
+003117      | OP_JUMP_IF_FALSE 3117 -> 3133
+003120      | OP_POP
+003121      | OP_GET_GLOBAL_LONG  587 'exActive'
+003125      | OP_GET_LOCAL        3
+003127      | OP_FALSE
+003128      | OP_SET_INDEX
+003129      | OP_POP
+003130      | OP_JUMP          3130 -> 3134
+003133      | OP_POP
+003134    767 OP_JUMP          3134 -> 3138
+003137      | OP_POP
+003138    768 OP_LOOP          3138 -> 3063
+003141      | OP_POP
+003142      | OP_POP
+003143    770 OP_ZERO
+003144      | OP_GET_LOCAL        3
+003146      | OP_CONSTANT_LONG  589 '16'
+003150      | OP_LESS
+003151      | OP_JUMP_IF_FALSE 3151 -> 3261
+003154      | OP_POP
+003155      | OP_JUMP          3155 -> 3171
+003158      | OP_GET_LOCAL        3
+003160      | OP_GET_LOCAL        3
+003162      | OP_ONE
+003163      | OP_ADD
+003164      | OP_SET_LOCAL        3
+003166      | OP_POP
+003167      | OP_POP
+003168      | OP_LOOP          3168 -> 3144
+003171    771 OP_GET_GLOBAL_LONG  590 'popActive'
+003175      | OP_GET_LOCAL        3
+003177      | OP_GET_INDEX
+003178      | OP_JUMP_IF_FALSE 3178 -> 3257
+003181      | OP_POP
+003182    772 OP_GET_GLOBAL_LONG  591 'popTimer'
+003186      | OP_GET_LOCAL        3
+003188      | OP_GET_GLOBAL_LONG  592 'popTimer'
+003192      | OP_GET_LOCAL        3
+003194      | OP_GET_INDEX
+003195      | OP_GET_GLOBAL_LONG  593 'dt'
+003199      | OP_SUBTRACT
+003200      | OP_SET_INDEX
+003201      | OP_POP
+003202    773 OP_GET_GLOBAL_LONG  594 'popY'
+003206      | OP_GET_LOCAL        3
+003208      | OP_GET_GLOBAL_LONG  595 'popY'
+003212      | OP_GET_LOCAL        3
+003214      | OP_GET_INDEX
+003215      | OP_CONSTANT_LONG  596 '24'
+003219      | OP_GET_GLOBAL_LONG  597 'dt'
+003223      | OP_MULTIPLY
+003224      | OP_SUBTRACT
+003225      | OP_SET_INDEX
+003226      | OP_POP
+003227    774 OP_GET_GLOBAL_LONG  598 'popTimer'
+003231      | OP_GET_LOCAL        3
+003233      | OP_GET_INDEX
+003234      | OP_ZERO
+003235      | OP_GREATER
+003236      | OP_NOT
+003237      | OP_JUMP_IF_FALSE 3237 -> 3253
+003240      | OP_POP
+003241      | OP_GET_GLOBAL_LONG  599 'popActive'
+003245      | OP_GET_LOCAL        3
+003247      | OP_FALSE
+003248      | OP_SET_INDEX
+003249      | OP_POP
+003250      | OP_JUMP          3250 -> 3254
+003253      | OP_POP
+003254    775 OP_JUMP          3254 -> 3258
+003257      | OP_POP
+003258    776 OP_LOOP          3258 -> 3158
+003261      | OP_POP
+003262      | OP_POP
+003263    779 OP_GET_GLOBAL_LONG  600 'score'
+003267      | OP_GET_GLOBAL_LONG  601 'highScore'
+003271      | OP_GREATER
+003272      | OP_JUMP_IF_FALSE 3272 -> 3288
+003275      | OP_POP
+003276      | OP_GET_GLOBAL_LONG  603 'score'
+003280      | OP_SET_GLOBAL_LONG  602 'highScore'
+003284      | OP_POP
+003285      | OP_JUMP          3285 -> 3289
+003288      | OP_POP
+003289    782 OP_GET_GLOBAL_LONG  604 'enemyCountDirty'
+003293      | OP_JUMP_IF_FALSE 3293 -> 3329
+003296      | OP_POP
+003297    783 OP_CONSTANT_LONG  606 'ENEMIES: '
+003301      | OP_GET_GLOBAL_LONG  607 'cast'
+003305      | OP_GET_GLOBAL_LONG  609 'enemyCount'
+003309      | OP_INVOKE_LONG   (1 args)  608 'ntos'
+003314      | OP_ADD
+003315      | OP_SET_GLOBAL_LONG  605 'enemyCountStr'
+003319      | OP_POP
+003320    784 OP_FALSE
+003321      | OP_SET_GLOBAL_LONG  610 'enemyCountDirty'
+003325      | OP_POP
+003326    785 OP_JUMP          3326 -> 3330
+003329      | OP_POP
+003330    789 OP_GET_GLOBAL_LONG  611 'victory'
+003334      | OP_JUMP_IF_FALSE 3334 -> 3383
+003337      | OP_POP
+003338    790 OP_GET_GLOBAL_LONG  612 'wave'
+003342      | OP_GET_GLOBAL_LONG  612 'wave'
+003346      | OP_ONE
+003347      | OP_ADD
+003348      | OP_SET_GLOBAL_LONG  612 'wave'
+003352      | OP_POP
+003353      | OP_POP
+003354    791 OP_TRUE
+003355      | OP_SET_GLOBAL_LONG  613 'showingWaveBanner'
+003359      | OP_POP
+003360    792 OP_CONSTANT_LONG  615 '3.500000'
+003364      | OP_SET_GLOBAL_LONG  614 'waveTransTimer'
+003368      | OP_POP
+003369    793 OP_FALSE
+003370      | OP_SET_GLOBAL_LONG  616 'victory'
+003374      | OP_POP
+003375    794 OP_POP
+003376      | OP_POP
+003377      | OP_LOOP          3377 -> 598
+003380    795 OP_JUMP          3380 -> 3384
+003383      | OP_POP
+003384    801 OP_GET_GLOBAL_LONG  617 'graphics'
+003388      | OP_INVOKE_LONG   (0 args)  618 'beginDraw'
+003393      | OP_POP
+003394    802 OP_GET_GLOBAL_LONG  619 'graphics'
+003398      | OP_ZERO
+003399      | OP_ZERO
+003400      | OP_ZERO
+003401      | OP_INVOKE_LONG   (3 args)  620 'clearColor'
+003406      | OP_POP
+003407    804 OP_GET_GLOBAL_LONG  621 'drawStars'
+003411      | OP_GET_GLOBAL_LONG  622 'swayT'
+003415      | OP_CALL             1
+003417      | OP_POP
+003418    807 OP_GET_GLOBAL_LONG  623 'graphics'
+003422      | OP_CONSTANT_LONG  625 '1UP'
+003426      | OP_CONSTANT_LONG  626 '255'
+003430      | OP_CONSTANT_LONG  627 '255'
+003434      | OP_CONSTANT_LONG  628 '255'
+003438      | OP_ARRAY_INIT       3
+003440      | OP_CONSTANT_LONG  629 '10'
+003444      | OP_CONSTANT_LONG  630 '6'
+003448      | OP_CONSTANT_LONG  631 '16'
+003452      | OP_INVOKE_LONG   (5 args)  624 'drawText'
+003457      | OP_POP
+003458    808 OP_GET_GLOBAL_LONG  632 'graphics'
+003462      | OP_GET_GLOBAL_LONG  634 'cast'
+003466      | OP_GET_GLOBAL_LONG  636 'score'
+003470      | OP_INVOKE_LONG   (1 args)  635 'ntos'
+003475      | OP_CONSTANT_LONG  637 '255'
+003479      | OP_CONSTANT_LONG  638 '255'
+003483      | OP_CONSTANT_LONG  639 '80'
+003487      | OP_ARRAY_INIT       3
+003489      | OP_CONSTANT_LONG  640 '10'
+003493      | OP_CONSTANT_LONG  641 '24'
+003497      | OP_CONSTANT_LONG  642 '22'
+003501      | OP_INVOKE_LONG   (5 args)  633 'drawText'
+003506      | OP_POP
+003507    810 OP_GET_GLOBAL_LONG  643 'graphics'
+003511      | OP_CONSTANT_LONG  645 'HIGH SCORE'
+003515      | OP_CONSTANT_LONG  646 '255'
+003519      | OP_CONSTANT_LONG  647 '200'
+003523      | OP_CONSTANT_LONG  648 '200'
+003527      | OP_ARRAY_INIT       3
+003529      | OP_GET_GLOBAL_LONG  649 'SCREEN_W'
+003533      | OP_CONSTANT_LONG  650 '2'
+003537      | OP_DIVIDE
+003538      | OP_CONSTANT_LONG  651 '60'
+003542      | OP_SUBTRACT
+003543      | OP_CONSTANT_LONG  652 '6'
+003547      | OP_CONSTANT_LONG  653 '14'
+003551      | OP_INVOKE_LONG   (5 args)  644 'drawText'
+003556      | OP_POP
+003557    811 OP_GET_GLOBAL_LONG  654 'graphics'
+003561      | OP_GET_GLOBAL_LONG  656 'cast'
+003565      | OP_GET_GLOBAL_LONG  658 'highScore'
+003569      | OP_INVOKE_LONG   (1 args)  657 'ntos'
+003574      | OP_CONSTANT_LONG  659 '255'
+003578      | OP_CONSTANT_LONG  660 '200'
+003582      | OP_CONSTANT_LONG  661 '200'
+003586      | OP_ARRAY_INIT       3
+003588      | OP_GET_GLOBAL_LONG  662 'SCREEN_W'
+003592      | OP_CONSTANT_LONG  663 '2'
+003596      | OP_DIVIDE
+003597      | OP_CONSTANT_LONG  664 '20'
+003601      | OP_SUBTRACT
+003602      | OP_CONSTANT_LONG  665 '22'
+003606      | OP_CONSTANT_LONG  666 '18'
+003610      | OP_INVOKE_LONG   (5 args)  655 'drawText'
+003615      | OP_POP
+003616    813 OP_GET_GLOBAL_LONG  667 'graphics'
+003620      | OP_CONSTANT_LONG  669 'WAVE '
+003624      | OP_GET_GLOBAL_LONG  670 'cast'
+003628      | OP_GET_GLOBAL_LONG  672 'wave'
+003632      | OP_INVOKE_LONG   (1 args)  671 'ntos'
+003637      | OP_ADD
+003638      | OP_CONSTANT_LONG  673 '160'
+003642      | OP_CONSTANT_LONG  674 '160'
+003646      | OP_CONSTANT_LONG  675 '255'
+003650      | OP_ARRAY_INIT       3
+003652    814 OP_GET_GLOBAL_LONG  676 'SCREEN_W'
+003656      | OP_CONSTANT_LONG  677 '110'
+003660      | OP_SUBTRACT
+003661      | OP_CONSTANT_LONG  678 '6'
+003665      | OP_CONSTANT_LONG  679 '16'
+003669      | OP_INVOKE_LONG   (5 args)  668 'drawText'
+003674      | OP_POP
+003675    817 OP_ZERO
+003676      | OP_GET_LOCAL        3
+003678      | OP_GET_GLOBAL_LONG  680 'lives'
+003682      | OP_ONE
+003683      | OP_SUBTRACT
+003684      | OP_LESS
+003685      | OP_JUMP_IF_FALSE 3685 -> 3853
+003688      | OP_POP
+003689      | OP_JUMP          3689 -> 3705
+003692      | OP_GET_LOCAL        3
+003694      | OP_GET_LOCAL        3
+003696      | OP_ONE
+003697      | OP_ADD
+003698      | OP_SET_LOCAL        3
+003700      | OP_POP
+003701      | OP_POP
+003702      | OP_LOOP          3702 -> 3676
+003705    818 OP_CONSTANT_LONG  681 '14'
+003709      | OP_GET_LOCAL        3
+003711      | OP_CONSTANT_LONG  682 '32'
+003715      | OP_MULTIPLY
+003716      | OP_ADD
+003717    819 OP_GET_GLOBAL_LONG  683 'SCREEN_H'
+003721      | OP_CONSTANT_LONG  684 '24'
+003725      | OP_SUBTRACT
+003726    820 OP_GET_GLOBAL_LONG  685 'graphics'
+003730      | OP_ZERO
+003731      | OP_CONSTANT_LONG  687 '190'
+003735      | OP_CONSTANT_LONG  688 '255'
+003739      | OP_ARRAY_INIT       3
+003741      | OP_GET_LOCAL        4
+003743      | OP_GET_LOCAL        5
+003745      | OP_CONSTANT_LONG  689 '8'
+003749      | OP_ADD
+003750      | OP_CONSTANT_LONG  690 '22'
+003754      | OP_CONSTANT_LONG  691 '10'
+003758      | OP_INVOKE_LONG   (5 args)  686 'drawRect'
+003763      | OP_POP
+003764    821 OP_GET_GLOBAL_LONG  692 'graphics'
+003768      | OP_ZERO
+003769      | OP_CONSTANT_LONG  694 '225'
+003773      | OP_CONSTANT_LONG  695 '255'
+003777      | OP_ARRAY_INIT       3
+003779      | OP_GET_LOCAL        4
+003781      | OP_CONSTANT_LONG  696 '6'
+003785      | OP_ADD
+003786      | OP_GET_LOCAL        5
+003788      | OP_CONSTANT_LONG  697 '4'
+003792      | OP_ADD
+003793      | OP_CONSTANT_LONG  698 '10'
+003797      | OP_CONSTANT_LONG  699 '8'
+003801      | OP_INVOKE_LONG   (5 args)  693 'drawRect'
+003806      | OP_POP
+003807    822 OP_GET_GLOBAL_LONG  700 'graphics'
+003811      | OP_CONSTANT_LONG  702 '80'
+003815      | OP_CONSTANT_LONG  703 '255'
+003819      | OP_CONSTANT_LONG  704 '255'
+003823      | OP_ARRAY_INIT       3
+003825      | OP_GET_LOCAL        4
+003827      | OP_CONSTANT_LONG  705 '9'
+003831      | OP_ADD
+003832      | OP_GET_LOCAL        5
+003834      | OP_CONSTANT_LONG  706 '4'
+003838      | OP_CONSTANT_LONG  707 '5'
+003842      | OP_INVOKE_LONG   (5 args)  701 'drawRect'
+003847      | OP_POP
+003848    823 OP_POP
+003849      | OP_POP
+003850      | OP_LOOP          3850 -> 3692
+003853      | OP_POP
+003854      | OP_POP
+003855    825 OP_GET_GLOBAL_LONG  708 'graphics'
+003859      | OP_CONSTANT_LONG  710 '80'
+003863      | OP_CONSTANT_LONG  711 '80'
+003867      | OP_CONSTANT_LONG  712 '180'
+003871      | OP_ARRAY_INIT       3
+003873      | OP_ZERO
+003874      | OP_GET_GLOBAL_LONG  713 'SCREEN_H'
+003878      | OP_CONSTANT_LONG  714 '34'
+003882      | OP_SUBTRACT
+003883      | OP_GET_GLOBAL_LONG  715 'SCREEN_W'
+003887      | OP_GET_GLOBAL_LONG  716 'SCREEN_H'
+003891      | OP_CONSTANT_LONG  717 '34'
+003895      | OP_SUBTRACT
+003896      | OP_INVOKE_LONG   (5 args)  709 'drawLine'
+003901      | OP_POP
+003902    828 OP_ZERO
+003903      | OP_GET_LOCAL        3
+003905      | OP_CONSTANT_LONG  719 '50'
+003909      | OP_LESS
+003910      | OP_JUMP_IF_FALSE 3910 -> 4012
+003913      | OP_POP
+003914      | OP_JUMP          3914 -> 3930
+003917      | OP_GET_LOCAL        3
+003919      | OP_GET_LOCAL        3
+003921      | OP_ONE
+003922      | OP_ADD
+003923      | OP_SET_LOCAL        3
+003925      | OP_POP
+003926      | OP_POP
+003927      | OP_LOOP          3927 -> 3903
+003930    829 OP_GET_GLOBAL_LONG  720 'eAlive'
+003934      | OP_GET_LOCAL        3
+003936      | OP_GET_INDEX
+003937      | OP_NOT
+003938      | OP_JUMP_IF_FALSE 3938 -> 3944
+003941      | OP_JUMP          3941 -> 3952
+003944      | OP_POP
+003945      | OP_GET_GLOBAL_LONG  721 'eDiving'
+003949      | OP_GET_LOCAL        3
+003951      | OP_GET_INDEX
+003952      | OP_JUMP_IF_FALSE 3952 -> 3962
+003955      | OP_POP
+003956      | OP_LOOP          3956 -> 3917
+003959      | OP_JUMP          3959 -> 3963
+003962      | OP_POP
+003963    830 OP_GET_GLOBAL_LONG  722 'formX'
+003967      | OP_GET_GLOBAL_LONG  723 'eCol'
+003971      | OP_GET_LOCAL        3
+003973      | OP_CALL             1
+003975      | OP_CALL             1
+003977      | OP_GET_LOCAL        1
+003979      | OP_ADD
+003980    831 OP_GET_GLOBAL_LONG  724 'formY'
+003984      | OP_GET_GLOBAL_LONG  725 'eRow'
+003988      | OP_GET_LOCAL        3
+003990      | OP_CALL             1
+003992      | OP_CALL             1
+003994    832 OP_GET_GLOBAL_LONG  726 'drawEnemy'
+003998      | OP_GET_LOCAL        3
+004000      | OP_GET_LOCAL        4
+004002      | OP_GET_LOCAL        5
+004004      | OP_CALL             3
+004006      | OP_POP
+004007    833 OP_POP
+004008      | OP_POP
+004009      | OP_LOOP          4009 -> 3917
+004012      | OP_POP
+004013      | OP_POP
+004014    836 OP_ZERO
+004015      | OP_GET_LOCAL        3
+004017      | OP_CONSTANT_LONG  728 '50'
+004021      | OP_LESS
+004022      | OP_JUMP_IF_FALSE 4022 -> 4102
+004025      | OP_POP
+004026      | OP_JUMP          4026 -> 4042
+004029      | OP_GET_LOCAL        3
+004031      | OP_GET_LOCAL        3
+004033      | OP_ONE
+004034      | OP_ADD
+004035      | OP_SET_LOCAL        3
+004037      | OP_POP
+004038      | OP_POP
+004039      | OP_LOOP          4039 -> 4015
+004042    837 OP_GET_GLOBAL_LONG  729 'eAlive'
+004046      | OP_GET_LOCAL        3
+004048      | OP_GET_INDEX
+004049      | OP_NOT
+004050      | OP_JUMP_IF_FALSE 4050 -> 4056
+004053      | OP_JUMP          4053 -> 4065
+004056      | OP_POP
+004057      | OP_GET_GLOBAL_LONG  730 'eDiving'
+004061      | OP_GET_LOCAL        3
+004063      | OP_GET_INDEX
+004064      | OP_NOT
+004065      | OP_JUMP_IF_FALSE 4065 -> 4075
+004068      | OP_POP
+004069      | OP_LOOP          4069 -> 4029
+004072      | OP_JUMP          4072 -> 4076
+004075      | OP_POP
+004076    838 OP_GET_GLOBAL_LONG  731 'drawEnemy'
+004080      | OP_GET_LOCAL        3
+004082      | OP_GET_GLOBAL_LONG  732 'eDiveX'
+004086      | OP_GET_LOCAL        3
+004088      | OP_GET_INDEX
+004089      | OP_GET_GLOBAL_LONG  733 'eDiveY'
+004093      | OP_GET_LOCAL        3
+004095      | OP_GET_INDEX
+004096      | OP_CALL             3
+004098      | OP_POP
+004099    839 OP_LOOP          4099 -> 4029
+004102      | OP_POP
+004103      | OP_POP
+004104    842 OP_ZERO
+004105      | OP_GET_LOCAL        3
+004107      | OP_CONSTANT_LONG  735 '16'
+004111      | OP_LESS
+004112      | OP_JUMP_IF_FALSE 4112 -> 4178
+004115      | OP_POP
+004116      | OP_JUMP          4116 -> 4132
+004119      | OP_GET_LOCAL        3
+004121      | OP_GET_LOCAL        3
+004123      | OP_ONE
+004124      | OP_ADD
+004125      | OP_SET_LOCAL        3
+004127      | OP_POP
+004128      | OP_POP
+004129      | OP_LOOP          4129 -> 4105
+004132    843 OP_GET_GLOBAL_LONG  736 'exActive'
+004136      | OP_GET_LOCAL        3
+004138      | OP_GET_INDEX
+004139      | OP_JUMP_IF_FALSE 4139 -> 4174
+004142      | OP_POP
+004143    844 OP_GET_GLOBAL_LONG  737 'drawExplosion'
+004147      | OP_GET_GLOBAL_LONG  738 'exX'
+004151      | OP_GET_LOCAL        3
+004153      | OP_GET_INDEX
+004154      | OP_GET_GLOBAL_LONG  739 'exY'
+004158      | OP_GET_LOCAL        3
+004160      | OP_GET_INDEX
+004161      | OP_GET_GLOBAL_LONG  740 'exTimer'
+004165      | OP_GET_LOCAL        3
+004167      | OP_GET_INDEX
+004168      | OP_CALL             3
+004170      | OP_POP
+004171    845 OP_JUMP          4171 -> 4175
+004174      | OP_POP
+004175    846 OP_LOOP          4175 -> 4119
+004178      | OP_POP
+004179      | OP_POP
+004180    849 OP_ZERO
+004181      | OP_GET_LOCAL        3
+004183      | OP_CONSTANT_LONG  742 '16'
+004187      | OP_LESS
+004188      | OP_JUMP_IF_FALSE 4188 -> 4330
+004191      | OP_POP
+004192      | OP_JUMP          4192 -> 4208
+004195      | OP_GET_LOCAL        3
+004197      | OP_GET_LOCAL        3
+004199      | OP_ONE
+004200      | OP_ADD
+004201      | OP_SET_LOCAL        3
+004203      | OP_POP
+004204      | OP_POP
+004205      | OP_LOOP          4205 -> 4181
+004208    850 OP_GET_GLOBAL_LONG  743 'popActive'
+004212      | OP_GET_LOCAL        3
+004214      | OP_GET_INDEX
+004215      | OP_JUMP_IF_FALSE 4215 -> 4326
+004218      | OP_POP
+004219    851 OP_GET_GLOBAL_LONG  744 'popTimer'
+004223      | OP_GET_LOCAL        3
+004225      | OP_GET_INDEX
+004226      | OP_CONSTANT_LONG  746 '0.700000'
+004230      | OP_DIVIDE
+004231    852 OP_CONSTANT_LONG  747 '255'
+004235    853 OP_GET_GLOBAL_LONG  748 'math'
+004239      | OP_CONSTANT_LONG  750 '255'
+004243      | OP_GET_LOCAL        4
+004245      | OP_MULTIPLY
+004246      | OP_INVOKE_LONG   (1 args)  749 'floor'
+004251    854 OP_GET_GLOBAL_LONG  751 'graphics'
+004255      | OP_GET_GLOBAL_LONG  753 'cast'
+004259      | OP_GET_GLOBAL_LONG  755 'popValue'
+004263      | OP_GET_LOCAL        3
+004265      | OP_GET_INDEX
+004266      | OP_INVOKE_LONG   (1 args)  754 'ntos'
+004271      | OP_GET_LOCAL        5
+004273      | OP_GET_LOCAL        6
+004275      | OP_ZERO
+004276      | OP_ARRAY_INIT       3
+004278    855 OP_GET_GLOBAL_LONG  756 'math'
+004282      | OP_GET_GLOBAL_LONG  758 'popX'
+004286      | OP_GET_LOCAL        3
+004288      | OP_GET_INDEX
+004289      | OP_INVOKE_LONG   (1 args)  757 'floor'
+004294      | OP_GET_GLOBAL_LONG  759 'math'
+004298      | OP_GET_GLOBAL_LONG  761 'popY'
+004302      | OP_GET_LOCAL        3
+004304      | OP_GET_INDEX
+004305      | OP_INVOKE_LONG   (1 args)  760 'floor'
+004310      | OP_CONSTANT_LONG  762 '14'
+004314      | OP_INVOKE_LONG   (5 args)  752 'drawText'
+004319      | OP_POP
+004320    856 OP_POP
+004321      | OP_POP
+004322      | OP_POP
+004323      | OP_JUMP          4323 -> 4327
+004326      | OP_POP
+004327    857 OP_LOOP          4327 -> 4195
+004330      | OP_POP
+004331      | OP_POP
+004332    860 OP_GET_GLOBAL_LONG  763 'playerAlive'
+004336      | OP_JUMP_IF_FALSE 4336 -> 4443
+004339      | OP_POP
+004340    861 OP_GET_GLOBAL_LONG  764 'invulnTimer'
+004344      | OP_ZERO
+004345      | OP_GREATER
+004346      | OP_JUMP_IF_FALSE 4346 -> 4424
+004349      | OP_POP
+004350    862 OP_GET_GLOBAL_LONG  765 'math'
+004354      | OP_GET_GLOBAL_LONG  767 'invulnTimer'
+004358      | OP_CONSTANT_LONG  768 '10'
+004362      | OP_MULTIPLY
+004363      | OP_INVOKE_LONG   (1 args)  766 'floor'
+004368    863 OP_GET_LOCAL        3
+004370      | OP_GET_GLOBAL_LONG  769 'math'
+004374      | OP_GET_LOCAL        3
+004376      | OP_CONSTANT_LONG  771 '2'
+004380      | OP_DIVIDE
+004381      | OP_INVOKE_LONG   (1 args)  770 'floor'
+004386      | OP_CONSTANT_LONG  772 '2'
+004390      | OP_MULTIPLY
+004391      | OP_SUBTRACT
+004392    864 OP_GET_LOCAL        4
+004394      | OP_ZERO
+004395      | OP_EQUAL
+004396      | OP_JUMP_IF_FALSE 4396 -> 4418
+004399      | OP_POP
+004400      | OP_GET_GLOBAL_LONG  773 'drawPlayer'
+004404      | OP_GET_GLOBAL_LONG  774 'playerX'
+004408      | OP_GET_GLOBAL_LONG  775 'playerY'
+004412      | OP_CALL             2
+004414      | OP_POP
+004415      | OP_JUMP          4415 -> 4419
+004418      | OP_POP
+004419    865 OP_POP
+004420      | OP_POP
+004421      | OP_JUMP          4421 -> 4440
+004424      | OP_POP
+004425    866 OP_GET_GLOBAL_LONG  776 'drawPlayer'
+004429      | OP_GET_GLOBAL_LONG  777 'playerX'
+004433      | OP_GET_GLOBAL_LONG  778 'playerY'
+004437      | OP_CALL             2
+004439      | OP_POP
+004440    868 OP_JUMP          4440 -> 4516
+004443      | OP_POP
+004444    869 OP_GET_GLOBAL_LONG  779 'respTimer'
+004448      | OP_CONSTANT_LONG  780 '1.800000'
+004452      | OP_GREATER
+004453      | OP_JUMP_IF_FALSE 4453 -> 4515
+004456      | OP_POP
+004457    870 OP_GET_GLOBAL_LONG  781 'graphics'
+004461      | OP_CONSTANT_LONG  783 '! ! !'
+004465      | OP_CONSTANT_LONG  784 '255'
+004469      | OP_CONSTANT_LONG  785 '60'
+004473      | OP_CONSTANT_LONG  786 '60'
+004477      | OP_ARRAY_INIT       3
+004479    871 OP_GET_GLOBAL_LONG  787 'SCREEN_W'
+004483      | OP_CONSTANT_LONG  788 '2'
+004487      | OP_DIVIDE
+004488      | OP_CONSTANT_LONG  789 '28'
+004492      | OP_SUBTRACT
+004493      | OP_GET_GLOBAL_LONG  790 'playerY'
+004497      | OP_CONSTANT_LONG  791 '22'
+004501      | OP_SUBTRACT
+004502      | OP_CONSTANT_LONG  792 '24'
+004506      | OP_INVOKE_LONG   (5 args)  782 'drawText'
+004511      | OP_POP
+004512    872 OP_JUMP          4512 -> 4516
+004515      | OP_POP
+004516    876 OP_ZERO
+004517      | OP_GET_LOCAL        3
+004519      | OP_CONSTANT_LONG  794 '2'
+004523      | OP_LESS
+004524      | OP_JUMP_IF_FALSE 4524 -> 4656
+004527      | OP_POP
+004528      | OP_JUMP          4528 -> 4544
+004531      | OP_GET_LOCAL        3
+004533      | OP_GET_LOCAL        3
+004535      | OP_ONE
+004536      | OP_ADD
+004537      | OP_SET_LOCAL        3
+004539      | OP_POP
+004540      | OP_POP
+004541      | OP_LOOP          4541 -> 4517
+004544    877 OP_GET_GLOBAL_LONG  795 'pbActive'
+004548      | OP_GET_LOCAL        3
+004550      | OP_GET_INDEX
+004551      | OP_JUMP_IF_FALSE 4551 -> 4652
+004554      | OP_POP
+004555    878 OP_GET_GLOBAL_LONG  796 'graphics'
+004559      | OP_CONSTANT_LONG  798 '255'
+004563      | OP_CONSTANT_LONG  799 '200'
+004567      | OP_ZERO
+004568      | OP_ARRAY_INIT       3
+004570      | OP_GET_GLOBAL_LONG  800 'pbX'
+004574      | OP_GET_LOCAL        3
+004576      | OP_GET_INDEX
+004577      | OP_GET_GLOBAL_LONG  801 'pbY'
+004581      | OP_GET_LOCAL        3
+004583      | OP_GET_INDEX
+004584      | OP_CONSTANT_LONG  802 '6'
+004588      | OP_ADD
+004589      | OP_GET_GLOBAL_LONG  803 'BULLET_W'
+004593      | OP_GET_GLOBAL_LONG  804 'BULLET_H'
+004597      | OP_INVOKE_LONG   (5 args)  797 'drawRect'
+004602      | OP_POP
+004603    879 OP_GET_GLOBAL_LONG  805 'graphics'
+004607      | OP_CONSTANT_LONG  807 '255'
+004611      | OP_CONSTANT_LONG  808 '255'
+004615      | OP_CONSTANT_LONG  809 '120'
+004619      | OP_ARRAY_INIT       3
+004621      | OP_GET_GLOBAL_LONG  810 'pbX'
+004625      | OP_GET_LOCAL        3
+004627      | OP_GET_INDEX
+004628      | OP_GET_GLOBAL_LONG  811 'pbY'
+004632      | OP_GET_LOCAL        3
+004634      | OP_GET_INDEX
+004635      | OP_GET_GLOBAL_LONG  812 'BULLET_W'
+004639      | OP_GET_GLOBAL_LONG  813 'BULLET_H'
+004643      | OP_INVOKE_LONG   (5 args)  806 'drawRect'
+004648      | OP_POP
+004649    880 OP_JUMP          4649 -> 4653
+004652      | OP_POP
+004653    881 OP_LOOP          4653 -> 4531
+004656      | OP_POP
+004657      | OP_POP
+004658    884 OP_ZERO
+004659      | OP_GET_LOCAL        3
+004661      | OP_CONSTANT_LONG  815 '6'
+004665      | OP_LESS
+004666      | OP_JUMP_IF_FALSE 4666 -> 4750
+004669      | OP_POP
+004670      | OP_JUMP          4670 -> 4686
+004673      | OP_GET_LOCAL        3
+004675      | OP_GET_LOCAL        3
+004677      | OP_ONE
+004678      | OP_ADD
+004679      | OP_SET_LOCAL        3
+004681      | OP_POP
+004682      | OP_POP
+004683      | OP_LOOP          4683 -> 4659
+004686    885 OP_GET_GLOBAL_LONG  816 'ebActive'
+004690      | OP_GET_LOCAL        3
+004692      | OP_GET_INDEX
+004693      | OP_JUMP_IF_FALSE 4693 -> 4746
+004696      | OP_POP
+004697    886 OP_GET_GLOBAL_LONG  817 'graphics'
+004701      | OP_CONSTANT_LONG  819 '255'
+004705      | OP_CONSTANT_LONG  820 '80'
+004709      | OP_CONSTANT_LONG  821 '80'
+004713      | OP_ARRAY_INIT       3
+004715      | OP_GET_GLOBAL_LONG  822 'ebX'
+004719      | OP_GET_LOCAL        3
+004721      | OP_GET_INDEX
+004722      | OP_GET_GLOBAL_LONG  823 'ebY'
+004726      | OP_GET_LOCAL        3
+004728      | OP_GET_INDEX
+004729      | OP_GET_GLOBAL_LONG  824 'EBULLET_W'
+004733      | OP_GET_GLOBAL_LONG  825 'EBULLET_H'
+004737      | OP_INVOKE_LONG   (5 args)  818 'drawRect'
+004742      | OP_POP
+004743    887 OP_JUMP          4743 -> 4747
+004746      | OP_POP
+004747    888 OP_LOOP          4747 -> 4673
+004750      | OP_POP
+004751      | OP_POP
+004752    891 OP_GET_GLOBAL_LONG  826 'graphics'
+004756      | OP_GET_GLOBAL_LONG  828 'enemyCountStr'
+004760      | OP_CONSTANT_LONG  829 '160'
+004764      | OP_CONSTANT_LONG  830 '160'
+004768      | OP_CONSTANT_LONG  831 '255'
+004772      | OP_ARRAY_INIT       3
+004774      | OP_GET_GLOBAL_LONG  832 'SCREEN_W'
+004778      | OP_CONSTANT_LONG  833 '155'
+004782      | OP_SUBTRACT
+004783      | OP_CONSTANT_LONG  834 '24'
+004787      | OP_CONSTANT_LONG  835 '16'
+004791      | OP_INVOKE_LONG   (5 args)  827 'drawText'
+004796      | OP_POP
+004797    893 OP_GET_GLOBAL_LONG  836 'graphics'
+004801      | OP_INVOKE_LONG   (0 args)  837 'endDraw'
+004806      | OP_POP
+004807    894 OP_POP
+004808      | OP_POP
+004809      | OP_LOOP          4809 -> 598
+004812      | OP_POP
+004813    900 OP_GET_GLOBAL_LONG  838 'graphics'
+004817      | OP_INVOKE_LONG   (0 args)  839 'windowShouldClose'
+004822      | OP_NOT
+004823      | OP_JUMP_IF_FALSE 4823 -> 4845
+004826      | OP_POP
+004827      | OP_GET_GLOBAL_LONG  840 'game'
+004831      | OP_GET_GLOBAL_LONG  842 'game'
+004835      | OP_GET_PROPERTY_LONG  843 'KEY_ESCAPE'
+004839      | OP_INVOKE_LONG   (1 args)  841 'isKeyDown'
+004844      | OP_NOT
+004845      | OP_JUMP_IF_FALSE 4845 -> 5466
+004848      | OP_POP
+004849    902 OP_GET_GLOBAL_LONG  845 'graphics'
+004853      | OP_INVOKE_LONG   (0 args)  846 'getDeltaTime'
+004858      | OP_SET_GLOBAL_LONG  844 'dt'
+004862      | OP_POP
+004863    903 OP_GET_GLOBAL_LONG  847 'swayT'
+004867      | OP_GET_GLOBAL_LONG  848 'dt'
+004871      | OP_ADD
+004872      | OP_SET_GLOBAL_LONG  847 'swayT'
+004876      | OP_POP
+004877    904 OP_GET_GLOBAL_LONG  849 'updateStars'
+004881      | OP_GET_GLOBAL_LONG  850 'dt'
+004885      | OP_CALL             1
+004887      | OP_POP
+004888    906 OP_GET_GLOBAL_LONG  851 'graphics'
+004892      | OP_INVOKE_LONG   (0 args)  852 'beginDraw'
+004897      | OP_POP
+004898    907 OP_GET_GLOBAL_LONG  853 'graphics'
+004902      | OP_ZERO
+004903      | OP_ZERO
+004904      | OP_ZERO
+004905      | OP_INVOKE_LONG   (3 args)  854 'clearColor'
+004910      | OP_POP
+004911    908 OP_GET_GLOBAL_LONG  855 'drawStars'
+004915      | OP_GET_GLOBAL_LONG  856 'swayT'
+004919      | OP_CALL             1
+004921      | OP_POP
+004922    910 OP_GET_GLOBAL_LONG  857 'graphics'
+004926      | OP_CONSTANT_LONG  859 'GAME OVER'
+004930      | OP_CONSTANT_LONG  860 '255'
+004934      | OP_CONSTANT_LONG  861 '40'
+004938      | OP_CONSTANT_LONG  862 '40'
+004942      | OP_ARRAY_INIT       3
+004944    911 OP_GET_GLOBAL_LONG  863 'SCREEN_W'
+004948      | OP_CONSTANT_LONG  864 '2'
+004952      | OP_DIVIDE
+004953      | OP_CONSTANT_LONG  865 '120'
+004957      | OP_SUBTRACT
+004958      | OP_GET_GLOBAL_LONG  866 'SCREEN_H'
+004962      | OP_CONSTANT_LONG  867 '2'
+004966      | OP_DIVIDE
+004967      | OP_CONSTANT_LONG  868 '60'
+004971      | OP_SUBTRACT
+004972      | OP_CONSTANT_LONG  869 '44'
+004976      | OP_INVOKE_LONG   (5 args)  858 'drawText'
+004981      | OP_POP
+004982    913 OP_GET_GLOBAL_LONG  870 'graphics'
+004986      | OP_CONSTANT_LONG  872 'WAVE REACHED'
+004990      | OP_CONSTANT_LONG  873 '255'
+004994      | OP_CONSTANT_LONG  874 '255'
+004998      | OP_CONSTANT_LONG  875 '255'
+005002      | OP_ARRAY_INIT       3
+005004    914 OP_GET_GLOBAL_LONG  876 'SCREEN_W'
+005008      | OP_CONSTANT_LONG  877 '2'
+005012      | OP_DIVIDE
+005013      | OP_CONSTANT_LONG  878 '95'
+005017      | OP_SUBTRACT
+005018      | OP_GET_GLOBAL_LONG  879 'SCREEN_H'
+005022      | OP_CONSTANT_LONG  880 '2'
+005026      | OP_DIVIDE
+005027      | OP_ZERO
+005028      | OP_ADD
+005029      | OP_CONSTANT_LONG  881 '20'
+005033      | OP_INVOKE_LONG   (5 args)  871 'drawText'
+005038      | OP_POP
+005039    915 OP_GET_GLOBAL_LONG  882 'graphics'
+005043      | OP_GET_GLOBAL_LONG  884 'cast'
+005047      | OP_GET_GLOBAL_LONG  886 'wave'
+005051      | OP_INVOKE_LONG   (1 args)  885 'ntos'
+005056      | OP_CONSTANT_LONG  887 '255'
+005060      | OP_CONSTANT_LONG  888 '220'
+005064      | OP_CONSTANT_LONG  889 '80'
+005068      | OP_ARRAY_INIT       3
+005070    916 OP_GET_GLOBAL_LONG  890 'SCREEN_W'
+005074      | OP_CONSTANT_LONG  891 '2'
+005078      | OP_DIVIDE
+005079      | OP_CONSTANT_LONG  892 '15'
+005083      | OP_SUBTRACT
+005084      | OP_GET_GLOBAL_LONG  893 'SCREEN_H'
+005088      | OP_CONSTANT_LONG  894 '2'
+005092      | OP_DIVIDE
+005093      | OP_CONSTANT_LONG  895 '26'
+005097      | OP_ADD
+005098      | OP_CONSTANT_LONG  896 '28'
+005102      | OP_INVOKE_LONG   (5 args)  883 'drawText'
+005107      | OP_POP
+005108    918 OP_GET_GLOBAL_LONG  897 'graphics'
+005112      | OP_CONSTANT_LONG  899 'FINAL SCORE'
+005116      | OP_CONSTANT_LONG  900 '255'
+005120      | OP_CONSTANT_LONG  901 '255'
+005124      | OP_CONSTANT_LONG  902 '255'
+005128      | OP_ARRAY_INIT       3
+005130    919 OP_GET_GLOBAL_LONG  903 'SCREEN_W'
+005134      | OP_CONSTANT_LONG  904 '2'
+005138      | OP_DIVIDE
+005139      | OP_CONSTANT_LONG  905 '80'
+005143      | OP_SUBTRACT
+005144      | OP_GET_GLOBAL_LONG  906 'SCREEN_H'
+005148      | OP_CONSTANT_LONG  907 '2'
+005152      | OP_DIVIDE
+005153      | OP_CONSTANT_LONG  908 '62'
+005157      | OP_ADD
+005158      | OP_CONSTANT_LONG  909 '20'
+005162      | OP_INVOKE_LONG   (5 args)  898 'drawText'
+005167      | OP_POP
+005168    920 OP_GET_GLOBAL_LONG  910 'graphics'
+005172      | OP_GET_GLOBAL_LONG  912 'cast'
+005176      | OP_GET_GLOBAL_LONG  914 'score'
+005180      | OP_INVOKE_LONG   (1 args)  913 'ntos'
+005185      | OP_CONSTANT_LONG  915 '255'
+005189      | OP_CONSTANT_LONG  916 '255'
+005193      | OP_CONSTANT_LONG  917 '80'
+005197      | OP_ARRAY_INIT       3
+005199    921 OP_GET_GLOBAL_LONG  918 'SCREEN_W'
+005203      | OP_CONSTANT_LONG  919 '2'
+005207      | OP_DIVIDE
+005208      | OP_CONSTANT_LONG  920 '40'
+005212      | OP_SUBTRACT
+005213      | OP_GET_GLOBAL_LONG  921 'SCREEN_H'
+005217      | OP_CONSTANT_LONG  922 '2'
+005221      | OP_DIVIDE
+005222      | OP_CONSTANT_LONG  923 '88'
+005226      | OP_ADD
+005227      | OP_CONSTANT_LONG  924 '30'
+005231      | OP_INVOKE_LONG   (5 args)  911 'drawText'
+005236      | OP_POP
+005237    923 OP_GET_GLOBAL_LONG  925 'graphics'
+005241      | OP_CONSTANT_LONG  927 'HIGH SCORE'
+005245      | OP_CONSTANT_LONG  928 '200'
+005249      | OP_CONSTANT_LONG  929 '200'
+005253      | OP_CONSTANT_LONG  930 '255'
+005257      | OP_ARRAY_INIT       3
+005259    924 OP_GET_GLOBAL_LONG  931 'SCREEN_W'
+005263      | OP_CONSTANT_LONG  932 '2'
+005267      | OP_DIVIDE
+005268      | OP_CONSTANT_LONG  933 '75'
+005272      | OP_SUBTRACT
+005273      | OP_GET_GLOBAL_LONG  934 'SCREEN_H'
+005277      | OP_CONSTANT_LONG  935 '2'
+005281      | OP_DIVIDE
+005282      | OP_CONSTANT_LONG  936 '126'
+005286      | OP_ADD
+005287      | OP_CONSTANT_LONG  937 '18'
+005291      | OP_INVOKE_LONG   (5 args)  926 'drawText'
+005296      | OP_POP
+005297    925 OP_GET_GLOBAL_LONG  938 'graphics'
+005301      | OP_GET_GLOBAL_LONG  940 'cast'
+005305      | OP_GET_GLOBAL_LONG  942 'highScore'
+005309      | OP_INVOKE_LONG   (1 args)  941 'ntos'
+005314      | OP_CONSTANT_LONG  943 '200'
+005318      | OP_CONSTANT_LONG  944 '200'
+005322      | OP_CONSTANT_LONG  945 '255'
+005326      | OP_ARRAY_INIT       3
+005328    926 OP_GET_GLOBAL_LONG  946 'SCREEN_W'
+005332      | OP_CONSTANT_LONG  947 '2'
+005336      | OP_DIVIDE
+005337      | OP_CONSTANT_LONG  948 '35'
+005341      | OP_SUBTRACT
+005342      | OP_GET_GLOBAL_LONG  949 'SCREEN_H'
+005346      | OP_CONSTANT_LONG  950 '2'
+005350      | OP_DIVIDE
+005351      | OP_CONSTANT_LONG  951 '148'
+005355      | OP_ADD
+005356      | OP_CONSTANT_LONG  952 '24'
+005360      | OP_INVOKE_LONG   (5 args)  939 'drawText'
+005365      | OP_POP
+005366    928 OP_GET_GLOBAL_LONG  953 'graphics'
+005370      | OP_CONSTANT_LONG  955 'Press ESC to quit'
+005374      | OP_CONSTANT_LONG  956 '140'
+005378      | OP_CONSTANT_LONG  957 '140'
+005382      | OP_CONSTANT_LONG  958 '140'
+005386      | OP_ARRAY_INIT       3
+005388    929 OP_GET_GLOBAL_LONG  959 'SCREEN_W'
+005392      | OP_CONSTANT_LONG  960 '2'
+005396      | OP_DIVIDE
+005397      | OP_CONSTANT_LONG  961 '110'
+005401      | OP_SUBTRACT
+005402      | OP_GET_GLOBAL_LONG  962 'SCREEN_H'
+005406      | OP_CONSTANT_LONG  963 '2'
+005410      | OP_DIVIDE
+005411      | OP_CONSTANT_LONG  964 '190'
+005415      | OP_ADD
+005416      | OP_CONSTANT_LONG  965 '18'
+005420      | OP_INVOKE_LONG   (5 args)  954 'drawText'
+005425      | OP_POP
+005426    931 OP_GET_GLOBAL_LONG  966 'graphics'
+005430      | OP_INVOKE_LONG   (0 args)  967 'endDraw'
+005435      | OP_POP
+005436    933 OP_GET_GLOBAL_LONG  968 'io'
+005440      | OP_CONSTANT_LONG  970 './examples/galagasave'
+005444      | OP_GET_GLOBAL_LONG  971 'cast'
+005448      | OP_GET_GLOBAL_LONG  973 'highScore'
+005452      | OP_INVOKE_LONG   (1 args)  972 'ntos'
+005457      | OP_INVOKE_LONG   (2 args)  969 'writeFile'
+005462      | OP_POP
+005463    934 OP_LOOP          5463 -> 4813
+005466      | OP_POP
+005467    936 OP_GET_GLOBAL_LONG  974 'graphics'
+005471      | OP_INVOKE_LONG   (0 args)  975 'closeWindow'
+005476      | OP_POP
+005477    937 OP_NULL
+005478      | OP_RETURN
+
+
