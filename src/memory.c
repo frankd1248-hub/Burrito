@@ -11,9 +11,14 @@
 
 #define GC_HEAP_GROW_FACTOR 8
 
+/**
+ * Reallocate a pointer to a new size.
+ * @warning can call collectGarbage()
+ */
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
     vm.bytesAllocated += newSize - oldSize;
 
+    // If we are allocating additional memory there is potential for a GC run
     if (newSize > oldSize) {
 #ifdef DEBUG_STRESS_GC
         collectGarbage();
@@ -24,11 +29,13 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
         }
     }
 
+    // If we want to realloc to 0 the result is just a free
     if (newSize == 0) {
         free(pointer);
         return NULL;
     }
 
+    // Yeah, I'm lazy. So what? Arena systems are convoluted.
     void* result = realloc(pointer, newSize);
     if (result == NULL) {
         exit(1);

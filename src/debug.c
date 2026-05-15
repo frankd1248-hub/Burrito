@@ -4,6 +4,9 @@
 #include "object.h"
 #include "value.h"
 
+/**
+ * Dissassembles every instruction in the given chunk
+ */
 void dissassembleChunk(Chunk* chunk, const char* name, FILE* out) {
     if (out == NULL) out = stdout;
     fprintf(out, "== %s ==\n", name);
@@ -12,6 +15,10 @@ void dissassembleChunk(Chunk* chunk, const char* name, FILE* out) {
     }
 }
 
+/**
+ * Helper function for opcodes with:
+ * - A one-byte argument holding a constant-index.
+ */
 static int constantInstruction(const char* name, Chunk* chunk, int offset, FILE* out) {
     uint8_t constant = chunk->code[offset + 1];
     fprintf(out, "%-16s %4d '", name, constant);
@@ -20,6 +27,10 @@ static int constantInstruction(const char* name, Chunk* chunk, int offset, FILE*
     return offset + 2;
 }
 
+/**
+ * Helper function for opcodes with:
+ * - A three-byte argument holding a constant-index.
+ */
 static int longConstantInstruction(const char* name, Chunk* chunk, int offset, FILE* out) {
     uint32_t constant = chunk->code[offset + 1] |
                        (chunk->code[offset + 2] << 8) |
@@ -31,6 +42,9 @@ static int longConstantInstruction(const char* name, Chunk* chunk, int offset, F
     return offset + 4;
 }
 
+/**
+ * Helper function for OP_INVOKE, OP_SUPER_INVOKE.
+ */
 static int invokeInstruction(const char* name, Chunk* chunk, int offset, FILE* out) {
     uint8_t constant = chunk->code[offset + 1];
     uint8_t argCount = chunk->code[offset + 2];
@@ -40,6 +54,9 @@ static int invokeInstruction(const char* name, Chunk* chunk, int offset, FILE* o
     return offset + 3;
 }
 
+/**
+ * Helper function for OP_INVOKE_LONG, OP_SUPER_INVOKE_LONG.
+ */
 static int longInvokeInstruction(const char* name, Chunk* chunk, int offset, FILE* out) {
     uint32_t constant = chunk->code[offset + 1] |
                        (chunk->code[offset + 2] << 8) |
@@ -51,17 +68,26 @@ static int longInvokeInstruction(const char* name, Chunk* chunk, int offset, FIL
     return offset + 5;
 }
 
+/**
+ * Helper function for opcodes without arguments.
+ */
 static int simpleInstruction(const char* name, int offset, FILE* out) {
     fprintf(out, "%s\n", name);
     return offset + 1;
 }
 
+/**
+ * Helper function for opcodes with one-byte arguments, e.g. local indices.
+ */
 static int byteInstruction(const char* name, Chunk* chunk, int offset, FILE* out) {
     uint8_t slot = chunk->code[offset + 1];
     fprintf(out, "%-16s %4d\n", name, slot);
     return offset + 2;
 }
 
+/**
+ * Helper function for opcodes with three-byte arguments, e.g. long local indices.
+ */
 static int longByteInstruction(const char* name, Chunk* chunk, int offset, FILE* out) {
     uint32_t slot = chunk->code[offset + 1] |
                    (chunk->code[offset + 2] << 8) |
@@ -71,6 +97,9 @@ static int longByteInstruction(const char* name, Chunk* chunk, int offset, FILE*
     return offset + 4;
 }
 
+/**
+ * Helper function for opcodes that jump either forwards or backwards.
+ */
 static int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset, FILE* out) {
     uint16_t jump = (uint16_t) (chunk->code[offset + 1] << 8);
     jump |= chunk->code[offset + 2];
@@ -83,6 +112,9 @@ static int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset,
     return offset + 3;
 }
 
+/**
+ * Dissassemble one instruction using a looooong switch block
+ */
 int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
     if (out == NULL) out = stdout;
 
@@ -198,6 +230,8 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
             return byteInstruction("OP_PRINT", chunk, offset, out);
         case OP_DUP:
             return simpleInstruction("OP_DUP", offset, out);
+        case OP_DUP2:
+            return simpleInstruction("OP_DUP2", offset, out);
         case OP_JUMP:
             return jumpInstruction("OP_JUMP", 1, chunk, offset, out);
         case OP_JUMP_IF_FALSE:

@@ -441,6 +441,7 @@ static InterpretResult run(int returnDepth) {
         [OP_SET_UPVALUE]       = &&op_OP_SET_UPVALUE,
         [OP_ARRAY_INIT]        = &&op_OP_ARRAY_INIT,
         [OP_ARRAY_INIT_LONG]   = &&op_OP_ARRAY_INIT_LONG,
+        [OP_ARRAY_NEW]         = &&op_OP_ARRAY_NEW,
         [OP_EQUAL]             = &&op_OP_EQUAL,
         [OP_GREATER]           = &&op_OP_GREATER,
         [OP_LESS]              = &&op_OP_LESS,
@@ -834,6 +835,25 @@ static InterpretResult run(int returnDepth) {
         array->size = count;
         vm.stackTop -= count + 1;                                 // remove elements AND the array slot
         push(OBJ_VAL(array));                                     // put array back on top
+        DISPATCH();
+    } CASE(OP_ARRAY_NEW): {
+        Value sizeVal = pop();
+        if (!IS_NUMBER(sizeVal)) {
+            
+            runtimeError("Array size must be a number.");
+            if (errorWasHandled) DISPATCH();
+            return INTERPRET_RUNTIME_ERROR;
+        }
+        int size = (int)AS_NUMBER(sizeVal);
+        if (size < 0) {
+            
+            runtimeError("Array size must be non-negative.");
+            if (errorWasHandled) DISPATCH();
+            return INTERPRET_RUNTIME_ERROR;
+        }
+        ObjArray* arr = newArray(size);
+        for (int i = 0; i < size; i++) arr->values[i] = NULL_VAL;
+        push(OBJ_VAL(arr));
         DISPATCH();
     } CASE(OP_EQUAL): {
         Value b = pop();

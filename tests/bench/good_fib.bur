@@ -17,6 +17,6 @@ fn fib(n) {
 }
 
 decl start = time.clock();
-print("%d", fib(92));
+print("%d\n", fib(92));
 decl elapsed = time.clock() - start;
-print("Time: %d", elapsed);
+print("Time: %d\n", elapsed);

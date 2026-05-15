@@ -767,6 +767,9 @@ static void string(bool canAssign) {
     free(parser.previous.start);
 }
 
+/**
+ * Emits a get opcode; helper function.
+ */
 static void emitGet(int arg, uint8_t instruction, bool longOp) {
     if (longOp) {
         emitDoubleWord(
@@ -780,19 +783,18 @@ static void emitGet(int arg, uint8_t instruction, bool longOp) {
     }
 }
 
+/**
+ * Emit a set opcode; helper function.
+ * Technically does the same thing as emitGet.
+ * In fact, it internally calls emitGet.
+ */
 static void emitSet(int arg, uint8_t instruction, bool longOp) {
-    if (longOp) {
-        emitDoubleWord(
-            instruction,
-            (uint8_t) ((arg)       & 0xff),
-            (uint8_t) ((arg >> 8)  & 0xff),
-            (uint8_t) ((arg >> 16) & 0xff)
-        );
-    } else {
-        emitWord(instruction, (uint8_t) arg);
-    }
+    emitGet(arg, instruction, longOp);
 }
 
+/**
+ * Returns the get and set opcodes for the given identifier and if it is long or not
+ */
 static int resolveVariable(Token name, uint8_t* getOp, uint8_t* setOp, bool* longOp) {
     int arg = resolveLocal(current, &name);
 
@@ -826,6 +828,9 @@ static int resolveVariable(Token name, uint8_t* getOp, uint8_t* setOp, bool* lon
     return arg;
 }
 
+/**
+ * Prefix incrementation (++x)
+ */
 static void preInc(bool canAssign) {
     consume(TOKEN_IDENTIFIER, "Expect identifier after '++'.");
     Token name = parser.previous;
@@ -841,6 +846,9 @@ static void preInc(bool canAssign) {
     emitSet(arg, setOp, longOp);
 }
 
+/**
+ * Prefix decrementation (--x)
+ */
 static void preDec(bool canAssign) {
     consume(TOKEN_IDENTIFIER, "Expect identifier after '--'.");
     Token name = parser.previous;
@@ -856,6 +864,9 @@ static void preDec(bool canAssign) {
     emitSet(arg, setOp, longOp);
 }
 
+/**
+ * Parses a variable expression with a given name.
+ */
 static void namedVariable(Token name, bool canAssign) {
     uint8_t getOp, setOp;
     bool longOp;
@@ -937,10 +948,16 @@ static void namedVariable(Token name, bool canAssign) {
     }
 }
 
+/**
+ * Parses a variable expression.
+ */
 static void variable(bool canAssign) {
     namedVariable(parser.previous, canAssign);
 }
 
+/**
+ * Create a token at compile-time. Used by super.
+ */
 static Token syntheticToken(const char* text) {
     Token token;
     token.start = text;
@@ -948,6 +965,9 @@ static Token syntheticToken(const char* text) {
     return token;
 }
 
+/**
+ * Parses a super call expression.
+ */
 static void super_(bool canAssign) {
     if (currentClass == NULL) {
         error("Cannot use 'super' outside a class.");
@@ -981,6 +1001,9 @@ static void super_(bool canAssign) {
     }
 }
 
+/**
+ * Parses a this expression.
+ */
 static void this_(bool canAssign) {
     if (currentClass == NULL) {
         error("Cannot use 'this' outside a class.");
@@ -990,6 +1013,9 @@ static void this_(bool canAssign) {
     variable(false);
 }
 
+/**
+ * Parses an unary expression.
+ */
 static void unary(bool canAssign) {
     TokenType operatorType = parser.previous.type;
 
@@ -1000,6 +1026,7 @@ static void unary(bool canAssign) {
     parsePrecedence(PREC_UNARY);
 
 #ifdef CONSTANT_OPTIMIZATIONS
+    // Constant folding
     if (lastExpr.isConst && IS_NUMBER(lastExpr.value)) {
         if (operatorType == TOKEN_MINUS) {
             currentChunk()->count           = lastExpr.chunkSizeBefore;
@@ -1034,6 +1061,9 @@ static void unary(bool canAssign) {
     }
 }
 
+/**
+ * Big parse rules array
+ */
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN]    = {grouping, call,    PREC_CALL},
     [TOKEN_RIGHT_PAREN]   = {NULL,     NULL,    PREC_NONE},
@@ -1098,6 +1128,11 @@ ParseRule rules[] = {
     [TOKEN_EOF]           = {NULL,     NULL,    PREC_NONE},
 };
 
+/**
+ * The heart of the pratt parser.
+ * First tries to parse a prefix expression, and while there are lower precedence
+ *  &nbsp;&nbsp;expressions it parses that with the infix rule.
+ */
 static void parsePrecedence(Precedence precedence) {
     advance();
     ParseFn prefixRule = getRule(parser.previous.type)->prefix;
@@ -1121,15 +1156,24 @@ static void parsePrecedence(Precedence precedence) {
     }
 }
 
+/**
+ * Creates a constant for the given identifier.
+ */
 static int identifierConstant(Token* name) {
     return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
+/**
+ * Returns if the two tokens' lexeme are equal
+ */
 static bool identifiersEqual(Token* a, Token* b) {
     if (a->length != b->length) return false;
     return memcmp(a->start, b->start, a->length) == 0;
 }
 
+/**
+ * Returns the index of the local with the given name.
+ */
 static int resolveLocal(Compiler* compiler, Token* name) {
     for (int i = compiler->localCount - 1; i >= 0; i--) {
         Local* local = &compiler->locals[i];
@@ -1145,6 +1189,9 @@ static int resolveLocal(Compiler* compiler, Token* name) {
     return -1;
 }
 
+/**
+ * Adds an upvalue with the given index to the current function.
+ */
 static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal) {
     int upvalueCount = compiler->function->upvalueCount;
 
@@ -1165,6 +1212,10 @@ static int addUpvalue(Compiler* compiler, uint8_t index, bool isLocal) {
     return compiler->function->upvalueCount++;
 }
 
+/**
+ * Returns the index of the upvalue with the current name.
+ * (Adds an upvalue and returns its index)
+ */
 static int resolveUpvalue(Compiler* compiler, Token* name) {
     if (compiler->enclosing == NULL) return -1;
 
@@ -1179,6 +1230,7 @@ static int resolveUpvalue(Compiler* compiler, Token* name) {
         return addUpvalue(compiler, (uint8_t) local, true);
     }
 
+    // Recursively go up and out looking for a variable with the given name
     int upvalue = resolveUpvalue(compiler->enclosing, name);
     if (upvalue != -1) {
         return addUpvalue(compiler, (uint8_t) upvalue, false);
@@ -1187,6 +1239,9 @@ static int resolveUpvalue(Compiler* compiler, Token* name) {
     return -1;
 }
 
+/**
+ * Adds a local to the current scope.
+ */
 static void addLocal(Token name) {
     if (current->localCount >= ARB_COUNT) {
         error("Too many local variables currently in scope.");
@@ -1437,10 +1492,21 @@ static void varDeclaration() {
 
     int global = parseVariable("Expect variable name.");
 
+    if (match(TOKEN_LEFT_BRACKET)) {
+        expression();        // parse the size — this is what was missing
+        hasArraySize = true;
+        consume(TOKEN_RIGHT_BRACKET, "Expect ']' after size.");
+    }
+
     if (match(TOKEN_EQUAL)) {
+        if (hasArraySize) emitByte(OP_POP);
         expression();
     } else {
-        emitByte(OP_NULL);
+        if (hasArraySize) {
+            emitByte(OP_ARRAY_NEW);  // size already on stack, ARRAY_NEW consumes it
+        } else {
+            emitByte(OP_NULL);
+        }
     }
     consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
 

@@ -40,6 +40,7 @@ typedef enum {
     OP_SET_UPVALUE,
     OP_ARRAY_INIT,           // Create an array object from values on the stack
     OP_ARRAY_INIT_LONG,
+    OP_ARRAY_NEW,
     OP_EQUAL,
     OP_GREATER,
     OP_LESS,
