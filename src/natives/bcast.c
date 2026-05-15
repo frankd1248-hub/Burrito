@@ -28,7 +28,7 @@ static bool ntosNative(int argCount, Value* args, Value* result) {
     }
     
     int written;
-    if (fabs(round(val) - val) < 0.00001) {
+    if (fabs(round(val) - val) < 0.0000001) {
         written = snprintf(str, size + 1, "%ld", (long)round(val));
     } else {
         written = snprintf(str, size + 1, "%.4lf", val);

@@ -230,11 +230,11 @@ static bool callValue(Value callee, int argCount) {
     return false;
 }
 
-static InterpretResult run();
+static InterpretResult run(int);
 
 bool callBurrito(Value callee, int argCount, Value* result) {
     if (!callValue(callee, argCount)) return false;
-    InterpretResult res = run();
+    InterpretResult res = run(vm.frameCount - 1);
     if (res != INTERPRET_OK) return false;
     *result = pop();
     return true;
@@ -357,7 +357,7 @@ static void concatenate() {
     push(OBJ_VAL(result));
 }
 
-static InterpretResult run() {
+static InterpretResult run(int returnDepth) {
     CallFrame* frame = &vm.frames[vm.frameCount - 1];
 
 #define READ_BYTE() (*frame->ip++)
@@ -459,6 +459,7 @@ static InterpretResult run() {
         [OP_BITLEFT]           = &&op_OP_BITLEFT,
         [OP_PRINT]             = &&op_OP_PRINT,
         [OP_DUP]               = &&op_OP_DUP,
+        [OP_DUP2]              = &&op_OP_DUP2,
         [OP_JUMP]              = &&op_OP_JUMP,
         [OP_JUMP_IF_FALSE]     = &&op_OP_JUMP_IF_FALSE,
         [OP_LOOP]              = &&op_OP_LOOP,
@@ -982,6 +983,11 @@ print_end:
         DISPATCH();
     }
     CASE(OP_DUP): push(peek(0)); DISPATCH();
+    CASE(OP_DUP2): {
+        push(peek(1));
+        push(peek(1));
+        DISPATCH();
+    }
     CASE(OP_JUMP): {
         uint16_t offset = READ_SHORT();
         frame->ip += offset;
@@ -1085,8 +1091,9 @@ print_end:
         Value result = pop();
         closeUpvalues(frame->slots);
         vm.frameCount--;
-        if (vm.frameCount == 0) {
-            pop();
+        if (vm.frameCount == returnDepth) {
+            vm.stackTop = frame->slots;
+            push(result);
             return INTERPRET_OK;
         }
         vm.stackTop = frame->slots;
@@ -1158,5 +1165,5 @@ InterpretResult interpret(const char* source) {
     push(OBJ_VAL(closure));
     call(closure, 0);
 
-    return run();
+    return run(0);
 }

@@ -8,6 +8,11 @@
 #include <algorithm>
 #include <string>
 
+#ifndef _WIN32
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
+
 using namespace std;
 namespace fs = filesystem;
 
@@ -51,7 +56,6 @@ static vector<string> extractComments(const fs::path& path) {
     while (getline(f, line)) {
         if (line.size() >= 2 && line[0] == '/' && line[1] == '/') {
             string text = line.substr(2);
-            // trim leading space
             size_t start = text.find_first_not_of(' ');
             comments.push_back(start == string::npos ? "" : text.substr(start));
         } else {
@@ -64,6 +68,98 @@ static vector<string> extractComments(const fs::path& path) {
 // A relative label shown to the user, e.g. "bitwise/basic.bur"
 static string relativeLabel(const fs::path& test, const fs::path& root) {
     return fs::relative(test, root).string();
+}
+
+// ─── Terminal width ───────────────────────────────────────────────────────────
+
+static int terminalWidth() {
+#ifdef _WIN32
+    return 100;
+#else
+    struct winsize w;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0 && w.ws_col > 0)
+        return w.ws_col;
+    return 100;
+#endif
+}
+
+// ─── Multi-column test list ───────────────────────────────────────────────────
+
+struct TestEntry {
+    int         number;
+    string      group;
+    string      filename;
+};
+
+// Build a display string for one entry: "  NNN: filename"
+// Returns the rendered length (without ANSI codes).
+static int entryDisplayWidth(const TestEntry& e) {
+    // "  NNN: filename"
+    // 2 leading spaces + up to 3 digits + 2 (": ") + filename
+    return 2 + 3 + 2 + (int)e.filename.size();
+}
+
+static void printTestList(const vector<fs::path>& tests, const fs::path& root) {
+    // Build structured entries and determine groups.
+    vector<TestEntry> entries;
+    vector<string>    groupOrder;   // groups in encounter order
+    string            prevGroup;
+
+    for (int i = 0; i < (int)tests.size(); i++) {
+        fs::path rel = fs::relative(tests[i], root);
+        string   grp = rel.has_parent_path() ? rel.parent_path().string() : ".";
+        if (grp != prevGroup) {
+            groupOrder.push_back(grp);
+            prevGroup = grp;
+        }
+        entries.push_back({ i + 1, grp, tests[i].filename().string() });
+    }
+
+    // Determine column width: max entry width + inter-column gap.
+    const int GAP = 3;
+    int maxEntry = 0;
+    for (const TestEntry& e : entries)
+        maxEntry = max(maxEntry, entryDisplayWidth(e));
+    int colWidth = maxEntry + GAP;
+
+    // How many columns fit?
+    int tw      = terminalWidth();
+    int numCols = max(1, tw / colWidth);
+
+    // Print group by group, each group in its own multi-column block.
+    for (const string& grp : groupOrder) {
+        // Collect entries belonging to this group.
+        vector<const TestEntry*> grpEntries;
+        for (const TestEntry& e : entries)
+            if (e.group == grp) grpEntries.push_back(&e);
+
+        printf(CLR_CYAN "\n  [%s]\n" CLR_RESET, grp.c_str());
+
+        int rows = ((int)grpEntries.size() + numCols - 1) / numCols;
+
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < numCols; col++) {
+                // Column-major order so entries read top-to-bottom within each column.
+                int idx = col * rows + row;
+                if (idx >= (int)grpEntries.size()) break;
+
+                const TestEntry* e = grpEntries[idx];
+                // Render "  NNN: filename"
+                char buf[256];
+                int written = snprintf(buf, sizeof(buf),
+                    "  %3d: %s", e->number, e->filename.c_str());
+
+                if (col + 1 < numCols) {
+                    // Pad to column boundary.
+                    int pad = colWidth - written;
+                    printf("%s%*s", buf, pad > 0 ? pad : 0, "");
+                } else {
+                    printf("%s", buf);
+                }
+            }
+            printf("\n");
+        }
+    }
 }
 
 // ─── Single test ─────────────────────────────────────────────────────────────
@@ -109,7 +205,6 @@ static TestResult runTest(const fs::path& path, const fs::path& root, bool verbo
         printf(CLR_RED "FAIL (exit %d)\n" CLR_RESET, exitCode);
     }
 
-    // Always print program output in verbose mode; only on failure otherwise.
     string out = output.str();
     if (!out.empty() && (verbose || exitCode != 0)) {
         istringstream ss(out);
@@ -121,14 +216,13 @@ static TestResult runTest(const fs::path& path, const fs::path& root, bool verbo
     return {path, exitCode};
 }
 
-// ─── Run a list of tests and print a summary ──────────────────────────────────
+// ─── Run a list of tests and print a summary ─────────────────────────────────
 
 static void runTests(const vector<fs::path>& batch,
                      const fs::path& root,
                      bool verbose) {
     if (batch.empty()) { printf("  (no tests)\n"); return; }
 
-    // Group by immediate subdirectory under root so we print section headers.
     string currentGroup;
     vector<TestResult> results;
 
@@ -144,7 +238,6 @@ static void runTests(const vector<fs::path>& batch,
         results.push_back(runTest(p, root, verbose));
     }
 
-    // Summary
     int passed = 0;
     for (const TestResult& r : results) if (r.passed()) passed++;
     int total  = (int)results.size();
@@ -166,19 +259,12 @@ static void runTests(const vector<fs::path>& batch,
 }
 
 // ─── Parse a selection string into a list of tests ───────────────────────────
-//
-// Supported formats:
-//   all          → every test
-//   N            → test number N (1-based)
-//   N-M          → tests N through M inclusive
-//   <name>       → tests whose path contains <name> (substring, e.g. "bitwise")
 
 static vector<fs::path> parseSelection(const string& input,
                                        const vector<fs::path>& tests,
                                        const fs::path& root) {
     if (input == "all") return tests;
 
-    // Numeric single
     if (isNumeric(input)) {
         int n = stoi(input);
         if (n < 1 || n > (int)tests.size()) {
@@ -188,7 +274,6 @@ static vector<fs::path> parseSelection(const string& input,
         return { tests[n - 1] };
     }
 
-    // Numeric range  N-M
     size_t dash = input.find('-');
     if (dash != string::npos &&
         isNumeric(input.substr(0, dash)) &&
@@ -205,7 +290,6 @@ static vector<fs::path> parseSelection(const string& input,
                                 tests.begin() + end);
     }
 
-    // Substring filter (folder name, file name, etc.)
     vector<fs::path> matches;
     for (const fs::path& p : tests) {
         string label = relativeLabel(p, root);
@@ -243,19 +327,7 @@ int main(int argc, char** argv) {
                "══════════════════════════════════════\n"
                CLR_RESET);
 
-        // Print test list grouped by subdirectory
-        string currentGroup;
-        for (int i = 0; i < (int)tests.size(); i++) {
-            fs::path rel = fs::relative(tests[i], root);
-            string group = rel.has_parent_path()
-                           ? rel.parent_path().string() : ".";
-            if (group != currentGroup) {
-                currentGroup = group;
-                printf(CLR_CYAN "\n  [%s]\n" CLR_RESET, group.c_str());
-            }
-            printf("  %3d: %s\n", i + 1,
-                   tests[i].filename().c_str());
-        }
+        printTestList(tests, root);
 
         printf(CLR_GREY
                "\nEnter a number, range (e.g. 3-7), folder/substring, or 'all'.\n"

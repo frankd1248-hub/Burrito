@@ -31,7 +31,7 @@ void freeValueArray(ValueArray* array) {
 static void printNumber(Value value, FILE* f) {
     double val = AS_NUMBER(value);
     if (f == NULL) f = stdout;
-    if (fabs(val - round(val)) < 0.00001) {
+    if (fabs(val - round(val)) < 0.0000001) {
         fprintf(f, "%ld", (long) round(val));
     } else {
         fprintf(f, "%lf", val);

@@ -10,9 +10,15 @@
 
 #include "debug.h"
 
+// Maximum cases in a switch block
 #define MAX_CASES 256
+
+// Maximum breaks in nested loops
 #define MAX_BREAKS 256
 
+/**
+ * Parser struct encapsulating recent tokens, all source, and error recovery states.
+ */
 typedef struct {
     Token current;
     Token previous;
@@ -21,6 +27,9 @@ typedef struct {
     bool panicMode;
 } Parser;
 
+/**
+ * Precedence enum for operators
+ */
 typedef enum {
     PREC_NONE,
     PREC_ASSIGNMENT,    // =
@@ -40,25 +49,40 @@ typedef enum {
     PREC_PRIMARY
 } Precedence;
 
+// Encapsulation of a parse function
 typedef void (*ParseFn) (bool canAssign);
 
+/**
+ * A parsing rule, for both prefix and infix functions and a precedence for the Pratt Parser
+ */
 typedef struct {
     ParseFn prefix;
     ParseFn infix;
     Precedence precedence;
 } ParseRule;
 
+/**
+ * A compile-time local, fields:
+ * Name and depth, and most importantly:
+ * isCaptured, if the local has been captured as an upvalue
+ */
 typedef struct {
     Token name;
     int depth;
     bool isCaptured;
 } Local;
 
+/**
+ * A compile-time upvalue, containing its index in either the global table or the local stack.
+ */
 typedef struct {
     uint8_t index;
     bool isLocal;
 } Upvalue;
 
+/**
+ * Enum of types of function
+ */
 typedef enum {
     TYPE_FUNCTION,
     TYPE_INITIALIZER,
@@ -66,6 +90,12 @@ typedef enum {
     TYPE_SCRIPT
 } FunctionType;
 
+/**
+ * A struct encapsulating a loop at compile time.
+ * Contains:
+ * - start (offset) and scope depth
+ * - number of breaks and array of break jumps
+ */
 typedef struct {
     int start;
     int scopeDepth;
@@ -74,6 +104,9 @@ typedef struct {
     int breakCount;
 } Loop;
 
+/**
+ * Compiler struct, requiring entirely unnecessary amounts of memory.
+ */
 typedef struct Compiler {
     struct Compiler* enclosing;
     ObjFunction* function;
@@ -85,6 +118,9 @@ typedef struct Compiler {
     int scopeDepth;
 } Compiler;
 
+/**
+ * Compiler for dealing with nested classes
+ */
 typedef struct ClassCompiler {
     struct ClassCompiler* enclosing;
     bool hasSuperclass;
@@ -117,10 +153,16 @@ Loop* currentLoop = NULL;
 
 int currentTryDepth = 0;
 
+/**
+ * Helper function
+ */
 static Chunk* currentChunk() {
     return &current->function->chunk;
 }
 
+/**
+ * Prints a parser error at the given token
+ */
 static void errorAt(Token* token, const char* message) {
     if (parser.panicMode) return;
     parser.panicMode = true;
@@ -158,18 +200,28 @@ static void errorAt(Token* token, const char* message) {
     parser.hadError = true;
 }
 
+/**
+ * Print an error at the previous token
+ */
 static void error(const char *message) {
     errorAt(&parser.previous, message);
 }
 
+/**
+ * Print an error at the current token
+ */
 static void errorAtCurrent(const char* message) {
     errorAt(&parser.current, message);
 }
 
+/**
+ * Advance to the next token
+ */
 static void advance() {
     parser.previous = parser.current;
 
     for (;;) {
+        // Consume every invalid token
         parser.current = scanToken();
         if (parser.current.type != TOKEN_ERROR) break;
 
@@ -177,6 +229,9 @@ static void advance() {
     }
 }
 
+/**
+ * Expect a given token
+ */
 static void consume(TokenType type, const char* message) {
     if (parser.current.type == type) {
         advance();
@@ -186,25 +241,40 @@ static void consume(TokenType type, const char* message) {
     errorAtCurrent(message);
 }
 
+/**
+ * Check if the current token is of the given type
+ */
 static bool check(TokenType type) {
     return parser.current.type == type;
 }
 
+/**
+ * Advance if the current token matches the give type.
+ */
 static bool match(TokenType type) {
     if (!check(type)) return false;
     advance();
     return true;
 }
 
+/**
+ * Write one byte to the current chunk
+ */
 static void emitByte(uint8_t byte) {
     writeChunk(currentChunk(), byte, parser.previous.line);
 }
 
+/**
+ * Write two bytes to the current chunk, i.e. a word
+ */
 static void emitWord(uint8_t byte1, uint8_t byte2) {
     emitByte(byte1);
     emitByte(byte2);
 }
 
+/**
+ * Write four bytes to the current chunk, i.e. a double-word
+ */
 static void emitDoubleWord(uint8_t byte1, uint8_t byte2, uint8_t byte3, uint8_t byte4) {
     emitByte(byte1);
     emitByte(byte2);
@@ -212,6 +282,9 @@ static void emitDoubleWord(uint8_t byte1, uint8_t byte2, uint8_t byte3, uint8_t 
     emitByte(byte4);
 }
 
+/**
+ * emit bytecode for a loop back to the given offset
+ */
 static void emitLoop(int loopStart) {
     emitByte(OP_LOOP);
 
@@ -221,6 +294,10 @@ static void emitLoop(int loopStart) {
     emitWord((offset >> 8) & 0xff, offset & 0xff);
 }
 
+/**
+ * Emit a jump placeholder to be "patched" later
+ * returns the offset of the jump
+ */
 static int emitJump(uint8_t instruction) {
     emitByte(instruction);
     emitByte(0xff);
@@ -228,6 +305,9 @@ static int emitJump(uint8_t instruction) {
     return currentChunk()->count - 2;
 }
 
+/**
+ * Emits a return.
+ */
 static void emitReturn() {
     if (current->type == TYPE_INITIALIZER) {
         emitWord(OP_GET_LOCAL, 0);
@@ -236,12 +316,19 @@ static void emitReturn() {
     emitByte(OP_RETURN);
 }
 
+/**
+ * Adds a constant to the constants array and returns the index
+ */
 static int makeConstant(Value value) {
     return addConstant(currentChunk(), value);
 }
 
+/**
+ * Writes a constant to the chunk.
+ */
 static void emitConstant(Value value) {
     if (IS_NUMBER(value)) {
+        // Specialized optimization
         if (AS_NUMBER(value) == 1) {
             emitByte(OP_ONE); return;
         } else if (AS_NUMBER(value) == 0) {
@@ -251,6 +338,10 @@ static void emitConstant(Value value) {
     writeConstant(currentChunk(), value, parser.previous.line);
 }
 
+/**
+ * Patches a jump at the given offset.
+ * Calculates the jump distance and writes it to the offset.
+ */
 static void patchJump(int offset) {
     int jump = currentChunk()->count - offset - 2;
 
@@ -262,6 +353,10 @@ static void patchJump(int offset) {
     currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
+/**
+ * Initializes a compiler.
+ * Zeros all fields
+ */
 static void initCompiler(Compiler* compiler, FunctionType type) {
     compiler->enclosing = current;
     compiler->function = NULL;
@@ -289,11 +384,14 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
     }
 }
 
+/**
+ * Finishes the current compiler and returns the function it was working on
+ */
 static ObjFunction* endCompiler() {
     emitReturn();
     ObjFunction* function = current->function;
 
-    if (disassembleFlag){
+    if (disassembleFlag) {
         if (!parser.hadError) {
             FILE* f = fopen("output.text", "a");
             dissassembleChunk(
@@ -311,10 +409,16 @@ static ObjFunction* endCompiler() {
     return function;
 }
 
+/**
+ * Increments scope depth.
+ */
 static void beginScope() {
     current->scopeDepth++;
 }
 
+/**
+ * Decrements scope depth and pops all relevant locals.
+ */
 static void endScope() {
     current->scopeDepth--;
 
@@ -333,12 +437,16 @@ static void emitSet(int, uint8_t, bool);
 static void expression();
 static void statement();
 static void declaration();
+
 static uint8_t argumentList();
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 static int resolveLocal(Compiler* compiler, Token* name);
 static int resolveUpvalue(Compiler* compiler, Token* name);
 
+/**
+ * Parses an array literal
+ */
 static void arrLit(bool canAssign) {
     int count = 0;
 
@@ -346,6 +454,8 @@ static void arrLit(bool canAssign) {
         do {
             expression();
             if (count == 0xffffff) {
+                // Shouldn't ever happen unless you are using a script to generate code
+                // Or that new fancy thing everyone's using... What was it called?
                 errorAtCurrent("Cannot have more than 16777215 elements in initializer list.");
             }
             count++;
@@ -359,13 +469,16 @@ static void arrLit(bool canAssign) {
     } else {
         emitDoubleWord(
             OP_ARRAY_INIT_LONG,
-            (uint8_t)(count & 0xff),
-            (uint8_t)((count >> 8) & 0xff),
-            (uint8_t)((count >> 16) & 0xff)
+            (uint8_t) (count & 0xff),
+            (uint8_t) ((count >> 8) & 0xff),
+            (uint8_t) ((count >> 16) & 0xff)
         );
     }
 }
 
+/**
+ * Parses a binary expression.
+ */
 static void binary(bool canAssign) {
     TokenType operatorType = parser.previous.type;
     ParseRule* rule = getRule(operatorType);
@@ -380,6 +493,7 @@ static void binary(bool canAssign) {
 #ifdef CONSTANT_OPTIMIZATIONS
     ExprResult right = lastExpr;
 
+    // Detecting if we can propagate constants. If there should be an error, stop folding and break.
     if (left.isConst && right.isConst &&
         IS_NUMBER(left.value) && IS_NUMBER(right.value)) {
 
@@ -414,6 +528,7 @@ static void binary(bool canAssign) {
             default: fold = false; break;
         }
 
+        // Folding constants
         if (fold) {
             // Retract both operands' bytecode and constant pool entries
             currentChunk()->count          = left.chunkSizeBefore;
@@ -461,6 +576,10 @@ static void binary(bool canAssign) {
     }
 }
 
+/**
+ * Calling a value. Comes from the '(' token
+ * Parses the argument list and emits a call opcode.
+ */
 static void call(bool canAssign) {
     uint8_t argCount = argumentList();
     emitWord(OP_CALL, argCount);
@@ -469,6 +588,10 @@ static void call(bool canAssign) {
 static int identifierConstant(Token*);
 static void emitGet(int, uint8_t, bool);
 
+/**
+ * Parses a dot expression which is either a get property or set property.
+ * Invoke optimization is also applied here.
+ */
 static void dot(bool canAssign) {
     consume(TOKEN_IDENTIFIER, "Expect property name after '.'.");
 
@@ -489,18 +612,60 @@ static void dot(bool canAssign) {
     }
 }
 
+/**
+ * Parses an index expression.
+ */
 static void index_(bool canAssign) {
     expression();
     consume(TOKEN_RIGHT_BRACKET, "Expect ']' after index");
 
-    if (canAssign && match(TOKEN_EQUAL)) {
-        expression();   // value to assign
-        emitByte(OP_SET_INDEX);
+    if (canAssign) {
+        if (match(TOKEN_EQUAL)) { 
+            // A flat set index
+            expression();   // value to assign
+            emitByte(OP_SET_INDEX);
+        } else if (match(TOKEN_PLUS_EQUAL)) { // +=
+            emitByte(OP_DUP2);      // Reserve stack values for later set operation
+            emitByte(OP_GET_INDEX); // Gets the value
+            expression();           // Parses the expression
+            emitByte(OP_ADD);       // Add the values together
+            emitByte(OP_SET_INDEX); // Sets it using the earlier duplicated values
+        } else if (match(TOKEN_MINUS_EQUAL)) { // -=
+            emitByte(OP_DUP2);
+            emitByte(OP_GET_INDEX);
+            expression();
+            emitByte(OP_SUBTRACT);
+            emitByte(OP_SET_INDEX);
+        } else if (match(TOKEN_STAR_EQUAL)) { // *=
+            emitByte(OP_DUP2);
+            emitByte(OP_GET_INDEX);
+            expression();
+            emitByte(OP_MULTIPLY);
+            emitByte(OP_SET_INDEX);
+        } else if (match(TOKEN_SLASH_EQUAL)) { // /=
+            emitByte(OP_DUP2);
+            emitByte(OP_GET_INDEX);
+            expression();
+            emitByte(OP_DIVIDE);
+            emitByte(OP_SET_INDEX);
+        } else if (match(TOKEN_PERCENT_EQUAL)) { // %=
+            emitByte(OP_DUP2);
+            emitByte(OP_GET_INDEX);
+            expression();
+            emitByte(OP_MODULUS);
+            emitByte(OP_SET_INDEX);
+        } else {  
+            // Else case if nothing is being assigned or mutated
+            emitByte(OP_GET_INDEX);
+        }
     } else {
         emitByte(OP_GET_INDEX);
     }
 }
 
+/**
+ * Parses a literal expression and potentially starts a constant folding chain
+ */
 static void literal(bool canAssign) {
     switch (parser.previous.type) {
         case TOKEN_FALSE:
@@ -531,11 +696,17 @@ static void literal(bool canAssign) {
     }
 }
 
+/**
+ * Parses a grouping expression, e.g. (1+5)
+ */
 static void grouping(bool canAssign) {
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
+/**
+ * Parses a number literl. Potentially starts a constant folding chain.
+ */
 static void number(bool canAssign) {
     double value = strtod(parser.previous.start, NULL);
 
@@ -549,7 +720,11 @@ static void number(bool canAssign) {
     emitConstant(NUMBER_VAL(value));
 }
 
+/**
+ * Parses an or expression.
+ */
 static void or_(bool canAssign) {
+    // These jumps are a pseudo-optimization that is expected in most languages.
     int elseJump = emitJump(OP_JUMP_IF_FALSE);
     int endJump = emitJump(OP_JUMP);
 
@@ -560,6 +735,10 @@ static void or_(bool canAssign) {
     patchJump(endJump);
 }
 
+/**
+ * THE TERNARY OPERATOR
+ * ?: ?: ?: ?: ?: ?: ?: ?: ?: ?: ?: ?:
+ */
 static void ternary(bool canAssign) {
     int elseJump = emitJump(OP_JUMP_IF_FALSE);
     emitByte(OP_POP);
@@ -580,6 +759,9 @@ static void ternary(bool canAssign) {
 
 static void and_(bool);
 
+/**
+ * Parses a string literal.
+ */
 static void string(bool canAssign) {
     emitConstant(OBJ_VAL(copyString(parser.previous.start, parser.previous.length)));
     free(parser.previous.start);

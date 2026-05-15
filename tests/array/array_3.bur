@@ -1,0 +1,15 @@
+
+decl array = {
+    1, 5, 4, 2, 3, 8, 7, 9, 6, 10
+};
+
+fn comp(a, b) {
+    return a < b;
+}
+
+decl start = time.clock();
+arrays.sort(array, comp);
+decl elapsed = time.clock() - start;
+
+print("%o\n", array);
+print("Time: %d\n", elapsed);

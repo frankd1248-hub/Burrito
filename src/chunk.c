@@ -4,16 +4,24 @@
 #include "memory.h"
 #include "vm.h"
 
+/**
+ * Initializes a bytecode chunk to a workable state.
+ * Zeroes both dynamic arrays (code and lines) and initializes the values list.
+ */
 void initChunk(Chunk* chunk) {
     chunk->count = 0;
     chunk->capacity = 0;
     chunk->code = NULL;
     chunk->lineCount = 0;
     chunk->lineCapacity = 0;
-     chunk->lines = NULL;
+    chunk->lines = NULL;
     initValueArray(&chunk->constants);
 }
 
+/**
+ * Frees all three arrays and re-inits the chunk.
+ * (code, lines, constants)
+ */
 void freeChunk(Chunk* chunk) {
     FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
     FREE_ARRAY(LineStart, chunk->lines, chunk->lineCapacity);
@@ -21,38 +29,55 @@ void freeChunk(Chunk* chunk) {
     initChunk(chunk);
 }
 
+/**
+ * Writes one byte to a chunk with a given line.
+ */
 void writeChunk(Chunk* chunk, uint8_t byte, int line) {
+    // If we need to grow the code array
     if (chunk->capacity < chunk->count + 1) {
         int oldCapacity = chunk->capacity;
         chunk->capacity = GROW_CAPACITY(oldCapacity);
         chunk->code = GROW_ARRAY(uint8_t, chunk->code, oldCapacity, chunk->capacity);
     }
 
+    // "Writing" the byte
     chunk->code[chunk->count] = byte;
     chunk->count++;
 
+    // If the code is still on the same line we don't need to change anything
     if (chunk->lineCount > 0 && chunk->lines[chunk->lineCount - 1].line == line) {
         return;
     }
 
+    // If we need to grow the lines array
     if (chunk->lineCapacity < chunk->lineCount + 1) {
         int oldCapacity = chunk->lineCapacity;
         chunk->lineCapacity = GROW_CAPACITY(oldCapacity);
         chunk->lines = GROW_ARRAY(LineStart, chunk->lines, oldCapacity, chunk->lineCapacity);
     }
 
+    // Writes a new LineStart struct to the array
     LineStart* lineStart = &chunk->lines[chunk->lineCount++];
     lineStart->offset = chunk->count - 1;
     lineStart->line = line;
 }
 
+/**
+ * Adds a constant value to the chunk's constants array
+ */
 int addConstant(Chunk* chunk, Value value) {
+    // Root the value in case it's an object; writeValueArray can alloc if the capacity is full
     push(value);
     writeValueArray(&chunk->constants, value);
+    // Don't corrupt the stack!
     pop();
     return chunk->constants.count - 1;
 }
 
+/**
+ * Helper to write a constant to a chunk
+ * Writes either OP_CONSTANT or OP_CONSTANT_LONG depending the index
+ */
 void writeConstant(Chunk* chunk, Value value, int line) {
     int index = addConstant(chunk, value);
     if (index < 256) {
@@ -66,10 +91,14 @@ void writeConstant(Chunk* chunk, Value value, int line) {
     }
 }
 
+/**
+ * Helper function to get the line for the instruction at the given offset
+ */
 int getLine(Chunk* chunk, int instruction) {
     int start = 0;
     int end = chunk->lineCount - 1;
 
+    // Loop through the array until we find it (binary search)
     for (;;) {
         int mid = (start + end) / 2;
         LineStart* line = &chunk->lines[mid];

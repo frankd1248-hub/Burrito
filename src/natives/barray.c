@@ -177,63 +177,68 @@ static bool sortNative(int argCount, Value* args, Value* result) {
         return false;
     }
 #endif
-
-#define swap(array, a, b) \
+ 
+#define swap(a, b) \
     do { \
         Value tmp = array->values[(a)]; \
         array->values[(a)] = array->values[(b)]; \
         array->values[(b)] = tmp; \
     } while (false)
-
-    ObjArray* array = AS_ARRAY(args[0]);
-    Value comp = args[1];
-    int n = array->size;
-
+ 
 #define CMP(ai, bi, out) \
     do { \
-        push(comp); push(array->values[(ai)]); push(array->values[(bi)]); \
+        push(comp); \
+        push(array->values[(ai)]); \
+        push(array->values[(bi)]); \
         if (!callBurrito(comp, 2, (out))) { \
             *result = OBJ_VAL(copyString("sort() comparator raised an error.", 34)); \
             return false; \
         } \
+        array = AS_ARRAY(args[0]); \
     } while (false)
-
+ 
+    ObjArray* array = AS_ARRAY(args[0]);
+    Value comp = args[1];
+    int n = array->size;
+ 
+    // Build max-heap: sift each element up to its correct position.
     for (int i = 1; i < n; i++) {
         int j = i;
         while (j > 0) {
             int parent = (j - 1) / 2;
             Value cmpResult;
-            CMP(parent, j, &cmpResult);  // comp(parent, j): true = parent < j
+            CMP(parent, j, &cmpResult);  // true = parent < j → j larger → swap up
             if (IS_BOOL(cmpResult) && AS_BOOL(cmpResult)) {
-                swap(array, j, parent);
+                swap(j, parent);
                 j = parent;
             } else break;
         }
     }
-
+ 
+    // Extract max element one by one into the sorted suffix.
     for (int i = n - 1; i > 0; i--) {
-        swap(array, 0, i);   // move current max to sorted suffix
+        swap(0, i);
         int j = 0;
         while (true) {
             int left = 2 * j + 1;
-            if (left >= i) break;   // no children in heap region
+            if (left >= i) break;
             int child = left;
-            if (left + 1 < i) {    // pick the larger child
+            if (left + 1 < i) {
                 Value cmpResult;
-                CMP(left, left + 1, &cmpResult);
+                CMP(left, left + 1, &cmpResult);  // true = left < right → pick right
                 if (IS_BOOL(cmpResult) && AS_BOOL(cmpResult)) child = left + 1;
             }
             Value cmpResult;
-            CMP(child, j, &cmpResult);  // comp(child, j): true = child < j (heap ok)
+            CMP(child, j, &cmpResult);  // true = child < parent → heap ok, stop
             if (IS_BOOL(cmpResult) && AS_BOOL(cmpResult)) break;
-            swap(array, j, child);
+            swap(j, child);
             j = child;
         }
     }
-
+ 
 #undef CMP
 #undef swap
-
+ 
     *result = BOOL_VAL(true);
     return true;
 }
