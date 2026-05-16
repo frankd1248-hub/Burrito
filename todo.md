@@ -2,8 +2,7 @@
 
 ### Highest Priority
 
-1. Write a better test suite
-2. Document *everything*
+1. Document *everything*
 
 ### Moderate Priority
 
@@ -28,6 +27,8 @@
     - [ ] (***) Functional Paradigms
     - [ ] (****) Imperative Paradigms
     - [ ] (**) Try/catch blocks
+    - [ ] (*) Lambda expressions
+    - [ ] (**) For-each loops
 
 Note: *'s mark amount of effort estimated for task.
 

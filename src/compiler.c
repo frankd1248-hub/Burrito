@@ -1641,6 +1641,94 @@ static void continueStatement() {
 
 static void forStatement() {
     beginScope();
+
+    // Check for for-each: "for x in arr { ... }" (no parentheses)
+    if (match(TOKEN_IDENTIFIER)) {
+        Token loopVar = parser.previous;
+        consume(TOKEN_IN, "Expect 'in' after loop variable.");
+
+        // Evaluate the array expression and store it in a hidden local.
+        expression();
+        consume(TOKEN_LEFT_BRACE, "Expect '{' after array expression.");
+
+        // Hidden local 0: the array itself.
+        // Declare it with a name the user can't type so it can't be accessed.
+        Token arrayToken = syntheticToken("__arr__");
+        addLocal(arrayToken);
+        markInitialized();
+
+        // Hidden local 1: the counter __i__ = 0.
+        emitConstant(NUMBER_VAL(0));
+        Token counterToken = syntheticToken("__i__");
+        addLocal(counterToken);
+        markInitialized();
+
+        // Visible local: the loop variable, initialised to null for now.
+        emitByte(OP_NULL);
+        addLocal(loopVar);
+        markInitialized();
+        int loopVarSlot = current->localCount - 1;
+
+        // Resolve slot indices for __arr__ and __i__.
+        int arrSlot     = loopVarSlot - 2;
+        int counterSlot = loopVarSlot - 1;
+
+        Loop loop;
+        loop.start      = currentChunk()->count;
+        loop.scopeDepth = current->scopeDepth;
+        loop.breakCount = 0;
+        Loop* enclosingLoop = currentLoop;
+        currentLoop = &loop;
+
+        // Condition: __i__ < __arr__.length
+        emitGet(arrSlot, OP_GET_LOCAL, false);
+        Token lengthToken = syntheticToken("length");
+        int lengthConstant = identifierConstant(&lengthToken);
+        if (lengthConstant <= UINT8_MAX) {
+            emitWord(OP_GET_PROPERTY, (uint8_t) lengthConstant);
+        } else {
+            emitDoubleWord(OP_GET_PROPERTY_LONG,
+                (uint8_t) (lengthConstant & 0xff),
+                (uint8_t) ((lengthConstant >> 8) & 0xff),
+                (uint8_t) ((lengthConstant >> 16) & 0xff)
+            );
+        }
+        emitGet(counterSlot, OP_GET_LOCAL, false);
+        emitByte(OP_GREATER);       // length > __i__
+        int exitJump = emitJump(OP_JUMP_IF_FALSE);
+        emitByte(OP_POP);
+
+        // Assign loop variable: x = __arr__[__i__]
+        emitGet(arrSlot, OP_GET_LOCAL, false);
+        emitGet(counterSlot, OP_GET_LOCAL, false);
+        emitByte(OP_GET_INDEX);
+        emitSet(loopVarSlot, OP_SET_LOCAL, false);
+        emitByte(OP_POP);
+
+        block();
+
+        // Increment: __i__++
+        emitGet(counterSlot, OP_GET_LOCAL, false);
+        emitConstant(NUMBER_VAL(1));
+        emitByte(OP_ADD);
+        emitSet(counterSlot, OP_SET_LOCAL, false);
+        emitByte(OP_POP);
+
+        emitLoop(loop.start);
+
+        patchJump(exitJump);
+        emitByte(OP_POP);   // pop the condition value
+
+        for (int i = 0; i < currentLoop->breakCount; i++) {
+            patchJump(currentLoop->breakJumps[i]);
+        }
+
+        currentLoop = enclosingLoop;
+        endScope();
+        return;
+    }
+
+    // Original C-style for loop.
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
 
     if (match(TOKEN_SEMICOLON)) {
@@ -1692,7 +1780,6 @@ static void forStatement() {
     }
 
     currentLoop = enclosingLoop;
-
     endScope();
 }
 
