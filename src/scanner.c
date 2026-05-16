@@ -144,6 +144,7 @@ static TokenType identifierType() {
             }
             break;
         case 'i': return checkKeyword(1, 1, "f", TOKEN_IF);
+        case 'l': return checkKeyword(1, 5, "ambda", TOKEN_LAMBDA);
         case 'n': return checkKeyword(1, 3, "ull", TOKEN_NULL);
         case 'o': return checkKeyword(1, 1, "r", TOKEN_OR);
         case 'p': return checkKeyword(1, 4, "rint", TOKEN_PRINT);
@@ -267,11 +268,11 @@ Token scanToken() {
         case '+': return makeToken(match('=') ? TOKEN_PLUS_EQUAL : match('+') ? TOKEN_PLUS_PLUS : TOKEN_PLUS);
         case '<': return makeToken(match('=') ? TOKEN_LESS_EQUAL : match('<') ? TOKEN_LEFT_SHIFT : TOKEN_LESS);
         case '>': return makeToken(match('=') ? TOKEN_GREATER_EQUAL : match('>') ? TOKEN_RIGHT_SHIFT : TOKEN_GREATER);
+        case '=': return makeToken(match('=') ? TOKEN_EQUAL_EQUAL : match('>') ? TOKEN_ARROW : TOKEN_EQUAL);
         case '/': return makeToken(match('=') ? TOKEN_SLASH_EQUAL : TOKEN_SLASH);
         case '%': return makeToken(match('=') ? TOKEN_PERCENT_EQUAL : TOKEN_PERCENT);
         case '*': return makeToken(match('=') ? TOKEN_STAR_EQUAL : TOKEN_STAR);
         case '!': return makeToken(match('=') ? TOKEN_BANG_EQUAL : TOKEN_BANG);
-        case '=': return makeToken(match('=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
         case '"': return string();
     }
 

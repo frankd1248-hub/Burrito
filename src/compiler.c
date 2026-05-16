@@ -86,6 +86,7 @@ typedef struct {
 typedef enum {
     TYPE_FUNCTION,
     TYPE_INITIALIZER,
+    TYPE_LAMBDA,
     TYPE_METHOD,
     TYPE_SCRIPT
 } FunctionType;
@@ -1061,6 +1062,8 @@ static void unary(bool canAssign) {
     }
 }
 
+static void lambda(bool);
+
 /**
  * Big parse rules array
  */
@@ -1112,6 +1115,7 @@ ParseRule rules[] = {
     [TOKEN_FOR]           = {NULL,     NULL,    PREC_NONE},
     [TOKEN_FN]            = {NULL,     NULL,    PREC_NONE},
     [TOKEN_IF]            = {NULL,     NULL,    PREC_NONE},
+    [TOKEN_LAMBDA]        = {lambda,   NULL,    PREC_NONE},
     [TOKEN_NULL]          = {literal,  NULL,    PREC_NONE},
     [TOKEN_OR]            = {NULL,     or_,     PREC_OR},
     [TOKEN_PRINT]         = {NULL,     NULL,    PREC_NONE},
@@ -1386,6 +1390,48 @@ static void function(FunctionType type){
     } else {
         emitDoubleWord(OP_CLOSURE_LONG,
             (uint8_t) ((index) & 0xff),
+            (uint8_t) ((index >> 8) & 0xff),
+            (uint8_t) ((index >> 16) & 0xff)
+        );
+    }
+
+    for (int i = 0; i < function->upvalueCount; i++) {
+        emitByte(compiler->upvalues[i].isLocal ? 1 : 0);
+        emitByte(compiler->upvalues[i].index);
+    }
+
+    free(compiler);
+}
+
+static void lambda(bool canAssign) {
+
+    Compiler* compiler = malloc(sizeof(Compiler));
+    initCompiler(compiler, TYPE_LAMBDA);
+    beginScope();
+
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'lambda'.");
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            current->function->arity++;
+            if (current->function->arity > 255) {
+                errorAtCurrent("Cannot have more than 255 parameters.");
+            }
+            int constant = parseVariable("Expect parameter name.");
+            defineVariable(constant);
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after lambda parameters.");
+    consume(TOKEN_ARROW,       "Expect '=>' after lambda parameters.");
+    consume(TOKEN_LEFT_BRACE,  "Expect '{' before lambda body.");
+    block();
+
+    ObjFunction* function = endCompiler();
+    int index = makeConstant(OBJ_VAL(function));
+    if (index <= 255) {
+        emitWord(OP_CLOSURE, (uint8_t) index);
+    } else {
+        emitDoubleWord(OP_CLOSURE_LONG,
+            (uint8_t) (index & 0xff),
             (uint8_t) ((index >> 8) & 0xff),
             (uint8_t) ((index >> 16) & 0xff)
         );
