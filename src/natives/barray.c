@@ -327,29 +327,23 @@ static bool copyNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
-static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
+static void addMethod(const char* name, int length, NativeFn fn) {
     push(OBJ_VAL(newNative(fn)));
-    tableSet(&module->table, copyString(name, length), peek(0));
+    tableSet(&vm.arrayMethods, copyString(name, length), peek(0));
     pop();
 }
 
-ObjModule* buildArrayModule() {
-    ObjModule* module = newModule();
-    push(OBJ_VAL(module));
-
-    addNative(module, "push",     4,  pushNative);
-    addNative(module, "pop",      3,  popNative);
-    addNative(module, "insert",   6,  insertNative);
-    addNative(module, "remove",   6,  removeNative);
-    addNative(module, "slice",    5,  sliceNative);
-    addNative(module, "concat",   6,  concatNative);
-    addNative(module, "reverse",  7,  reverseNative);
-    addNative(module, "sort",     4,  sortNative);
-    addNative(module, "contains", 8,  containsNative);
-    addNative(module, "indexOf",  7,  indexOfNative);
-    addNative(module, "fill",     4,  fillNative);
-    addNative(module, "copy",     4,  copyNative);
-
-    pop();
-    return module;
+void buildArrayMethods() {
+    addMethod("push",     4,  pushNative);
+    addMethod("pop",      3,  popNative);
+    addMethod("insert",   6,  insertNative);
+    addMethod("remove",   6,  removeNative);
+    addMethod("slice",    5,  sliceNative);
+    addMethod("concat",   6,  concatNative);
+    addMethod("reverse",  7,  reverseNative);
+    addMethod("sort",     4,  sortNative);
+    addMethod("contains", 8,  containsNative);
+    addMethod("indexOf",  7,  indexOfNative);
+    addMethod("fill",     4,  fillNative);
+    addMethod("copy",     4,  copyNative);
 }

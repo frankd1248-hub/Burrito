@@ -59,6 +59,9 @@ typedef struct {
     ErrorHandler handlerStack[HANDLER_MAX];
     int handlerCount;
 
+    Table arrayMethods;
+    Table mapMethods;
+
     size_t bytesAllocated;
     size_t nextGC;
     Value* stackTop;

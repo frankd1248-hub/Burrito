@@ -96,6 +96,12 @@ static void blackenObject(Obj* object) {
             markObject((Obj*) bound->method);
             break;
         }
+        case OBJ_BOUND_NATIVE: {
+            ObjBoundNative* bound = (ObjBoundNative*) object;
+            markValue(bound->receiver);
+            markObject((Obj*) bound->method);
+            break;
+        }
         case OBJ_CLASS: {
             ObjClass* class_ = (ObjClass*) object;
             markObject((Obj*) class_->name);
@@ -122,6 +128,11 @@ static void blackenObject(Obj* object) {
             ObjInstance* instance = (ObjInstance*) object;
             markObject((Obj*) instance->class_);
             markTable(&instance->fields);
+            break;
+        }
+        case OBJ_MAP: {
+            ObjMap* map = (ObjMap*) object;
+            markTable(&map->table);
             break;
         }
         case OBJ_MODULE: {
@@ -154,6 +165,9 @@ static void freeObject(Obj* object) {
         case OBJ_BOUND_METHOD:
             FREE(ObjBoundMethod, object);
             break;
+        case OBJ_BOUND_NATIVE:
+            FREE(ObjBoundNative, object);
+            break;
         case OBJ_CLASS: {
             ObjClass* class_ = (ObjClass*) object;
             freeTable(&class_->methods);
@@ -176,6 +190,12 @@ static void freeObject(Obj* object) {
             ObjInstance* instance = (ObjInstance*) object;
             freeTable(&instance->fields);
             FREE(ObjInstance, object);
+            break;
+        }
+        case OBJ_MAP: {
+            ObjMap* map = (ObjMap*) object;
+            freeTable(&map->table);
+            FREE(ObjMap, object);
             break;
         }
         case OBJ_NATIVE:
@@ -216,6 +236,8 @@ static void markRoots() {
 
     markTable(&vm.globals);
     markTable(&vm.consts);
+    markTable(&vm.arrayMethods);
+    markTable(&vm.mapMethods);
     markCompilerRoots();
     markObject((Obj*) vm.initString);
 }

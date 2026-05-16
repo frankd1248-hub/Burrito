@@ -73,15 +73,25 @@ static bool typeOfNative(int argCount, Value* args, Value* result) {
         *result = OBJ_VAL(copyString("number", 6));
     } else if (IS_OBJ(args[0])) {
         switch (AS_OBJ(args[0])->type) {
-            case OBJ_ARRAY:    *result = OBJ_VAL(copyString("Array", 5)); break;
-            case OBJ_CLASS:    *result = OBJ_VAL(copyString("Class", 5)); break;
-            case OBJ_CLOSURE:  *result = OBJ_VAL(copyString("Closure", 7)); break;
-            case OBJ_FUNCTION: *result = OBJ_VAL(copyString("Function", 8)); break;
-            case OBJ_INSTANCE: *result = OBJ_VAL(copyString("Instance", 8)); break;
-            case OBJ_MODULE:   *result = OBJ_VAL(copyString("Module", 6)); break;
-            case OBJ_NATIVE:   *result = OBJ_VAL(copyString("Native", 6)); break;
-            case OBJ_STRING:   *result = OBJ_VAL(copyString("String", 6)); break;
-            case OBJ_UPVALUE:  *result = OBJ_VAL(copyString("Upvalue", 7)); break;
+            case OBJ_ARRAY:        *result = OBJ_VAL(copyString("Array", 5)); break;
+            case OBJ_BOUND_METHOD: 
+            case OBJ_BOUND_NATIVE: *result = OBJ_VAL(copyString("BoundMethod", 11)); break;
+            case OBJ_CLASS:        *result = OBJ_VAL(copyString("Class", 5)); break;
+            case OBJ_CLOSURE:      *result = OBJ_VAL(copyString("Closure", 7)); break;
+            case OBJ_FUNCTION:     *result = OBJ_VAL(copyString("Function", 8)); break;
+            case OBJ_INSTANCE:     *result = OBJ_VAL(copyString("Instance", 8)); break;
+            case OBJ_MAP:          *result = OBJ_VAL(copyString("Map", 3)); break;
+            case OBJ_MODULE:       *result = OBJ_VAL(copyString("Module", 6)); break;
+            case OBJ_NATIVE:       *result = OBJ_VAL(copyString("Native", 6)); break;
+            case OBJ_RESOURCE:
+                switch (AS_RESOURCE(args[0])->type) {
+                    case RESOURCE_FONT:  *result = OBJ_VAL(copyString("ResourceFont", 12)); break;
+                    case RESOURCE_IMAGE: *result = OBJ_VAL(copyString("ResourceImage", 13)); break;
+                    case RESOURCE_SOUND: *result = OBJ_VAL(copyString("ResourceSound", 13)); break;
+                }
+                break;
+            case OBJ_STRING:       *result = OBJ_VAL(copyString("String", 6)); break;
+            case OBJ_UPVALUE:      *result = OBJ_VAL(copyString("Upvalue", 7)); break;
         }
     }
 
@@ -160,11 +170,12 @@ static Value toString(Value arg) {
                                    name->chars);
                 return OBJ_VAL(copyString(buf, len));
             }
+            case OBJ_MAP: return OBJ_VAL(copyString("Sorry, I am very lazy.", 22));
             case OBJ_MODULE: return OBJ_VAL(copyString("<Module>", 8));
             case OBJ_NATIVE: return OBJ_VAL(copyString("<Native>", 8));
+            case OBJ_RESOURCE: return OBJ_VAL(copyString("<Resource>", 10));
             case OBJ_STRING: return arg;
             case OBJ_UPVALUE: return OBJ_VAL(copyString("<Upvalue>", 9));
-            case OBJ_RESOURCE: return OBJ_VAL(copyString("<Resource>", 10));
         }
     }
     return OBJ_VAL(copyString("<unknown>", 9));

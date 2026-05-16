@@ -1,0 +1,67 @@
+// Guess the Number — no top-level variable declarations.
+// All state is passed explicitly as function arguments.
+
+const MAX_GUESSES = 7;
+const LOW  = 1;
+const HIGH = 100;
+
+// Evaluate one guess against the secret.
+// Returns "win", "lose", "low", or "high".
+fn evaluate(secret, guess, guessesLeft) {
+    if (guessesLeft == 0)  return "lose";
+    if (guess == secret)   return "win";
+    if (guess < secret)    return "low";
+    return "high";
+}
+
+// Play one round recursively.
+// guessesLeft counts down; returns true if the player won.
+fn playRound(secret, guessesLeft, guesssTaken) {
+    if (guessesLeft == 0) {
+        print("Out of guesses! The number was %d.\n\n", secret);
+        return false;
+    }
+
+    print("Guesses remaining: %d\n", guessesLeft);
+    print("Enter your guess: ");
+
+    decl result = evaluate(secret, io.getNumber(), guessesLeft);
+
+    if (result == "win") {
+        print("Correct! You got it in %d guess(es).\n\n", guesssTaken + 1);
+        return true;
+    }
+    if (result == "low")  print("Too low! Try higher.\n\n");
+    if (result == "high") print("Too high! Try lower.\n\n");
+
+    return playRound(secret, guessesLeft - 1, guesssTaken + 1);
+}
+
+// Print final score and exit.
+fn printScore(wins, losses) {
+    print("\n=== Final Score ===\n");
+    print("Wins:   %d\n", wins);
+    print("Losses: %d\n", losses);
+    print("Thanks for playing!\n");
+}
+
+// Main game loop, carried entirely in parameters.
+fn gameLoop(wins, losses) {
+    decl won = playRound(math.floor(math.randRange(LOW, HIGH + 1)), MAX_GUESSES, 0);
+
+    print("Play again? (yes/no): ");
+    decl again = io.getString();
+
+    if (again == "yes" or again == "y") {
+        return gameLoop(wins + (won ? 1 : 0), losses + (won ? 0 : 1));
+    }
+
+    return printScore(wins + (won ? 1 : 0), losses + (won ? 0 : 1));
+}
+
+// Entry point.
+print("=== Guess the Number ===\n");
+print("I'll pick a number between %d and %d.\n", LOW, HIGH);
+print("You have %d guesses per round.\n\n", MAX_GUESSES);
+
+gameLoop(0, 0);

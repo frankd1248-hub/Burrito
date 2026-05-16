@@ -104,7 +104,7 @@ bool tableDelete(Table* table, ObjString* key) {
             entry->key = NULL;
             entry->value = BOOL_VAL(true);
             table->tombstones++;
-            table->count--;  // ← you're also missing this
+            table->count--;
             return true;
         }
         if (entry->key == NULL && IS_NULL(entry->value)) return false;

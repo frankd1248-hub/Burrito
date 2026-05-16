@@ -47,6 +47,13 @@ ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method) {
     return bound;
 }
 
+ObjBoundNative* newBoundNative(Value receiver, ObjNative* method) {
+    ObjBoundNative* bound = ALLOCATE_OBJ(ObjBoundNative, OBJ_BOUND_NATIVE);
+    bound->receiver = receiver;
+    bound->method = method;
+    return bound;
+}
+
 ObjClass* newClass(ObjString* name) {
     ObjClass* class_ = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
     class_->name = name;
@@ -83,6 +90,12 @@ ObjInstance* newInstance(ObjClass* class_) {
     instance->class_ = class_;
     initTable(&instance->fields);
     return instance;
+}
+
+ObjMap* newMap() {
+    ObjMap* map = ALLOCATE_OBJ(ObjMap, OBJ_MAP);
+    initTable(&map->table);
+    return map;
 }
 
 ObjModule* newModule() {
@@ -171,6 +184,25 @@ static void printArray(ObjArray* array, FILE* f) {
     fprintf(f, " }");
 }
 
+static void printMap(ObjMap* map, FILE* f) {
+    if (map->table.count == 0) {
+        fprintf(f, "{ }");
+        return;
+    }
+
+    fprintf(f, "{ ");
+    bool first = true;
+    for (int i = 0; i < map->table.capacity; i++) {
+        if (map->table.entries[i].key == NULL) continue;
+
+        if (!first) fprintf(f, ", ");
+        fprintf(f, "\"%s\": ", map->table.entries[i].key->chars);
+        printValue(map->table.entries[i].value, f);
+        first = false;
+    }
+    fprintf(f, " }");
+}
+
 static void printFunction(ObjFunction* function, FILE* f) {
     if (function->name == NULL) {
         if (f == NULL) printf("<script>");
@@ -198,6 +230,9 @@ void printObject(Value value, FILE* f) {
         case OBJ_BOUND_METHOD:
             printFunction(AS_BOUND_METHOD(value)->method->function, f);
             break;
+        case OBJ_BOUND_NATIVE:
+            fprintf(f, "<bound native method>");
+            break;
         case OBJ_CLASS:
             fprintf(f, "%s", AS_CLASS(value)->name->chars);
             break;
@@ -209,6 +244,9 @@ void printObject(Value value, FILE* f) {
             break;
         case OBJ_INSTANCE:
             fprintf(f, "%s instance", AS_INSTANCE(value)->class_->name->chars);
+            break;
+        case OBJ_MAP:
+            printMap(AS_MAP(value), f);
             break;
         case OBJ_MODULE:
             fprintf(f, "<native module>");

@@ -8,6 +8,7 @@
 #include "bgraphics.h"
 #include "bio.h"
 #include "bmath.h"
+#include "bmap.h"
 #include "bstring.h"
 #include "btime.h"
 
@@ -79,12 +80,14 @@ static bool assertNative(int argCount, Value* args, Value* result) {
 }
 
 void defineAllNatives() {
-    defineModule("arrays", buildArrayModule());
     defineModule("cast", buildCastModule());
     defineModule("io", buildIOModule());
     defineModule("math", buildMathModule());
     defineModule("str", buildStringModule());
     defineModule("time", buildTimeModule());
+
+    buildArrayMethods();
+    buildMapMethods();
 
     ObjModule** gmodules = buildGraphicsModules();
 

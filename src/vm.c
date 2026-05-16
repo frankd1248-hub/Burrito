@@ -113,6 +113,8 @@ void initVM() {
     initTable(&vm.globals);
     initTable(&vm.consts);
     initTable(&vm.strings);
+    initTable(&vm.arrayMethods);
+    initTable(&vm.mapMethods);
 
     vm.initString = NULL;
     vm.initString = copyString("init", 4);
@@ -124,6 +126,8 @@ void freeVM() {
     freeTable(&vm.globals);
     freeTable(&vm.consts);
     freeTable(&vm.strings);
+    freeTable(&vm.arrayMethods);
+    freeTable(&vm.mapMethods);
     vm.initString = NULL;
     freeObjects();
 }
@@ -192,6 +196,22 @@ static bool callValue(Value callee, int argCount) {
                 ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
                 vm.stackTop[-argCount-1] = bound->receiver;
                 return call(bound->method, argCount);
+            }
+            case OBJ_BOUND_NATIVE: {
+                ObjBoundNative* bound = AS_BOUND_NATIVE(callee);
+                vm.stackTop[-argCount-1] = bound->receiver;
+                NativeFn native = bound->method->function;
+                Value result = NULL_VAL;
+                bool ok = native(argCount + 1, vm.stackTop - argCount - 1, &result);
+                if (!ok) {
+                    runtimeError(AS_STRING(result)->chars);
+                    vm.stackTop -= argCount + 2;
+                    if (errorWasHandled) return true;
+                    return false;
+                }
+                vm.stackTop -= argCount + 2;
+                push(result);
+                return true;
             }
             case OBJ_CLASS: {
                 ObjClass* class_ = AS_CLASS(callee);
@@ -265,6 +285,48 @@ static bool invoke(ObjString* name, int argCount) {
             }
             vm.stackTop[-argCount - 1] = value;
             return callValue(value, argCount);
+        } else if (IS_ARRAY(receiver)) {
+            Value method;
+            if (!tableGet(&vm.arrayMethods, name, &method)) {
+                runtimeError("Undefined array method '%s'.", name->chars);
+                if (errorWasHandled) return true;
+                return false;
+            }
+            // Push a new slot for the callee without disturbing the receiver or args.
+            // We can't easily insert below, so instead call the native directly here.
+            NativeFn native = AS_NATIVE(method);
+            Value result = NULL_VAL;
+            bool ok = native(argCount + 1, vm.stackTop - argCount - 1, &result);
+            if (!ok) {
+                runtimeError(AS_STRING(result)->chars);
+                vm.stackTop -= argCount + 1;
+                if (errorWasHandled) return true;
+                return false;
+            }
+            vm.stackTop -= argCount + 1;
+            push(result);
+            return true;
+        } else if (IS_MAP(receiver)) {
+            Value method;
+            if (!tableGet(&vm.mapMethods, name, &method)) {
+                runtimeError("Undefined array method '%s'.", name->chars);
+                if (errorWasHandled) return true;
+                return false;
+            }
+            // Push a new slot for the callee without disturbing the receiver or args.
+            // We can't easily insert below, so instead call the native directly here.
+            NativeFn native = AS_NATIVE(method);
+            Value result = NULL_VAL;
+            bool ok = native(argCount + 1, vm.stackTop - argCount - 1, &result);
+            if (!ok) {
+                runtimeError(AS_STRING(result)->chars);
+                vm.stackTop -= argCount + 1;
+                if (errorWasHandled) return true;
+                return false;
+            }
+            vm.stackTop -= argCount + 1;
+            push(result);
+            return true;
         }
 
         runtimeError("Only instances have methods.");
@@ -662,12 +724,30 @@ static InterpretResult run(int returnDepth) {
                 pop();
                 push(NUMBER_VAL(array->size));
             } else {
-                runtimeError("Undefined property '%s'.", name->chars);
+                Value method;
+                if (!tableGet(&vm.arrayMethods, name, &method)) {
+                    runtimeError("Undefined array method '%s'.", name->chars);
+                    if (errorWasHandled) DISPATCH();
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                Value receiver = peek(0);
+                ObjBoundNative* bound = newBoundNative(receiver, AS_NATIVE_OBJ(method));
+                pop();
+                push(OBJ_VAL(bound));
+            }
+        } else if (IS_MAP(peek(0))) {
+            ObjString* name = READ_STRING();
+            Value method;
+            if (!tableGet(&vm.mapMethods, name, &method)) {
+                runtimeError("Undefined map method '%s'.", name->chars);
                 if (errorWasHandled) DISPATCH();
                 return INTERPRET_RUNTIME_ERROR;
             }
+            Value receiver = peek(0);
+            ObjBoundNative* bound = newBoundNative(receiver, AS_NATIVE_OBJ(method));
+            pop();
+            push(OBJ_VAL(bound));
         } else {
-            
             runtimeError("Only modules, instances, and arrays have properties.");
             if (errorWasHandled) DISPATCH();
             return INTERPRET_RUNTIME_ERROR;
@@ -706,11 +786,29 @@ static InterpretResult run(int returnDepth) {
                 pop();
                 push(NUMBER_VAL(array->size));
             } else {
-                
-                runtimeError("Undefined property '%s'.", name->chars);
+                Value method;
+                if (!tableGet(&vm.arrayMethods, name, &method)) {
+                    runtimeError("Undefined array method '%s'.", name->chars);
+                    if (errorWasHandled) DISPATCH();
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                Value receiver = peek(0);
+                ObjBoundNative* bound = newBoundNative(receiver, AS_NATIVE_OBJ(method));
+                pop();
+                push(OBJ_VAL(bound));
+            }
+        } else if (IS_MAP(peek(0))) {
+            ObjString* name = READ_STRING_LONG();
+            Value method;
+            if (!tableGet(&vm.mapMethods, name, &method)) {
+                runtimeError("Undefined map method '%s'.", name->chars);
                 if (errorWasHandled) DISPATCH();
                 return INTERPRET_RUNTIME_ERROR;
             }
+            Value receiver = peek(0);
+            ObjBoundNative* bound = newBoundNative(receiver, AS_NATIVE_OBJ(method));
+            pop();
+            push(OBJ_VAL(bound));
         } else {
             
             runtimeError("Only modules, instances, and arrays have properties.");
