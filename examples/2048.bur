@@ -33,17 +33,17 @@ fn setAt(x, y, val) {
 }
 
 fn getColor(val) {
-    if (val == 2)    return {238, 228, 218};
-    if (val == 4)    return {237, 224, 200};
-    if (val == 8)    return {242, 177, 121};
-    if (val == 16)   return {245, 149, 99};
-    if (val == 32)   return {246, 124, 95};
-    if (val == 64)   return {246, 94, 59};
-    if (val == 128)  return {237, 207, 114};
-    if (val == 256)  return {237, 204, 97};
-    if (val == 512)  return {237, 200, 80};
-    if (val == 1024) return {237, 197, 63};
-    if (val == 2048) return {237, 194, 46};
+    if (val == 2)    return { 238, 228, 218 };
+    if (val == 4)    return { 237, 224, 200 };
+    if (val == 8)    return { 242, 177, 121 };
+    if (val == 16)   return { 245, 149, 99  };
+    if (val == 32)   return { 246, 124, 95  };
+    if (val == 64)   return { 246, 94,  59  };
+    if (val == 128)  return { 237, 207, 114 };
+    if (val == 256)  return { 237, 204, 97  };
+    if (val == 512)  return { 237, 200, 80  };
+    if (val == 1024) return { 237, 197, 63  };
+    if (val == 2048) return { 237, 194, 46  };
 
     if (val > 2048) {
         decl level = math.log2(val);

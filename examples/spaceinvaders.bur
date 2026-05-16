@@ -488,10 +488,8 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
         graphics.drawText("GAME OVER", {255, 40, 40}, SCREEN_W / 2 - 120, SCREEN_H / 2 - 40, 40);
     }
 
-    graphics.drawText("FINAL SCORE: " + cast.ntos(score), {255, 255, 255},
-                      SCREEN_W / 2 - 110, SCREEN_H / 2 + 20, 24);
-    graphics.drawText("Press ESC to quit", {150, 150, 150},
-                      SCREEN_W / 2 - 100, SCREEN_H / 2 + 70, 18);
+    graphics.drawText("FINAL SCORE: " + cast.ntos(score), {255, 255, 255}, SCREEN_W / 2 - 110, SCREEN_H / 2 + 20, 24);
+    graphics.drawText("Press ESC to quit",                {150, 150, 150}, SCREEN_W / 2 - 100, SCREEN_H / 2 + 70, 18);
 
     graphics.endDraw();
 }

@@ -804,22 +804,19 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
     drawStars(swayT);
 
     // --- HUD ---
-    graphics.drawText("1UP", {255, 255, 255}, 10, 6, 16);
-    graphics.drawText(cast.ntos(score), {255, 255, 80}, 10, 24, 22);
-
-    graphics.drawText("HIGH SCORE", {255, 200, 200}, SCREEN_W / 2 - 60, 6, 14);
-    graphics.drawText(cast.ntos(highScore), {255, 200, 200}, SCREEN_W / 2 - 20, 22, 18);
-
-    graphics.drawText("WAVE " + cast.ntos(wave), {160, 160, 255},
-                      SCREEN_W - 110, 6, 16);
+    graphics.drawText("1UP",                     {255, 255, 255}, 10,                6,  16);
+    graphics.drawText(cast.ntos(score),          {255, 255, 80},  10,                24, 22);
+    graphics.drawText("HIGH SCORE",              {255, 200, 200}, SCREEN_W / 2 - 60, 6,  14);
+    graphics.drawText(cast.ntos(highScore),      {255, 200, 200}, SCREEN_W / 2 - 20, 22, 18);
+    graphics.drawText("WAVE " + cast.ntos(wave), {160, 160, 255}, SCREEN_W - 110,    6,  16);
 
     // Life icons
     for (decl l = 0; l < lives - 1; l++) {
         decl lx = 14 + l * 32;
         decl ly = SCREEN_H - 24;
-        graphics.drawRect({0, 190, 255}, lx,     ly + 8, 22, 10);
-        graphics.drawRect({0, 225, 255}, lx + 6, ly + 4, 10, 8);
-        graphics.drawRect({80, 255, 255}, lx + 9, ly,    4,  5);
+        graphics.drawRect({0, 190, 255},  lx,     ly + 8, 22, 10);
+        graphics.drawRect({0, 225, 255},  lx + 6, ly + 4, 10, 8);
+        graphics.drawRect({80, 255, 255}, lx + 9, ly,     4,  5);
     }
 
     graphics.drawLine({80, 80, 180}, 0, SCREEN_H - 34, SCREEN_W, SCREEN_H - 34);
@@ -851,8 +848,7 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
             decl frac = popTimer[i] / POPUP_DUR;
             decl pR   = 255;
             decl pG   = math.floor(255 * frac);
-            graphics.drawText(cast.ntos(popValue[i]), {pR, pG, 0},
-                              math.floor(popX[i]), math.floor(popY[i]), 14);
+            graphics.drawText(cast.ntos(popValue[i]), {pR, pG, 0}, math.floor(popX[i]), math.floor(popY[i]), 14);
         }
     }
 
@@ -867,8 +863,7 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE) and !g
         }
     } else {
         if (respTimer > 1.8) {
-            graphics.drawText("! ! !", {255, 60, 60},
-                              SCREEN_W / 2 - 28, playerY - 22, 24);
+            graphics.drawText("! ! !", {255, 60, 60}, SCREEN_W / 2 - 28, playerY - 22, 24);
         }
     }
 
@@ -907,26 +902,14 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
     graphics.clearColor(0, 0, 0);
     drawStars(swayT);
 
-    graphics.drawText("GAME OVER", {255, 40, 40},
-                      SCREEN_W / 2 - 120, SCREEN_H / 2 - 60, 44);
-
-    graphics.drawText("WAVE REACHED", {255, 255, 255},
-                      SCREEN_W / 2 - 95, SCREEN_H / 2 + 0, 20);
-    graphics.drawText(cast.ntos(wave), {255, 220, 80},
-                      SCREEN_W / 2 - 15, SCREEN_H / 2 + 26, 28);
-
-    graphics.drawText("FINAL SCORE", {255, 255, 255},
-                      SCREEN_W / 2 - 80, SCREEN_H / 2 + 62, 20);
-    graphics.drawText(cast.ntos(score), {255, 255, 80},
-                      SCREEN_W / 2 - 40, SCREEN_H / 2 + 88, 30);
-
-    graphics.drawText("HIGH SCORE", {200, 200, 255},
-                      SCREEN_W / 2 - 75, SCREEN_H / 2 + 126, 18);
-    graphics.drawText(cast.ntos(highScore), {200, 200, 255},
-                      SCREEN_W / 2 - 35, SCREEN_H / 2 + 148, 24);
-
-    graphics.drawText("Press ESC to quit", {140, 140, 140},
-                      SCREEN_W / 2 - 110, SCREEN_H / 2 + 190, 18);
+    graphics.drawText("GAME OVER",          {255, 40, 40},   SCREEN_W / 2 - 120, SCREEN_H / 2 - 60,  44);
+    graphics.drawText("WAVE REACHED",       {255, 255, 255}, SCREEN_W / 2 - 95,  SCREEN_H / 2 + 0,   20);
+    graphics.drawText(cast.ntos(wave),      {255, 220, 80},  SCREEN_W / 2 - 15,  SCREEN_H / 2 + 26,  28);
+    graphics.drawText("FINAL SCORE",        {255, 255, 255}, SCREEN_W / 2 - 80,  SCREEN_H / 2 + 62,  20);
+    graphics.drawText(cast.ntos(score),     {255, 255, 80},  SCREEN_W / 2 - 40,  SCREEN_H / 2 + 88,  30);
+    graphics.drawText("HIGH SCORE",         {200, 200, 255}, SCREEN_W / 2 - 75,  SCREEN_H / 2 + 126, 18);
+    graphics.drawText(cast.ntos(highScore), {200, 200, 255}, SCREEN_W / 2 - 35,  SCREEN_H / 2 + 148, 24);
+    graphics.drawText("Press ESC to quit",  {140, 140, 140}, SCREEN_W / 2 - 110, SCREEN_H / 2 + 190, 18);
 
     graphics.endDraw();
 

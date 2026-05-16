@@ -680,15 +680,10 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
     }
 
     // HUD — Score
-    graphics.drawText("Score: " + cast.ntos(score), {0, 0, 0},
-                      13, 13, 22);
-    graphics.drawText("Score: " + cast.ntos(score), {255, 255, 100},
-                      11, 11, 22);
-
-    graphics.drawText("Best:  " + cast.ntos(best), {0, 0, 0},
-                      13, 41, 18);
-    graphics.drawText("Best:  " + cast.ntos(best), {180, 220, 255},
-                      11, 39, 18);
+    graphics.drawText("Score: " + cast.ntos(score), {0, 0, 0},       13, 13, 22);
+    graphics.drawText("Score: " + cast.ntos(score), {255, 255, 100}, 11, 11, 22);
+    graphics.drawText("Best:  " + cast.ntos(best),  {0, 0, 0},       13, 41, 18);
+    graphics.drawText("Best:  " + cast.ntos(best),  {180, 220, 255}, 11, 39, 18);
 
     // Mode indicator
     decl modeStr = "CUBE";
@@ -704,17 +699,10 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
         graphics.drawRect({0,  0,  0},  panX,     panY,     380, 140);
         graphics.drawRect({20, 20, 40}, panX + 2, panY + 2, 376, 136);
 
-        graphics.drawText("GEOMETRY DASH",   {255, 200, 0},
-                          panX + 30, panY + 16, 32);
-        graphics.drawText("SPACE / UP  to jump or thrust",
-                          {200, 220, 255},
-                          panX + 28, panY + 68, 18);
-        graphics.drawText("Cube: jump over obstacles",
-                          {180, 180, 255},
-                          panX + 48, panY + 92, 16);
-        graphics.drawText("Ship: hold to fly up, release to fall",
-                          {180, 255, 180},
-                          panX + 20, panY + 112, 15);
+        graphics.drawText("GEOMETRY DASH",                         {255, 200, 0},   panX + 30, panY + 16,  32);
+        graphics.drawText("SPACE / UP  to jump or thrust",         {200, 220, 255}, panX + 28, panY + 68,  18);
+        graphics.drawText("Cube: jump over obstacles",             {180, 180, 255}, panX + 48, panY + 92,  16);
+        graphics.drawText("Ship: hold to fly up, release to fall", {180, 255, 180}, panX + 20, panY + 112, 15);
     }
 
     // Game over
@@ -724,16 +712,12 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
         graphics.drawRect({0,  0,  0},  panX,     panY,     340, 150);
         graphics.drawRect({40, 20, 20}, panX + 2, panY + 2, 336, 146);
 
-        graphics.drawText("GAME OVER",   {255, 60,  60},
-                          panX + 60, panY + 14, 36);
-        graphics.drawText("Score: " + cast.ntos(score), {255, 255, 255},
-                          panX + 80, panY + 66, 24);
-        graphics.drawText("Best:  " + cast.ntos(best),  {255, 220, 80},
-                          panX + 80, panY + 96, 24);
+        graphics.drawText("GAME OVER",                  {255, 60,  60},  panX + 60, panY + 14, 36);
+        graphics.drawText("Score: " + cast.ntos(score), {255, 255, 255}, panX + 80, panY + 66, 24);
+        graphics.drawText("Best:  " + cast.ntos(best),  {255, 220, 80},  panX + 80, panY + 96, 24);
 
         if (deathTimer > 1.2) {
-            graphics.drawText("SPACE to retry", {180, 220, 255},
-                              panX + 88, panY + 124, 18);
+            graphics.drawText("SPACE to retry", {180, 220, 255}, panX + 88, panY + 124, 18);
         }
     }
 

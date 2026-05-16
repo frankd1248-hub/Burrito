@@ -302,13 +302,10 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
     if (!started and alive) {
         graphics.drawRect({0, 0, 0},       SCREEN_W / 2 - 175, 155, 350, 115);
         graphics.drawRect({30, 30, 30},    SCREEN_W / 2 - 173, 157, 346, 111);
-        graphics.drawText("FLAPPY BIRD",    {255, 220, 50},
-                          SCREEN_W / 2 - 155, 165, 38);
-        graphics.drawText("SPACE / UP to flap", {200, 230, 255},
-                          SCREEN_W / 2 - 148, 215, 22);
+        graphics.drawText("FLAPPY BIRD",        {255, 220, 50},  SCREEN_W / 2 - 155, 165, 38);
+        graphics.drawText("SPACE / UP to flap", {200, 230, 255}, SCREEN_W / 2 - 148, 215, 22);
         if (best > 0) {
-            graphics.drawText("Best: " + cast.ntos(best), {255, 220, 100},
-                              SCREEN_W / 2 - 60, 248, 20);
+            graphics.drawText("Best: " + cast.ntos(best), {255, 220, 100}, SCREEN_W / 2 - 60, 248, 20);
         }
     }
 
@@ -320,16 +317,12 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
         graphics.drawRect({0,  0,  0},   panelX,     panelY,     350, 160);
         graphics.drawRect({40, 40, 40},  panelX + 2, panelY + 2, 346, 156);
 
-        graphics.drawText("GAME OVER",  {255, 80,  80},
-                          SCREEN_W / 2 - 105, panelY + 14,  36);
-        graphics.drawText("Score: " + cast.ntos(score), {255, 255, 255},
-                          SCREEN_W / 2 - 65,  panelY + 64,  26);
-        graphics.drawText("Best:  " + cast.ntos(best),  {255, 220, 100},
-                          SCREEN_W / 2 - 65,  panelY + 96,  26);
+        graphics.drawText("GAME OVER",                  {255, 80,  80 }, SCREEN_W / 2 - 105, panelY + 14,  36);
+        graphics.drawText("Score: " + cast.ntos(score), {255, 255, 255}, SCREEN_W / 2 - 65,  panelY + 64,  26);
+        graphics.drawText("Best:  " + cast.ntos(best),  {255, 220, 100}, SCREEN_W / 2 - 65,  panelY + 96,  26);
 
         if (deathTimer > 1.0) {
-            graphics.drawText("SPACE to restart", {180, 220, 255},
-                              SCREEN_W / 2 - 108, panelY + 132, 20);
+            graphics.drawText("SPACE to restart", {180, 220, 255}, SCREEN_W / 2 - 108, panelY + 132, 20);
         }
     }
 

@@ -374,14 +374,12 @@ while (!graphics.windowShouldClose() and !game.isKeyDown(game.KEY_ESCAPE)) {
     drawPlayer(p.x, p.y);
 
     if (levelComplete) {
-        graphics.drawRect({0, 0, 0}, WIDTH / 2 - 200, HEIGHT / 2 - 60, 400, 140);
+        graphics.drawRect({ 0,  0,  0}, WIDTH / 2 - 200, HEIGHT / 2 - 60, 400, 140);
         graphics.drawRect({20, 60, 20}, WIDTH / 2 - 198, HEIGHT / 2 - 58, 396, 136);
-        graphics.drawText("LEVEL COMPLETE!", {80, 255, 120},
-                          WIDTH / 2 - 172, HEIGHT / 2 - 42, 36);
-        graphics.drawText("ENTER to play again", {180, 220, 255},
-                          WIDTH / 2 - 132, HEIGHT / 2 + 16, 22);
-        graphics.drawText("RIGHT to go to next level", {180, 220, 255},
-                          WIDTH / 2 - 132, HEIGHT / 2 + 40, 22);
+
+        graphics.drawText("LEVEL COMPLETE!",           {80, 255, 120},  WIDTH / 2 - 172, HEIGHT / 2 - 42, 36);
+        graphics.drawText("ENTER to play again",       {180, 220, 255}, WIDTH / 2 - 132, HEIGHT / 2 + 16, 22);
+        graphics.drawText("RIGHT to go to next level", {180, 220, 255}, WIDTH / 2 - 132, HEIGHT / 2 + 40, 22);
     }
 
     if (levelComplete) {
