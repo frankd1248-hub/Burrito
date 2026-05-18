@@ -86,9 +86,11 @@ void initVM();
 void freeVM();
 void freeResources();
 InterpretResult interpret(const char* source);
+
 void push(Value value);
 Value peek(int distance);
 Value pop();
+
 bool callBurrito(Value callee, int argCount, Value* result);
 
 #endif

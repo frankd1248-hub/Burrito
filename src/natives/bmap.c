@@ -1,6 +1,7 @@
 #include "bmap.h"
 
 #include "../vm.h"
+#include "../memory.h"
 
 // map.set(key, val) — key must be a string
 static bool mapSetNative(int argCount, Value* args, Value* result) {
@@ -52,7 +53,12 @@ static bool mapKeysNative(int argCount, Value* args, Value* result) {
     Table* t = &AS_MAP(args[0])->table;  // re-read after GC
     for (int i = 0; i < t->capacity; i++) {
         if (t->entries[i].key != NULL) {
-            ensureCapacity(keys);
+            if (keys->size == keys->capacity) {
+                int oldCap = keys->capacity;
+                keys->capacity = GROW_CAPACITY(keys->capacity);
+                keys->values = GROW_ARRAY(Value, keys->values, oldCap, keys->capacity);
+            }
+
             keys->values[keys->size++] = OBJ_VAL(t->entries[i].key);
         }
     }
@@ -73,5 +79,5 @@ void buildMapMethods() {
     addMethod("get",    3, mapGetNative);
     addMethod("has",    3, mapHasNative);
     addMethod("delete", 6, mapDeleteNative);
-    addMathod("keys",   4, mapKeysNative);
+    addMethod("keys",   4, mapKeysNative);
 }

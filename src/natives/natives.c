@@ -79,6 +79,12 @@ static bool assertNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool mapConstructorNative(int argCount, Value* args, Value* result) {
+    ObjMap* map = newMap();
+    *result = OBJ_VAL(map);
+    return true;
+}
+
 void defineAllNatives() {
     defineModule("cast", buildCastModule());
     defineModule("io", buildIOModule());
@@ -99,4 +105,6 @@ void defineAllNatives() {
     defineNative("getField", newNative(getFieldNative));
     defineNative("setField", newNative(setFieldNative));
     defineNative("assert", newNative(assertNative));
+    
+    defineNative("map", newNative(mapConstructorNative));
 }

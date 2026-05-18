@@ -1,0 +1,8 @@
+
+fn even(x) {
+    return x % 2 == 0;
+}
+
+print("%o\n", even(5));
+print("%o\n", even(16));
+print("%o\n", even(500001));

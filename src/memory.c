@@ -43,6 +43,9 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
     return result;
 }
 
+/**
+ * Marks an object as visited in the GC.
+ */
 void markObject(Obj* object) {
     if (object == NULL) return;
     if (object->isMarked) return;
@@ -65,16 +68,28 @@ void markObject(Obj* object) {
     vm.grayStack[vm.grayCount++] = object;
 }
 
+/**
+ * Marks a value.
+ * If it is an object then it marks that.
+ * Otherwise does nothing.
+ */
 void markValue(Value value) {
     if (IS_OBJ(value)) markObject(AS_OBJ(value));
 }
 
+/**
+ * MArks an array. (Marks every value in the array)
+ */
 static void markArray(ValueArray* array) {
     for (int i = 0; i < array->count; i++) {
         markValue(array->values[i]);
     }
 }
 
+/**
+ * Blackens an object.
+ * i.e. Marks every object reachable from the object gray.
+ */
 static void blackenObject(Obj* object) {
 #ifdef DEBUG_LOG_GC
     printf("%p blacken ", (void*) object);
@@ -150,6 +165,9 @@ static void blackenObject(Obj* object) {
     }
 }
 
+/**
+ * Frees an object.
+ */
 static void freeObject(Obj* object) {
 #ifdef DEBUG_LOG_GC
     printf("%p free type %d\n", (void*) object, object->type);
@@ -221,6 +239,9 @@ static void freeObject(Obj* object) {
     }
 }
 
+/**
+ * Marks GC "Roots" that will spread blackness throughout the objects graph.
+ */
 static void markRoots() {
     for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
         markValue(*slot);
@@ -242,6 +263,9 @@ static void markRoots() {
     markObject((Obj*) vm.initString);
 }
 
+/**
+ * Blackens every gray object.
+ */
 static void traceReferences() {
     while (vm.grayCount > 0) {
         Obj* object = vm.grayStack[--vm.grayCount];
@@ -249,6 +273,9 @@ static void traceReferences() {
     }
 }
 
+/**
+ * Frees every un-marked object.
+ */
 static void sweep() {
     Obj* previous = NULL;
     Obj* object = vm.objects;
@@ -272,6 +299,9 @@ static void sweep() {
     }
 }
 
+/**
+ * Main GC function.
+ */
 void collectGarbage() {
 #ifdef DEBUG_LOG_GC
     printf("-- gc begin\n");
@@ -295,6 +325,9 @@ void collectGarbage() {
 
 }
 
+/**
+ * Frees every object the VM is holding.
+ */
 void freeObjects() {
     Obj* object = vm.objects;
     while (object != NULL) {

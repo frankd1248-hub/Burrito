@@ -1258,11 +1258,15 @@ static void addLocal(Token name) {
     local->isCaptured = false;
 }
 
+/**
+ * Declares a local variable at the current scope.
+ */
 static void declareVariable() {
     if (current->scopeDepth == 0) return;
 
     Token* name = &parser.previous;
 
+    // Keep going until we hit the correct scope depth.
     for (int i = current->localCount - 1; i >= 0; i--) {
         Local* local = &current->locals[i];
         if (local->depth != -1 && local->depth < current->scopeDepth) {
@@ -1277,6 +1281,11 @@ static void declareVariable() {
     addLocal(*name);
 }
 
+/**
+ * Parses either a local or global variable at the current scope.
+ * If we are in a local scope, returns 0.
+ * Otherwise, returns the constant index of the identifier.
+ */
 static int parseVariable(const char* errorMessage) {
     consume(TOKEN_IDENTIFIER, errorMessage);
 
@@ -1286,12 +1295,19 @@ static int parseVariable(const char* errorMessage) {
     return identifierConstant(&parser.previous);
 }
 
+/**
+ * Marks a local as initialized.
+ * Used to make sure nothing like "decl a = a" happens.
+ */
 static void markInitialized() {
     if (current->scopeDepth == 0) return;
 
     current->locals[current->localCount - 1].depth = current->scopeDepth;
 }
 
+/**
+ * Emits bytecode for a global variable OR marks a local as initialized.
+ */
 static void defineVariable(int global) {
     if (current->scopeDepth > 0) {
         markInitialized();
@@ -1310,6 +1326,9 @@ static void defineVariable(int global) {
     }   
 }
 
+/**
+ * Parses an argument list and leaves the values on the stack at runtime.
+ */
 static uint8_t argumentList() {
     uint8_t argCount = 0;
     if (!check(TOKEN_RIGHT_PAREN)) {
@@ -1325,6 +1344,9 @@ static uint8_t argumentList() {
     return argCount;
 }
 
+/**
+ * Parses an and expression.
+ */
 static void and_(bool canAssign) {
     int endJump = emitJump(OP_JUMP_IF_FALSE);
 
@@ -1334,6 +1356,9 @@ static void and_(bool canAssign) {
     patchJump(endJump);
 }
 
+/**
+ * Emits bytecode to define a constant
+ */
 static void defineConst(int global) {
     if (global <= UINT8_MAX) {
         emitWord(OP_DEFINE_CONST, (uint8_t) global);
@@ -1347,15 +1372,26 @@ static void defineConst(int global) {
     }
 }
 
+/**
+ * Returns tha parse rule for the given token type.
+ * A wrapper for a lookup into the array.
+ */
 static ParseRule* getRule(TokenType type) {
     return &rules[type];
 }
 
+/**
+ * Parses an expression with the starting precedence of assignment.
+ */
 static void expression() {
     parsePrecedence(PREC_ASSIGNMENT);
 }
 
+/**
+ * Parses a block statement.
+ */
 static void block() {
+    // Keep going until we see a right brace.
     while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
         declaration();
     }
@@ -1363,6 +1399,9 @@ static void block() {
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");
 }
 
+/**
+ * Parses a function with a given type.
+ */
 static void function(FunctionType type){
     Compiler* compiler = malloc(sizeof(Compiler));
     initCompiler(compiler, type);
@@ -1403,8 +1442,10 @@ static void function(FunctionType type){
     free(compiler);
 }
 
+/**
+ * Parses a lambda expression or unnamed function.
+ */
 static void lambda(bool canAssign) {
-
     Compiler* compiler = malloc(sizeof(Compiler));
     initCompiler(compiler, TYPE_LAMBDA);
     beginScope();
@@ -1445,6 +1486,9 @@ static void lambda(bool canAssign) {
     free(compiler);
 }
 
+/**
+ * Parses a method.
+ */
 static void method() {
     consume(TOKEN_IDENTIFIER, "Expect method name.");
     int constant = identifierConstant(&parser.previous);

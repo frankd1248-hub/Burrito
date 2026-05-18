@@ -309,7 +309,7 @@ static bool invoke(ObjString* name, int argCount) {
         } else if (IS_MAP(receiver)) {
             Value method;
             if (!tableGet(&vm.mapMethods, name, &method)) {
-                runtimeError("Undefined array method '%s'.", name->chars);
+                runtimeError("Undefined map method '%s'.", name->chars);
                 if (errorWasHandled) return true;
                 return false;
             }

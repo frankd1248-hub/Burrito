@@ -7,6 +7,10 @@
 #include "debug.h"
 #include "vm.h"
 
+/**
+ * A simple REPL.
+ * Only allows a single line of input.
+ */
 static void repl() {
     if (disassembleFlag) {
         FILE* f = fopen("output.text", "w");
@@ -26,6 +30,9 @@ static void repl() {
     }
 }
 
+/**
+ * Returns all contents of a given file.
+ */
 static char* readFile(const char* path) {
     FILE* file = fopen(path, "rb");
     if (file == NULL) {
@@ -54,6 +61,9 @@ static char* readFile(const char* path) {
     return buffer;
 }
 
+/**
+ * Runs source from a file.
+ */
 static void runFile(const char* path) {
     if (disassembleFlag) {
         FILE* f = fopen("output.text", "w");
@@ -71,6 +81,7 @@ static void runFile(const char* path) {
 int main(int argc, char** argv) {
     initVM();
 
+    // I would write an actual terminal app but I am too lazy and there's only one flag.
     if (argc == 1) {
         repl();
     } else if (argc == 2) {

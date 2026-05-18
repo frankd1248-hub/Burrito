@@ -43,19 +43,19 @@
 #define IS_SOUND(value)      isResType(value, RESOURCE_SOUND)
 
 typedef enum { 
-    OBJ_ARRAY,
-    OBJ_BOUND_METHOD,
-    OBJ_BOUND_NATIVE,
-    OBJ_CLASS,
-    OBJ_CLOSURE,
-    OBJ_FUNCTION,
-    OBJ_INSTANCE,
-    OBJ_MAP,
-    OBJ_MODULE,
-    OBJ_NATIVE,
-    OBJ_RESOURCE,
-    OBJ_STRING,
-    OBJ_UPVALUE
+    OBJ_ARRAY,        // Native array object.
+    OBJ_BOUND_METHOD, // Class method bound to an instance.
+    OBJ_BOUND_NATIVE, // Native method bound to an object.
+    OBJ_CLASS,        // A class holding methods.
+    OBJ_CLOSURE,      // A closure object.
+    OBJ_FUNCTION,     // A function object, always wrapped in a closure.
+    OBJ_INSTANCE,     // An instance of a class holding fields.
+    OBJ_MAP,          // Native map object.
+    OBJ_MODULE,       // Native module object.
+    OBJ_NATIVE,       // Native function object.
+    OBJ_RESOURCE,     // GPU Resource handle object.
+    OBJ_STRING,       // Native string object.
+    OBJ_UPVALUE       // Upvalue object, technically a type of variable.
 } ObjType;
 
 struct Obj {

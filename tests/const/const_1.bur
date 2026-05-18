@@ -1,11 +1,14 @@
 // Hello, world!
 // error (assign to const)
 
-const message = "Hello, world!";
+const message = "Hello, world!\n";
 print(message);
 
 try {
     message = "Hello";
-} catch(e) print(e);
+} catch(e) {
+    print(e);
+}
 
+assert(message == "Hello, world!\n", "Test failed.");
 print(message);

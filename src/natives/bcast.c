@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -15,7 +16,7 @@ static bool ntosNative(int argCount, Value* args, Value* result) {
 
     double val = AS_NUMBER(args[0]);
     int size;
-    if (fabs(round(val) - val) < 0.00001) {
+    if (fabs(round(val) - val) < 0.0000001) {
         size = snprintf(NULL, 0, "%ld", (long)round(val));
     } else {
         size = snprintf(NULL, 0, "%.4lf", val);
@@ -98,6 +99,41 @@ static bool typeOfNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+typedef struct {
+    char* data;
+    int length;
+    int capacity;
+} StrBuf;
+
+static void bufInit(StrBuf* buf) {
+    buf->capacity = 64;
+    buf->data = malloc(buf->capacity);
+    buf->length = 0;
+    buf->data[0] = '\0';
+}
+
+static void bufAppend(StrBuf* buf, const char* fmt, ...) {
+    va_list args;
+    while (true) {
+        int remaining = buf->capacity - buf->length;
+        va_start(args, fmt);
+        int needed = vsnprintf(buf->data + buf->length, remaining, fmt, args);
+        va_end(args);
+        if (needed < remaining) {
+            buf->length += needed;
+            return;
+        }
+        // Not enough space — double until it fits.
+        while (buf->capacity - buf->length <= needed)
+            buf->capacity *= 2;
+        buf->data = realloc(buf->data, buf->capacity);
+    }
+}
+
+static void bufFree(StrBuf* buf) {
+    free(buf->data);
+}
+
 static Value toString(Value arg) {
     if (IS_NULL(arg)) {
         return OBJ_VAL(copyString("null", 4));
@@ -116,30 +152,23 @@ static Value toString(Value arg) {
                 if (array->size == 0)
                     return OBJ_VAL(copyString("{ }", 3));
 
-                // Push array on stack to keep it rooted during allocations.
                 push(arg);
+                StrBuf buf;
+                bufInit(&buf);
+                bufAppend(&buf, "{ ");
 
-                char* result = malloc(32768);
-                int length = 0;
-                length += snprintf(result + length, 32768 - length, "{ ");
-
-                for (int i = 0; i < array->size; i++) {
-                    // Re-read array from stack in case GC moved things.
-                    ObjArray* arr = AS_ARRAY(peek(0));
-                    Value elem = toString(arr->values[i]);
-                    ObjString* s = AS_STRING(elem);
-                    length += snprintf(result + length, 32768 - length,
-                                       "%s", s->chars);
-                    if (i < array->size - 1)
-                        length += snprintf(result + length, 32768 - length, ", ");
-                    if (length >= 32767) break;
+                for (int i = 0; i < AS_ARRAY(peek(0))->size; i++) {
+                    Value elem = toString(AS_ARRAY(peek(0))->values[i]);
+                    bufAppend(&buf, "%s", AS_CSTRING(elem));
+                    if (i < AS_ARRAY(peek(0))->size - 1)
+                        bufAppend(&buf, ", ");
                 }
 
-                length += snprintf(result + length, 32768 - length, " }");
-                pop(); // unroot array
+                bufAppend(&buf, " }");
+                pop();
 
-                Value res = OBJ_VAL(copyString(result, length));
-                free(result);
+                Value res = OBJ_VAL(copyString(buf.data, buf.length));
+                bufFree(&buf);
                 return res;
             }
             case OBJ_CLASS: {
@@ -170,7 +199,35 @@ static Value toString(Value arg) {
                                    name->chars);
                 return OBJ_VAL(copyString(buf, len));
             }
-            case OBJ_MAP: return OBJ_VAL(copyString("Sorry, I am very lazy.", 22));
+            case OBJ_MAP: {
+                ObjMap* map = AS_MAP(arg);
+                if (map->table.count == 0)
+                    return OBJ_VAL(copyString("{ }", 3));
+
+                push(arg);
+                StrBuf buf;
+                bufInit(&buf);
+                bufAppend(&buf, "{ ");
+
+                bool first = true;
+                int cap = AS_MAP(peek(0))->table.capacity;
+                for (int i = 0; i < cap; i++) {
+                    Entry* e = &AS_MAP(peek(0))->table.entries[i];
+                    if (e->key == NULL) continue;
+                    if (!first) bufAppend(&buf, ", ");
+                    bufAppend(&buf, "\"%s\": ", e->key->chars);
+                    Value v = toString(e->value);
+                    bufAppend(&buf, "%s", AS_CSTRING(v));
+                    first = false;
+                }
+
+                bufAppend(&buf, " }");
+                pop();
+
+                Value res = OBJ_VAL(copyString(buf.data, buf.length));
+                bufFree(&buf);
+                return res;
+            }
             case OBJ_MODULE: return OBJ_VAL(copyString("<Module>", 8));
             case OBJ_NATIVE: return OBJ_VAL(copyString("<Native>", 8));
             case OBJ_RESOURCE: return OBJ_VAL(copyString("<Resource>", 10));
