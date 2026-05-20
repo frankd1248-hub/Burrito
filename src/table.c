@@ -6,8 +6,13 @@
 #include "table.h"
 #include "value.h"
 
+// Maximum fraction of "buckets" filled before the table grows
 #define TABLE_MAX_LOAD 0.65
 
+/**
+ * Initialize a hash table
+ * Zeros all fields.
+ */
 void initTable(Table* table) {
     table->count = 0;
     table->capacity = 0;
@@ -15,11 +20,17 @@ void initTable(Table* table) {
     table->entries = NULL;
 }
 
+/**
+ * Frees the entries array and then re-initializes the table
+ */
 void freeTable(Table* table) {
     FREE_ARRAY(Entry, table->entries, table->capacity);
     initTable(table);
 }
 
+/**
+ * Returns a pointer to an entry with the given key.
+ */
 static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
     uint32_t index = key->hash & (capacity - 1);
     Entry* tombstone = NULL;
@@ -40,6 +51,10 @@ static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
     }
 }
 
+/**
+ * Gets an entry from a has table.
+ * @return If the entry was found
+ */
 bool tableGet(Table* table, ObjString* key, Value* value) {
     if (table->count == 0) return false;
 
@@ -52,6 +67,9 @@ bool tableGet(Table* table, ObjString* key, Value* value) {
     }
 }
 
+/**
+ * Reallocate the table to a given number of "buckets"
+ */
 static void adjustCapacity(Table* table, int capacity) {
     Entry* entries = ALLOCATE(Entry, capacity);
     for (int i = 0; i < capacity; i++) {
@@ -76,6 +94,10 @@ static void adjustCapacity(Table* table, int capacity) {
     table->capacity = capacity;
 }
 
+/**
+ * Sets or adds an entry in a hash table.
+ * @return If a new entry was created
+ */
 bool tableSet(Table* table, ObjString* key, Value value) {
     if (table->count + 1 > table->capacity * TABLE_MAX_LOAD) {
         int capacity = (table->tombstones > table->count / 4)
@@ -94,6 +116,10 @@ bool tableSet(Table* table, ObjString* key, Value value) {
     return isNewKey;
 }
 
+/**
+ * Tries to replace an entry with a tombstone
+ * @return If an entry was removed
+ */
 bool tableDelete(Table* table, ObjString* key) {
     if (table->count == 0) return false;
 
@@ -121,6 +147,9 @@ void tableAddAll(Table* from, Table* to) {
     }
 }
 
+/**
+ * Used in VM string interning to find a given string in the strings table
+ */
 ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t hash) {
     if (table->count == 0) return NULL;
 
@@ -138,6 +167,9 @@ ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t
     }
 }
 
+/**
+ * Removes (replaces with a tombstone) every un-marked entry in a table.
+ */
 void tableRemoveWhite(Table* table) {
     for (int i = 0; i < table->capacity; i++) {
         Entry* entry = &table->entries[i];
@@ -150,6 +182,9 @@ void tableRemoveWhite(Table* table) {
     }
 }
 
+/**
+ * Marks every key and value in a table.
+ */
 void markTable(Table* table) {
     for (int i = 0; i < table->capacity; i++) {
         Entry* entry = &table->entries[i];

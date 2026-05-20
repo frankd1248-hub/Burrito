@@ -40,9 +40,9 @@ fn playRound(secret, guessesLeft, guesssTaken) {
 // Print final score and exit.
 fn printScore(wins, losses) {
     print("\n=== Final Score ===\n");
-    print("Wins:   %d\n", wins);
-    print("Losses: %d\n", losses);
-    print("Thanks for playing!\n");
+    print("    Wins:   %d\n", wins);
+    print("    Losses: %d\n", losses);
+    print(" Thanks for playing!\n");
 }
 
 // Main game loop, carried entirely in parameters.

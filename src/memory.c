@@ -9,6 +9,7 @@
 #include "debug.h"
 #endif
 
+// How much the threshold for the next GC collect grows each time
 #define GC_HEAP_GROW_FACTOR 8
 
 /**

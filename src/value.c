@@ -6,12 +6,18 @@
 #include "memory.h"
 #include "value.h"
 
+/**
+ * Initializes a dynamic array.
+ */
 void initValueArray(ValueArray* array) {
     array->values = NULL;
     array->capacity = 0;
     array->count = 0;
 }
 
+/**
+ * Appends one value to a dynamic array.
+ */
 void writeValueArray(ValueArray* array, Value value) {
     if (array->capacity < array->count + 1) {
         int oldCapacity = array->capacity;
@@ -23,14 +29,22 @@ void writeValueArray(ValueArray* array, Value value) {
     array->count++;
 }
 
+/**
+ * Frees a dynamic array.
+ */
 void freeValueArray(ValueArray* array) {
     FREE_ARRAY(Value, array->values, array->capacity);
     initValueArray(array);
 }
 
+/**
+ * Prints a number to the given file stream.
+ */
 static void printNumber(Value value, FILE* f) {
     double val = AS_NUMBER(value);
     if (f == NULL) f = stdout;
+
+    // Round when value is very close to a whole number
     if (fabs(val - round(val)) < 0.0000001) {
         fprintf(f, "%ld", (long) round(val));
     } else {
@@ -39,9 +53,13 @@ static void printNumber(Value value, FILE* f) {
     return;
 }
 
+/**
+ * One big if-else if block delegating to different functions
+ * Prints one value to the given file stream.
+ */
 void printValue(Value value, FILE* f) {
     if (f == NULL) f = stdout;
-#ifdef NAN_BOXING
+
     if (IS_BOOL(value)) {
         fprintf(f, AS_BOOL(value) ? "true" : "false");
     } else if (IS_EMPTY(value)) {
@@ -52,19 +70,14 @@ void printValue(Value value, FILE* f) {
     } else if (IS_OBJ(value)) {
         printObject(value, f);
     }
-#else
-    switch(value.type) {
-        case VAL_BOOL:   fprintf(f, AS_BOOL(value) ? "true" : "false"); break;
-        case VAL_EMPTY:  break;
-        case VAL_NULL:   fprintf(f, "null"); break;
-        case VAL_NUMBER: printNumber(value, f); break;
-        case VAL_OBJ:    printObject(value, f); break;
-    }
-#endif
 }
 
+/**
+ * Returns if the values are equal
+ */
 bool valuesEqual(Value a, Value b) {
 #ifdef NAN_BOXING
+    // NAN-boxed values can only be equal if every bit is equal.
     return a == b;
 #else
     if (a.type != b.type) return false;
