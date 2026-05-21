@@ -8,7 +8,7 @@ decl number = 1.5555;
 decl bool = true;
 decl string = "Hello, world!";
 
-print("%o", empty);
-print("%o", bool);
-print("%d", number);
-print("%s", string);
+print("Null: ${empty}\n");
+print("Bool: ${bool}\n");
+print("Number: ${number}\n");
+print("String: ${string}\n");

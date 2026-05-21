@@ -1,17 +1,5 @@
-
-decl start = time.clock();
-
 decl oneHalf = math.sin(math.pi / 6);
 decl thing = math.sin(math.pi / 3);
 
-print("One half is equal to: ");
-print("%d", oneHalf);
-
-print("Root three over two is equal to: ");
-print("%d", thing);
-
-decl end = time.clock();
-decl elapsed = end - start;
-
-print("time: ");
-print("%d", elapsed);
+print("One half is equal to: ${oneHalf}\n");
+print("Root three over two is equal to: ${thing}\n");

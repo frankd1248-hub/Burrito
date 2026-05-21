@@ -1,8 +1,3 @@
-// Volume:
-// 785.4
-// Surface area:
-// 471.24
-
 const PI = 3.141592653579893;
 decl radius = 5;
 decl height = 10;
@@ -10,5 +5,5 @@ decl height = 10;
 decl volume = radius * radius * PI * height;
 decl area = 2 * radius * radius * PI + 2 * PI * radius * height;
 
-print("Volume: %d", volume);
-print("Surface area: %d", area);
+print("Volume: ${volume}\n", volume);
+print("Surface area: ${area}\n", area);

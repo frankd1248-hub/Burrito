@@ -1,7 +1,7 @@
 
 
 fn message() {
-    print("Hello, world!");
+    print("Hello, world!\n");
 }
 
 decl ptr = message;

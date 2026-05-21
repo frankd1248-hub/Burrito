@@ -1,8 +1,3 @@
-// Area:
-// 78.53
-// Circumference:
-// 31.41
-
 
 const PI = 3.141592653579893;
 decl radius = 5;
@@ -10,5 +5,5 @@ decl radius = 5;
 decl area = PI * radius * radius;
 decl circumference = 2 * PI * radius;
 
-print("Area: %d", area);
-print("Circumference: %d", circumference);
+print("Area: ${area}\n");
+print("Circumference: ${circumference}\n");

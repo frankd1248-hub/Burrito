@@ -1,12 +1,9 @@
-// 1
-// 50000000
-
 decl a = 1;
 
-print("%d", a);
+print("${a}\n");
 
 for (decl i = 0; i <= 50000000; i++) {
     a = i;
 }
 
-print("%d", a);
+print("${a}\n");

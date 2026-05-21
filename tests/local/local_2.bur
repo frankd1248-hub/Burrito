@@ -3,5 +3,5 @@ fn value(i) {
 }
 
 for (decl i = 0; i < 5; i++) {
-    print("%d", value(i));
+    print("%d\n", value(i));
 }

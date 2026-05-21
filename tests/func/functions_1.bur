@@ -3,4 +3,4 @@ fn foo(x) {
     return x + 5;
 }
 
-print("%d", foo(10));
+print("${foo(10)}\n");

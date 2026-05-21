@@ -3,5 +3,5 @@ for (decl i = 0; i < 10; i++) {
     for (decl j = 0; j < i; j++) {
         print("*");
     }
-    print("%s", "\n");
+    print("\n");
 }

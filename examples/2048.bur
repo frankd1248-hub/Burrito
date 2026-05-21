@@ -285,7 +285,7 @@ while(!graphics.windowShouldClose()) {
 
     graphics.beginDraw();
     graphics.clearColor(250, 248, 239);
-    graphics.drawText("Score: " + cast.ntos(score), {0, 0, 0}, 10, 10, 40);
+    graphics.drawText("Score: ${cast.ntos(score)}", {0, 0, 0}, 10, 10, 40);
     drawGrid();
     graphics.endDraw();
 }
@@ -297,7 +297,7 @@ while (!graphics.windowShouldClose()) {
     graphics.beginDraw();
     graphics.clearColor(250, 248, 239);
     graphics.drawText("GAME OVER", {204, 0, 0}, 200, 200, 72);
-    graphics.drawText("Score: " + cast.ntos(score), {0, 0, 0}, 200, 265, 40);
+    graphics.drawText("Score: ${cast.ntos(score)}", {0, 0, 0}, 200, 265, 40);
     graphics.endDraw();
 }
  

@@ -3,9 +3,9 @@ decl arr = {
 };
 
 for x in arr {
-    print("%d ", x);
+    print("${x} ");
 }
 
 print("\n");
 
-print("Nothing has gone wrong, right?");
+print("Nothing has gone wrong, right?\n");

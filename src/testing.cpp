@@ -65,6 +65,16 @@ static vector<string> extractComments(const fs::path& path) {
     return comments;
 }
 
+// Read the entire contents of a file into a string. Returns false if not found.
+static bool readFile(const fs::path& path, string& out) {
+    ifstream f(path);
+    if (!f.is_open()) return false;
+    ostringstream ss;
+    ss << f.rdbuf();
+    out = ss.str();
+    return true;
+}
+
 // A relative label shown to the user, e.g. "bitwise/basic.bur"
 static string relativeLabel(const fs::path& test, const fs::path& root) {
     return fs::relative(test, root).string();
@@ -86,23 +96,20 @@ static int terminalWidth() {
 // ─── Multi-column test list ───────────────────────────────────────────────────
 
 struct TestEntry {
-    int         number;
-    string      group;
-    string      filename;
+    int    number;
+    string group;
+    string filename;
+    bool   hasExpected;  // whether a .bur.expected file exists
 };
 
-// Build a display string for one entry: "  NNN: filename"
-// Returns the rendered length (without ANSI codes).
 static int entryDisplayWidth(const TestEntry& e) {
-    // "  NNN: filename"
-    // 2 leading spaces + up to 3 digits + 2 (": ") + filename
-    return 2 + 3 + 2 + (int)e.filename.size();
+    // "  NNN: filename [!]"  — the [!] marker is 4 chars if no expected file
+    return 2 + 3 + 2 + (int)e.filename.size() + (e.hasExpected ? 0 : 4);
 }
 
 static void printTestList(const vector<fs::path>& tests, const fs::path& root) {
-    // Build structured entries and determine groups.
     vector<TestEntry> entries;
-    vector<string>    groupOrder;   // groups in encounter order
+    vector<string>    groupOrder;
     string            prevGroup;
 
     for (int i = 0; i < (int)tests.size(); i++) {
@@ -112,23 +119,22 @@ static void printTestList(const vector<fs::path>& tests, const fs::path& root) {
             groupOrder.push_back(grp);
             prevGroup = grp;
         }
-        entries.push_back({ i + 1, grp, tests[i].filename().string() });
+        fs::path expectedPath = tests[i];
+        expectedPath += ".expected";
+        entries.push_back({ i + 1, grp, tests[i].filename().string(),
+                            fs::exists(expectedPath) });
     }
 
-    // Determine column width: max entry width + inter-column gap.
     const int GAP = 3;
     int maxEntry = 0;
     for (const TestEntry& e : entries)
         maxEntry = max(maxEntry, entryDisplayWidth(e));
     int colWidth = maxEntry + GAP;
 
-    // How many columns fit?
     int tw      = terminalWidth();
     int numCols = max(1, tw / colWidth);
 
-    // Print group by group, each group in its own multi-column block.
     for (const string& grp : groupOrder) {
-        // Collect entries belonging to this group.
         vector<const TestEntry*> grpEntries;
         for (const TestEntry& e : entries)
             if (e.group == grp) grpEntries.push_back(&e);
@@ -139,22 +145,39 @@ static void printTestList(const vector<fs::path>& tests, const fs::path& root) {
 
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < numCols; col++) {
-                // Column-major order so entries read top-to-bottom within each column.
                 int idx = col * rows + row;
                 if (idx >= (int)grpEntries.size()) break;
 
                 const TestEntry* e = grpEntries[idx];
-                // Render "  NNN: filename"
+
                 char buf[256];
-                int written = snprintf(buf, sizeof(buf),
-                    "  %3d: %s", e->number, e->filename.c_str());
+                int written;
+                if (e->hasExpected) {
+                    written = snprintf(buf, sizeof(buf),
+                        "  %3d: %s", e->number, e->filename.c_str());
+                } else {
+                    written = snprintf(buf, sizeof(buf),
+                        "  %3d: " CLR_YELLOW "%s [?]" CLR_RESET,
+                        e->number, e->filename.c_str());
+                    // ANSI codes inflate the byte count; adjust written to
+                    // the visible character width for padding purposes.
+                    written = 2 + 3 + 2 + (int)e->filename.size() + 4;
+                }
 
                 if (col + 1 < numCols) {
-                    // Pad to column boundary.
                     int pad = colWidth - written;
-                    printf("%s%*s", buf, pad > 0 ? pad : 0, "");
+                    if (e->hasExpected)
+                        printf("%s%*s", buf, pad > 0 ? pad : 0, "");
+                    else
+                        printf("  %3d: " CLR_YELLOW "%s [?]" CLR_RESET "%*s",
+                               e->number, e->filename.c_str(),
+                               pad > 0 ? pad : 0, "");
                 } else {
-                    printf("%s", buf);
+                    if (e->hasExpected)
+                        printf("%s", buf);
+                    else
+                        printf("  %3d: " CLR_YELLOW "%s [?]" CLR_RESET,
+                               e->number, e->filename.c_str());
                 }
             }
             printf("\n");
@@ -162,12 +185,65 @@ static void printTestList(const vector<fs::path>& tests, const fs::path& root) {
     }
 }
 
+// ─── Diff helpers ─────────────────────────────────────────────────────────────
+
+// Split a string into lines (keeping empty trailing line if string ends with \n).
+static vector<string> splitLines(const string& s) {
+    vector<string> lines;
+    istringstream ss(s);
+    string line;
+    while (getline(ss, line))
+        lines.push_back(line);
+    return lines;
+}
+
+// Print a simple unified-style diff between expected and actual output.
+static void printDiff(const string& expected, const string& actual) {
+    vector<string> exp = splitLines(expected);
+    vector<string> act = splitLines(actual);
+
+    int maxLines = max((int)exp.size(), (int)act.size());
+    bool anyDiff = false;
+
+    for (int i = 0; i < maxLines; i++) {
+        bool hasExp = i < (int)exp.size();
+        bool hasAct = i < (int)act.size();
+
+        if (hasExp && hasAct && exp[i] == act[i]) {
+            printf(CLR_GREY "    %3d   %s\n" CLR_RESET, i + 1, exp[i].c_str());
+        } else {
+            anyDiff = true;
+            if (hasExp)
+                printf(CLR_RED "    %3d - %s\n" CLR_RESET, i + 1, exp[i].c_str());
+            if (hasAct)
+                printf(CLR_GREEN "    %3d + %s\n" CLR_RESET, i + 1, act[i].c_str());
+        }
+    }
+
+    if (!anyDiff)
+        printf(CLR_GREY "    (outputs match line-by-line but differ in trailing whitespace)\n" CLR_RESET);
+}
+
 // ─── Single test ─────────────────────────────────────────────────────────────
 
+enum class TestStatus {
+    PASS,         // output matched expected
+    FAIL_OUTPUT,  // ran OK but output differed
+    FAIL_EXIT,    // non-zero exit code
+    NO_EXPECTED,  // no .bur.expected file — exit-code-only check
+    ERROR,        // could not launch
+};
+
 struct TestResult {
-    fs::path path;
-    int      exitCode;
-    bool     passed() const { return exitCode == 0; }
+    fs::path   path;
+    TestStatus status;
+    string     actual;
+    string     expected;
+    int        exitCode;
+
+    bool passed() const {
+        return status == TestStatus::PASS || status == TestStatus::NO_EXPECTED;
+    }
 };
 
 static TestResult runTest(const fs::path& path, const fs::path& root, bool verbose) {
@@ -184,11 +260,18 @@ static TestResult runTest(const fs::path& path, const fs::path& root, bool verbo
         printf("  ");
     }
 
+    // Check for expected-output file.
+    fs::path expectedPath = path;
+    expectedPath += ".expected";
+    string expectedOutput;
+    bool hasExpected = readFile(expectedPath, expectedOutput);
+
+    // Run the test.
     string cmd = "./dist/burrito_linuxx86_64 " + path.string() + " 2>&1";
     FILE* pipe = popen(cmd.c_str(), "r");
     if (!pipe) {
         printf(CLR_RED "  ERROR (could not launch)\n" CLR_RESET);
-        return {path, -1};
+        return { path, TestStatus::ERROR, "", "", -1 };
     }
 
     ostringstream output;
@@ -196,24 +279,47 @@ static TestResult runTest(const fs::path& path, const fs::path& root, bool verbo
     while (fgets(buf, sizeof(buf), pipe))
         output << buf;
 
-    int status = pclose(pipe);
+    int status   = pclose(pipe);
     int exitCode = WEXITSTATUS(status);
+    string actual = output.str();
 
-    if (exitCode == 0) {
+    // Evaluate result.
+    TestResult result;
+    result.path     = path;
+    result.actual   = actual;
+    result.expected = expectedOutput;
+    result.exitCode = exitCode;
+
+    if (exitCode != 0) {
+        result.status = TestStatus::FAIL_EXIT;
+        printf(CLR_RED "FAIL (exit %d)\n" CLR_RESET, exitCode);
+    } else if (!hasExpected) {
+        result.status = TestStatus::NO_EXPECTED;
+        printf(CLR_YELLOW "PASS (no expected file)\n" CLR_RESET);
+    } else if (actual == expectedOutput) {
+        result.status = TestStatus::PASS;
         printf(CLR_GREEN "PASS\n" CLR_RESET);
     } else {
-        printf(CLR_RED "FAIL (exit %d)\n" CLR_RESET, exitCode);
+        result.status = TestStatus::FAIL_OUTPUT;
+        printf(CLR_RED "FAIL (output mismatch)\n" CLR_RESET);
     }
 
-    string out = output.str();
-    if (!out.empty() && (verbose || exitCode != 0)) {
-        istringstream ss(out);
+    // Show output on failure, or always in verbose mode.
+    bool showOutput = (result.status == TestStatus::FAIL_EXIT) ||
+                      (result.status == TestStatus::FAIL_OUTPUT) ||
+                      (verbose && !actual.empty());
+
+    if (result.status == TestStatus::FAIL_OUTPUT) {
+        printf(CLR_GREY "    expected (-) / actual (+):\n" CLR_RESET);
+        printDiff(expectedOutput, actual);
+    } else if (showOutput) {
+        istringstream ss(actual);
         string line;
         while (getline(ss, line))
             printf(CLR_GREY "    %s\n" CLR_RESET, line.c_str());
     }
 
-    return {path, exitCode};
+    return result;
 }
 
 // ─── Run a list of tests and print a summary ─────────────────────────────────
@@ -238,23 +344,66 @@ static void runTests(const vector<fs::path>& batch,
         results.push_back(runTest(p, root, verbose));
     }
 
-    int passed = 0;
-    for (const TestResult& r : results) if (r.passed()) passed++;
-    int total  = (int)results.size();
-    int failed = total - passed;
+    // Tally results.
+    int passed    = 0, failed = 0, noExpected = 0;
+    for (const TestResult& r : results) {
+        if (r.status == TestStatus::PASS)        passed++;
+        else if (r.status == TestStatus::NO_EXPECTED) { passed++; noExpected++; }
+        else failed++;
+    }
+    int total = (int)results.size();
 
     printf("\n" CLR_BOLD "Results: ");
-    if (failed == 0)
-        printf(CLR_GREEN "%d/%d passed\n" CLR_RESET, passed, total);
-    else
+    if (failed == 0) {
+        printf(CLR_GREEN "%d/%d passed" CLR_RESET, passed, total);
+        if (noExpected > 0)
+            printf(CLR_YELLOW " (%d without expected file)" CLR_RESET, noExpected);
+        printf("\n");
+    } else {
         printf(CLR_RED "%d/%d passed, %d failed\n" CLR_RESET, passed, total, failed);
+    }
 
     if (failed > 0) {
         printf(CLR_RED CLR_BOLD "Failed tests:\n" CLR_RESET);
-        for (const TestResult& r : results)
-            if (!r.passed())
-                printf(CLR_RED "  - %s\n" CLR_RESET,
-                       relativeLabel(r.path, root).c_str());
+        for (const TestResult& r : results) {
+            if (r.passed()) continue;
+            const char* reason = (r.status == TestStatus::FAIL_EXIT)   ? "exit code" :
+                                 (r.status == TestStatus::FAIL_OUTPUT)  ? "output mismatch" :
+                                                                          "error";
+            printf(CLR_RED "  - %s (%s)\n" CLR_RESET,
+                   relativeLabel(r.path, root).c_str(), reason);
+        }
+    }
+
+    // Offer to generate missing expected files after a run.
+    int missing = 0;
+    for (const TestResult& r : results)
+        if (r.status == TestStatus::NO_EXPECTED) missing++;
+
+    if (missing > 0) {
+        printf(CLR_YELLOW "\n%d test(s) have no expected file. "
+               "Generate them from current output? [y/N] " CLR_RESET, missing);
+        fflush(stdout);
+        string ans;
+        if (getline(cin, ans) && (ans == "y" || ans == "Y")) {
+            int generated = 0;
+            for (const TestResult& r : results) {
+                if (r.status != TestStatus::NO_EXPECTED) continue;
+                fs::path ep = r.path;
+                ep += ".expected";
+                ofstream f(ep);
+                if (f.is_open()) {
+                    f << r.actual;
+                    printf(CLR_GREEN "  wrote %s\n" CLR_RESET,
+                           relativeLabel(ep, root).c_str());
+                    generated++;
+                } else {
+                    printf(CLR_RED "  failed to write %s\n" CLR_RESET,
+                           relativeLabel(ep, root).c_str());
+                }
+            }
+            printf("Generated %d expected file(s).\n", generated);
+        }
     }
 }
 

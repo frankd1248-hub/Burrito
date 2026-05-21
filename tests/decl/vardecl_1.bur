@@ -2,4 +2,4 @@
 
 decl beverage = "café au lait";
 decl breakfast = "beignets with " + beverage;
-print(breakfast);
+print("${breakfast}\n");
