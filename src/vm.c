@@ -139,6 +139,7 @@ void freeResources() {
         Obj* next = iter->next;  // save before any potential free
         if (IS_RESOURCE(OBJ_VAL(iter)) && AS_RESOURCE(OBJ_VAL(iter))->destroy) {
             AS_RESOURCE(OBJ_VAL(iter))->destroy(AS_RESOURCE(OBJ_VAL(iter))->handle);
+            AS_RESOURCE(OBJ_VAL(iter))->destroy = NULL;
             if (previous == NULL)
                 vm.objects = next;
             else
@@ -229,7 +230,7 @@ static bool callValue(Value callee, int argCount) {
             case OBJ_CLOSURE:
                 return call(AS_CLOSURE(callee), argCount);
             case OBJ_NATIVE: {
-                Value result;
+                Value result = NULL_VAL;
                 NativeFn native = AS_NATIVE(callee);
                 if (native(argCount, vm.stackTop - argCount, &result)) {
                     vm.stackTop -= argCount + 1;
@@ -277,7 +278,7 @@ static bool invoke(ObjString* name, int argCount) {
     if (!IS_INSTANCE(receiver)) {
         if (IS_MODULE(receiver)) {
             ObjModule* module = AS_MODULE(receiver);
-            Value value;
+            Value value = NULL_VAL;
             if (!tableGet(&module->table, name, &value)) {
                 runtimeError("Undefined property '%s'.", name->chars);
                 if (errorWasHandled) return true;
@@ -521,6 +522,7 @@ static InterpretResult run(int returnDepth) {
         [OP_BITRIGHT]          = &&op_OP_BITRIGHT,
         [OP_BITLEFT]           = &&op_OP_BITLEFT,
         [OP_PRINT]             = &&op_OP_PRINT,
+        [OP_TO_STRING]         = &&op_OP_TO_STRING,
         [OP_DUP]               = &&op_OP_DUP,
         [OP_DUP2]              = &&op_OP_DUP2,
         [OP_JUMP]              = &&op_OP_JUMP,
@@ -1098,6 +1100,14 @@ print_end:
             return INTERPRET_RUNTIME_ERROR;
         }
         vm.stackTop -= argCount;
+        DISPATCH();
+    }
+    CASE(OP_TO_STRING): {
+        if (!IS_STRING(peek(0))) {
+            Value v = pop();
+            ObjString* s = AS_STRING(toStringValue(v));
+            push(OBJ_VAL(s));
+        }
         DISPATCH();
     }
     CASE(OP_DUP): push(peek(0)); DISPATCH();

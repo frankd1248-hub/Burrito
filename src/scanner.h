@@ -21,6 +21,9 @@ typedef enum {
 
     TOKEN_IDENTIFIER, TOKEN_STRING, TOKEN_NUMBER,
 
+    TOKEN_INTERP_BEGIN,   // emitted instead of TOKEN_STRING when a ${  is found mid-string
+    TOKEN_INTERP_END,     // emitted for the closing } and any trailing string text
+
     TOKEN_AND, TOKEN_BREAK, TOKEN_CASE, TOKEN_CATCH, TOKEN_CLASS, 
     TOKEN_CONST, TOKEN_CONTINUE, TOKEN_DECL, TOKEN_DEFAULT, TOKEN_ELSE, 
     TOKEN_FALSE, TOKEN_FOR, TOKEN_FN, TOKEN_IF, TOKEN_IN, TOKEN_LAMBDA,

@@ -64,7 +64,8 @@ static bool readLineNative(int argCount, Value* args, Value* result) {
         c = getchar();
         buf[count++] = c;
     } while (c != '\n' && c != EOF && count < 511);
-    count--;
+
+    if (count > 0) count--;
     buf[count] = '\0';
 
     *result = OBJ_VAL(copyString(buf, count));
@@ -156,6 +157,19 @@ static bool appendFileNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool flushNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 0) {
+        *result = OBJ_VAL(copyString("flush() does not expect arguments.", 35));
+        return false;
+    }
+#endif
+
+    fflush(stdout);
+    *result = BOOL_VAL(true);
+    return true;
+}
+
 ObjModule* buildIOModule() {
     ObjModule* module = newModule();
     push(OBJ_VAL(module));
@@ -166,6 +180,7 @@ ObjModule* buildIOModule() {
     tableSet(&module->table, copyString("readFile", 8), OBJ_VAL(newNative(readFileNative)));
     tableSet(&module->table, copyString("writeFile", 9), OBJ_VAL(newNative(writeFileNative)));
     tableSet(&module->table, copyString("appendFile", 10), OBJ_VAL(newNative(appendFileNative)));
+    tableSet(&module->table, copyString("flush", 5), OBJ_VAL(newNative(flushNative)));
 
     pop();
     return module;

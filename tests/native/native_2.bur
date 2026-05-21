@@ -1,0 +1,15 @@
+
+fn println(string) {
+    decl length = str.len(string);
+
+    for (decl i = 0; i < length; i++) {
+        print("%s", string[i]);
+        io.flush();
+        time.sleep(0.04);
+    }
+    print("\n");
+    time.sleep(0.04);
+}
+
+println("Hello, world! Is this printing with a delay between each character?");
+println("We could make a text adventure game with this.");

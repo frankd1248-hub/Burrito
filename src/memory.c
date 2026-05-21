@@ -10,7 +10,7 @@
 #endif
 
 // How much the threshold for the next GC collect grows each time
-#define GC_HEAP_GROW_FACTOR 8
+#define GC_HEAP_GROW_FACTOR 4
 
 /**
  * Reallocate a pointer to a new size.
@@ -224,8 +224,8 @@ static void freeObject(Obj* object) {
             ObjResource* resource = (ObjResource*) object;
             if (resource->destroy) {
                 resource->destroy(resource->handle);
+                FREE(ObjResource, object);
             }
-            FREE(ObjResource, object);
             break;
         }
         case OBJ_STRING: {

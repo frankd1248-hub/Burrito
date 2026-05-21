@@ -9,6 +9,7 @@ typedef struct {
     const char* start;
     const char* current;
     const char* lineStart;  // pointer to start of current line, for column calculation
+    int interpDepth;
     int line;
 } Scanner;
 
@@ -19,6 +20,7 @@ void initScanner(const char* source) {
     scanner.current = source;
     scanner.lineStart = source;
     scanner.line = 1;
+    scanner.interpDepth = 0;
 }
 
 static bool isAlpha(char c) {
@@ -198,51 +200,66 @@ static Token number() {
     return makeToken(TOKEN_NUMBER);
 }
 
-static Token string() {
+// Scans a string segment, stopping at ${ or closing ".
+// isInterp=true means we already entered the string and are resuming after a }.
+static Token stringSegment(bool isInterp) {
     char* buf = malloc(sizeof(char) * 8);
     int capacity = 8, count = 0;
 
     char c;
     while ((c = peek()) != '"' && !isAtEnd()) {
-        if (count + 1 >= capacity) {
+        if (count + 2 >= capacity) {
             capacity *= 2;
             buf = realloc(buf, sizeof(char) * capacity);
         }
 
         if (c == '\n') scanner.line++;
 
-        if (c == '\\') { // Escape character
+        if (c == '\\') {
             advance();
-            c = advance();;
-
+            c = advance();
             switch (c) {
-                case 'n': buf[count++] = '\n';  break;
-                case 't': buf[count++] = '\t';  break;
-                case 'b': buf[count++] = '\b';  break;
-                case '"': buf[count++] = '"';   break;
-                case '\\': buf[count++] = '\\'; break;
+                case 'n':  buf[count++] = '\n';  break;
+                case 't':  buf[count++] = '\t';  break;
+                case 'b':  buf[count++] = '\b';  break;
+                case '"':  buf[count++] = '"';   break;
+                case '\\': buf[count++] = '\\';  break;
                 default: free(buf); return errorToken("Invalid escape character");
             }
             continue;
         }
 
+        // Interpolation: ${ starts an expression
+        if (c == '$' && peekNext() == '{') {
+            advance(); advance(); // consume ${
+            Token tk;
+            tk.type = TOKEN_INTERP_BEGIN;
+            tk.start = buf;       // the text segment up to ${
+            tk.length = count;
+            tk.line = scanner.line;
+            tk.column = (int)(scanner.start - scanner.lineStart) + 1;
+            scanner.interpDepth++;
+            return tk;
+        }
+
         buf[count++] = advance();
     }
 
-    if (isAtEnd()) {
-        free(buf); 
-        return errorToken("Unterminated string.");
-    }
+    if (isAtEnd()) { free(buf); return errorToken("Unterminated string."); }
 
-    advance();
-    
+    advance(); // closing "
+
     Token tk;
-    tk.type = TOKEN_STRING;
+    tk.type = isInterp ? TOKEN_INTERP_END : TOKEN_STRING;
     tk.start = buf;
     tk.length = count;
     tk.line = scanner.line;
-    tk.column = (int) (scanner.start - scanner.lineStart) + 1;
+    tk.column = (int)(scanner.start - scanner.lineStart) + 1;
     return tk;
+}
+
+static Token string() {
+    return stringSegment(false);
 }
 
 Token scanToken() {
@@ -261,7 +278,12 @@ Token scanToken() {
         case '[': return makeToken(TOKEN_LEFT_BRACKET);
         case ']': return makeToken(TOKEN_RIGHT_BRACKET);
         case '{': return makeToken(TOKEN_LEFT_BRACE);
-        case '}': return makeToken(TOKEN_RIGHT_BRACE);
+        case '}': 
+            if (scanner.interpDepth > 0) {
+                scanner.interpDepth--;
+                return stringSegment(true);  // resume the string after the expression
+            }
+            return makeToken(TOKEN_RIGHT_BRACE);
         case ';': return makeToken(TOKEN_SEMICOLON);
         case ':': return makeToken(TOKEN_COLON);
         case ',': return makeToken(TOKEN_COMMA);

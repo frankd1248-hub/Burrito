@@ -228,6 +228,8 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
             return simpleInstruction("OP_NEGATE", offset, out);
         case OP_PRINT:
             return byteInstruction("OP_PRINT", chunk, offset, out);
+        case OP_TO_STRING:
+            return simpleInstruction("OP_TO_STRING", offset, out);
         case OP_DUP:
             return simpleInstruction("OP_DUP", offset, out);
         case OP_DUP2:

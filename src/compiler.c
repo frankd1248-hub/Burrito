@@ -764,8 +764,34 @@ static void and_(bool);
  * Parses a string literal.
  */
 static void string(bool canAssign) {
+    if (parser.previous.type == TOKEN_STRING) {
+        emitConstant(OBJ_VAL(copyString(parser.previous.start, parser.previous.length)));
+        free((char*)parser.previous.start);
+        return;
+    }
+
+    // Interpolation begins
     emitConstant(OBJ_VAL(copyString(parser.previous.start, parser.previous.length)));
-    free(parser.previous.start);
+    free((char*)parser.previous.start);
+
+    for (;;) {
+        // Parse the interpolated expression
+        expression();
+
+        // Coerce it to string and concatenate
+        emitByte(OP_TO_STRING);
+        emitByte(OP_ADD);
+
+        advance(); // now parser.previous is the next segment token
+
+        // Emit the text segment after the expression
+        emitConstant(OBJ_VAL(copyString(parser.previous.start, parser.previous.length)));
+        free((char*)parser.previous.start);
+        emitByte(OP_ADD);
+
+        if (parser.previous.type == TOKEN_INTERP_END || parser.previous.type == TOKEN_STRING) break;
+        // TOKEN_INTERP_BEGIN means another ${ follows — loop again
+    }
 }
 
 /**
@@ -1101,6 +1127,7 @@ ParseRule rules[] = {
     [TOKEN_LESS_EQUAL]    = {NULL,     binary,  PREC_COMPARISON},
     [TOKEN_IDENTIFIER]    = {variable, NULL,    PREC_NONE},
     [TOKEN_STRING]        = {string,   NULL,    PREC_NONE},
+    [TOKEN_INTERP_BEGIN]  = {string,   NULL,    PREC_NONE},
     [TOKEN_NUMBER]        = {number,   NULL,    PREC_NONE},
     [TOKEN_AND]           = {NULL,     and_,    PREC_AND},
     [TOKEN_BREAK]         = {NULL,     NULL,    PREC_NONE},

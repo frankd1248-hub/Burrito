@@ -58,6 +58,7 @@ typedef enum {
     OP_BITRIGHT,
     OP_BITLEFT,
     OP_PRINT,                // Formatted print
+    OP_TO_STRING,
     OP_DUP,                  // Duplicate top two values on the stack
     OP_DUP2,
     OP_JUMP,                 // Unconditional jump forwards

@@ -1,3 +1,4 @@
+#include <math.h>
 #include <time.h>
 
 #include "btime.h"
@@ -13,6 +14,18 @@ static bool timeNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static inline void _sleep(double milliseconds) {
+    struct timespec req = {
+        (time_t) (milliseconds / 1000), 
+        (time_t) (fmod(milliseconds, 1000.0) * 1000000)
+    };
+    struct timespec rem;
+
+    while (nanosleep(&req, &rem) == -1) {
+        req = rem;
+    }
+}
+
 static bool sleepNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
     if (argCount != 1 || !IS_NUMBER(args[0])) {
@@ -22,7 +35,7 @@ static bool sleepNative(int argCount, Value* args, Value* result) {
 #endif
 
     double seconds = AS_NUMBER(args[0]);
-    SLEEP(seconds * 1000);
+    _sleep(seconds * 1000);
     return true;
 }
 
