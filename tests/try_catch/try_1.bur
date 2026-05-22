@@ -6,5 +6,3 @@ try {
     print("%s\n", error);
     print("Hello, world!\n");
 }
-
-print("%s\n", 5);

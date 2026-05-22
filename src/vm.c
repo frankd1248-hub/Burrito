@@ -116,6 +116,8 @@ void initVM() {
     initTable(&vm.arrayMethods);
     initTable(&vm.mapMethods);
 
+    initTable(&vm.importedFiles);
+
     vm.initString = NULL;
     vm.initString = copyString("init", 4);
 
@@ -128,6 +130,9 @@ void freeVM() {
     freeTable(&vm.strings);
     freeTable(&vm.arrayMethods);
     freeTable(&vm.mapMethods);
+
+    freeTable(&vm.importedFiles);
+    
     vm.initString = NULL;
     freeObjects();
 }
@@ -259,6 +264,84 @@ bool callBurrito(Value callee, int argCount, Value* result) {
     if (res != INTERPRET_OK) return false;
     *result = pop();
     return true;
+}
+
+static ObjModule* importFile(const char* path) {
+    // 1. Resolve to a canonical path (realpath or just use path as-is).
+    ObjString* key = copyString(path, strlen(path));
+
+    // 2. Check cache — return existing module if already imported.
+    Value cached;
+    if (tableGet(&vm.importedFiles, key, &cached)) {
+        if (IS_NULL(cached)) {
+            // Sentinel hit — cycle detected
+            runtimeError("Circular import detected: '%s'", path);
+            return NULL;
+        }
+        return AS_MODULE(cached); // normal cache hit
+    }
+
+    // 3. Read the file.
+    char* source = readFile(path);   // move readFile() from main.c to vm.c (or a shared util)
+    if (source == NULL) return NULL;
+
+    // 4. Compile it.
+    ObjFunction* fn = compile(source);
+    free(source);
+    if (fn == NULL) return NULL;
+
+    // 5. Create the module and a temporary globals swap.
+    ObjModule* module = newModule();
+
+    // Save and replace globals so the imported file's top-level
+    // definitions land in the module table, not the importer's globals.
+    Table savedGlobals = vm.globals;
+    Table savedConsts  = vm.consts;
+    initTable(&vm.globals);
+    initTable(&vm.consts);
+
+    // Seed the fresh globals with natives from the saved globals
+    // so the imported file can use math, str, io, etc.
+    for (int i = 0; i < savedGlobals.capacity; i++) {
+        Entry* e = &savedGlobals.entries[i];
+        if (e->key == NULL) continue;
+        // Only copy modules and natives, not user-defined globals
+        if (IS_OBJ(e->value) && (IS_MODULE(e->value) || IS_NATIVE(e->value)))
+            tableSet(&vm.globals, e->key, e->value);
+    }
+
+    // Push a sentinel
+    tableSet(&vm.importedFiles, key, NULL_VAL);
+
+    // 6. Run the file.
+    push(OBJ_VAL(fn));
+    ObjClosure* closure = newClosure(fn);
+    pop();
+    push(OBJ_VAL(closure));
+    callValue(OBJ_VAL(closure), 0);
+    InterpretResult result = run(vm.frameCount - 1);
+
+    // 7. Harvest exports: copy everything from the temporary globals
+    //    into module->table.
+    if (result == INTERPRET_OK) {
+        for (int i = 0; i < vm.globals.capacity; i++) {
+            Entry* e = &vm.globals.entries[i];
+            if (e->key == NULL) continue;
+            tableSet(&module->table, e->key, e->value);
+        }
+    }
+
+    // 8. Restore caller's globals.
+    freeTable(&vm.globals);
+    freeTable(&vm.consts);
+    vm.globals = savedGlobals;
+    vm.consts  = savedConsts;
+
+    if (result != INTERPRET_OK) return NULL;
+
+    // 9. Cache the module.
+    tableSet(&vm.importedFiles, key, OBJ_VAL(module));
+    return module;
 }
 
 static bool invokeFromClass(ObjClass* class_, ObjString* name, int argCount) {
@@ -533,6 +616,8 @@ static InterpretResult run(int returnDepth) {
         [OP_INVOKE_LONG]       = &&op_OP_INVOKE_LONG,
         [OP_SUPER_INVOKE]      = &&op_OP_SUPER_INVOKE,
         [OP_SUPER_INVOKE_LONG] = &&op_OP_SUPER_INVOKE_LONG,
+        [OP_IMPORT]            = &&op_OP_IMPORT,
+        [OP_IMPORT_FROM]       = &&op_OP_IMPORT_FROM,
         [OP_CLOSURE]           = &&op_OP_CLOSURE,
         [OP_CLOSURE_LONG]      = &&op_OP_CLOSURE_LONG,
         [OP_CLOSE_UPVALUE]     = &&op_OP_CLOSE_UPVALUE,
@@ -1168,6 +1253,42 @@ print_end:
         if (!invokeFromClass(superclass, method, argCount)) return INTERPRET_RUNTIME_ERROR;
         frame = &vm.frames[vm.frameCount - 1];
         
+        DISPATCH();
+    } CASE(OP_IMPORT): {
+        ObjString* path = AS_STRING(READ_CONSTANT());
+        ObjModule* module = importFile(path->chars);
+        if (module == NULL) {
+            runtimeError("Could not import '%s'.", path->chars);
+            if (errorWasHandled) return INTERPRET_OK;
+            return INTERPRET_RUNTIME_ERROR;
+        }
+
+        // Derive the module name from the path ("one.bur" → "one")
+        const char* dot = strrchr(path->chars, '.');
+        int nameLen = dot ? (int)(dot - path->chars) : (int)path->length;
+        ObjString* name = copyString(path->chars, nameLen);
+        tableSet(&vm.globals, name, OBJ_VAL(module));
+        DISPATCH();
+    } CASE(OP_IMPORT_FROM): {
+        ObjString* path = AS_STRING(READ_CONSTANT());
+        uint8_t count = READ_BYTE();
+        ObjModule* module = importFile(path->chars);
+        if (module == NULL) {
+            runtimeError("Could not import '%s'.", path->chars);
+            if (errorWasHandled) return INTERPRET_OK;
+            return INTERPRET_RUNTIME_ERROR;
+        }
+
+        for (int i = 0; i < count; i++) {
+            ObjString* name = AS_STRING(READ_CONSTANT());
+            Value val;
+            if (!tableGet(&module->table, name, &val)) {
+                runtimeError("'%s' not found in module '%s'.", name->chars, path->chars);
+                if (errorWasHandled) return INTERPRET_OK;
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            tableSet(&vm.globals, name, val);
+        }
         DISPATCH();
     } CASE(OP_CLOSURE): {
         ObjFunction* function = AS_FUNCTION(READ_CONSTANT());

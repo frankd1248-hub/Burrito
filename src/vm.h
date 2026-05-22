@@ -62,6 +62,8 @@ typedef struct {
     Table arrayMethods;
     Table mapMethods;
 
+    Table importedFiles;
+
     size_t bytesAllocated;
     size_t nextGC;
     Value* stackTop;

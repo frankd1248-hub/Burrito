@@ -1854,6 +1854,38 @@ static void forStatement() {
     endScope();
 }
 
+static void fromImportStatement() {
+    consume(TOKEN_IDENTIFIER, "Expect module name after 'from'.");
+    char path[256];
+    snprintf(path, sizeof(path), "%.*s.bur", parser.previous.length, parser.previous.start);
+    uint8_t pathConst = makeConstant(OBJ_VAL(copyString(path, strlen(path))));
+
+    consume(TOKEN_IMPORT, "Expect 'import' after module name.");
+
+    uint8_t names[256];
+    int count = 0;
+    do {
+        consume(TOKEN_IDENTIFIER, "Expect name to import.");
+        names[count++] = makeConstant(OBJ_VAL(copyString(parser.previous.start, parser.previous.length)));
+    } while (match(TOKEN_COMMA));
+
+    consume(TOKEN_SEMICOLON, "Expect ';' after import list.");
+
+    emitWord(OP_IMPORT_FROM, pathConst);
+    emitByte((uint8_t)count);
+    for (int i = 0; i < count; i++) emitByte(names[i]);
+}
+
+static void importStatement() {
+    consume(TOKEN_IDENTIFIER, "Expect module name after 'import'.");
+    // build path: name + ".bur"
+    char path[256];
+    snprintf(path, sizeof(path), "%.*s.bur", parser.previous.length, parser.previous.start);
+    uint8_t pathConst = makeConstant(OBJ_VAL(copyString(path, strlen(path))));
+    consume(TOKEN_SEMICOLON, "Expect ';' after import.");
+    emitWord(OP_IMPORT, pathConst);
+}
+
 static void ifStatement() {
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
     expression();
@@ -2085,8 +2117,12 @@ static void statement() {
         continueStatement();
     } else if (match(TOKEN_FOR)) {
         forStatement();
+    } else if (match(TOKEN_FROM)) {
+        fromImportStatement();
     } else if (match(TOKEN_IF)) {
         ifStatement();
+    } else if (match(TOKEN_IMPORT)) {
+        importStatement();
     } else if (match(TOKEN_RETURN)) {
         returnStatement();
     } else if (match(TOKEN_SWITCH)) {
