@@ -141,6 +141,7 @@ static bool sSplitNative(int argCount, Value* args, Value* result) {
         arr->values[i] = OBJ_VAL(copyString(array[i], lengths[i]));
         FREE_ARRAY(char, array[i], lengths[i] + 1);  // ← free after copyString is done with it
     }
+    arr->size = count;
 
     *result = peek(0);
     pop();

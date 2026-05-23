@@ -1,0 +1,47 @@
+class Command {
+
+    init(literal) {
+        this.literal = literal;
+        this.command = "";
+        this.args = {};
+    }
+
+    parseCommand() {
+        decl i = 0;
+        decl len = str.len(this.literal);
+        decl tokens = {};
+
+        while (i < len) {
+            // Skip whitespace
+            while (i < len and this.literal[i] == " ") {
+                i++;
+            }
+            if (i >= len) break;
+
+            if (this.literal[i] == "\"") {
+                // Quoted token — consume until closing quote
+                i++;
+                decl start = i;
+                decl token = "";
+                while (i < len and this.literal[i] != "\"") {
+                    token = token + this.literal[i];
+                    i++;
+                }
+                i++; // skip closing quote
+                tokens.push(token);
+            } else {
+                // Unquoted token — consume until whitespace
+                decl token = "";
+                while (i < len and this.literal[i] != " ") {
+                    token = token + this.literal[i];
+                    i++;
+                }
+                tokens.push(token);
+            }
+        }
+
+        if (tokens.length == 0) return;
+        this.command = tokens[0];
+        this.args = tokens.length > 1 ? tokens.slice(1, tokens.length) : {};
+    }
+}

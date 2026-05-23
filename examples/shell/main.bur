@@ -1,0 +1,75 @@
+from command import Command;
+
+decl username = "frank";
+decl devname = "burrito";
+
+fn cmdExit(args) {
+    exit(0);
+}
+
+fn cmdLs(args) {
+    decl list = io.listDir();
+    list.concat(io.listFiles());
+    for ent in list {
+        print("${ent}  ");
+    }
+    print("\n");
+}
+
+fn cmdCd(args) {
+    if (args.length != 1) {
+        print("Command 'cd' takes one argument.\n");
+        return;
+    }
+    io.changeDir(args[0]);
+}
+
+fn cmdCat(args) {
+    if (args.length != 1) {
+        print("Command 'cat' takes one argument.\n");
+        return;
+    }
+    print("\n${io.readFile(args[0])}\n\n");
+}
+
+decl commands = {
+    {"exit", cmdExit},
+    {"ls",   cmdLs  },
+    {"cd",   cmdCd  },
+    {"cat",  cmdCat }
+};
+
+fn dispatch(command) {
+    for entry in commands {
+        if (entry[0] == command.command) {
+            entry[1](command.args);
+            return;
+        }
+    }
+
+    if (command.command != "") {
+        print("Unknown command: '${command.command}'\n");
+    }
+}
+
+fn getFolderName(path) {
+    decl comps = str.split(path, "/");
+    return comps[comps.length - 1];
+}
+
+fn run() {
+    print("[${username}@${devname} ${getFolderName(io.currentDir())}] $ ");
+    decl cmd_ = io.readLine();
+    decl cmd = Command(cmd_);
+    cmd.parseCommand();
+
+    try {    
+        dispatch(cmd);
+    } catch (runtimeError) {
+        print("Runtime error: ${runtimeError}");
+    }
+}
+
+while (true) {
+    run();
+}

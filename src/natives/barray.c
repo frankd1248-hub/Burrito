@@ -140,7 +140,8 @@ static bool concatNative(int argCount, Value* args, Value* result) {
         while (dst->capacity < needed) dst->capacity = GROW_CAPACITY(dst->capacity);
         dst->values = GROW_ARRAY(Value, dst->values, oldCap, dst->capacity);
     }
-
+    
+    dst = AS_ARRAY(args[0]);
     src = AS_ARRAY(args[1]);   // re-read after potential realloc
     for (int i = 0; i < src->size; i++)
         dst->values[dst->size++] = src->values[i];
