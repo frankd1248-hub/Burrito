@@ -454,9 +454,20 @@ static vector<fs::path> parseSelection(const string& input,
 
 int main(int argc, char** argv) {
 
-    if (argc > 1) {
-        fprintf(stderr, "The burrito test suite does not take arguments.\n");
-        return 1;
+    // --all / --ci  : run every test non-interactively and exit with a status code.
+    // --verbose     : print output for passing tests too (can combine with --all).
+    bool ciMode  = false;
+    bool verbose = false;
+
+    for (int i = 1; i < argc; i++) {
+        string arg = argv[i];
+        if (arg == "--all" || arg == "--ci") ciMode = true;
+        else if (arg == "--verbose" || arg == "-v") verbose = true;
+        else {
+            fprintf(stderr, "Unknown argument '%s'.\n"
+                            "Usage: burritoTestSuite [--all | --ci] [--verbose]\n", argv[i]);
+            return 1;
+        }
     }
 
     const fs::path root = "./tests";
@@ -467,7 +478,16 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    bool verbose = false;
+    // Non-interactive mode: run all tests, print results, exit with pass/fail code.
+    if (ciMode) {
+        printf(CLR_BOLD CLR_CYAN
+               "\n══════════════════════════════════════\n"
+               " Burrito Test Suite\n"
+               "══════════════════════════════════════\n"
+               CLR_RESET);
+        runTests(tests, root, verbose);
+        return 0;
+    }
 
     for (;;) {
         printf(CLR_BOLD CLR_CYAN
@@ -502,8 +522,6 @@ int main(int argc, char** argv) {
         vector<fs::path> batch = parseSelection(input, tests, root);
         if (!batch.empty())
             runTests(batch, root, verbose);
-
-        getchar();
     }
 
     return 0;

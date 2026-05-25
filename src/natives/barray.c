@@ -328,6 +328,143 @@ static bool copyNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool mapNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_ARRAY(args[0]) || !(IS_CLOSURE(args[1]) || IS_NATIVE(args[1]))) {
+        *result = OBJ_VAL(copyString("map() takes one array and one function argument.", 48));
+        return false;
+    }
+#endif
+
+    ObjArray* array = AS_ARRAY(args[0]);
+    Value fun = args[1];
+    int n = array->size;
+
+    push(args[0]);
+    ObjArray* mapped = newArray(n);
+    array = AS_ARRAY(args[0]);
+    pop();
+
+    push(OBJ_VAL(mapped));
+    for (int i = 0; i < n; i++) {
+        Value res;
+        push(fun);
+        push(array->values[i]);
+        array = AS_ARRAY(args[0]);
+        if (!callBurrito(fun, 1, &res)) {
+            *result = OBJ_VAL(copyString("map() function raised an error.", 31));
+            return false;
+        }
+
+        mapped->values[i] = res;
+    }
+    mapped->size = n;
+    pop();
+
+    *result = OBJ_VAL(mapped);
+    return true;
+}
+
+static bool filterNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_ARRAY(args[0]) || !(IS_CLOSURE(args[1]) || IS_NATIVE(args[1]))) {
+        *result = OBJ_VAL(copyString("filter() takes one array and one function argument.", 51));
+        return false;
+    }
+#endif
+
+    ObjArray* array = AS_ARRAY(args[0]);
+    Value fun = args[1];
+    int n = array->size;
+
+    push(args[0]);
+    ObjArray* filtered = newArray(n);  // worst case: all elements pass
+    array = AS_ARRAY(args[0]);         // re-read after potential GC in newArray
+    pop();
+
+    push(OBJ_VAL(filtered));           // root filtered across callBurrito calls
+
+    int count = 0;
+    for (int i = 0; i < n; i++) {
+        Value res;
+        push(fun);
+        push(AS_ARRAY(args[0])->values[i]);
+        if (!callBurrito(fun, 1, &res)) {
+            *result = OBJ_VAL(copyString("filter() function raised an error.", 34));
+            pop();  // filtered
+            return false;
+        }
+
+        if (IS_BOOL(res) && AS_BOOL(res)) {
+            AS_ARRAY(peek(0))->values[count++] = AS_ARRAY(args[0])->values[i];
+        }
+    }
+
+    AS_ARRAY(peek(0))->size = count;
+    *result = peek(0);
+    pop();  // filtered
+    return true;
+}
+
+static bool reduceNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 3 || !IS_ARRAY(args[0]) || !(IS_CLOSURE(args[1]) || IS_NATIVE(args[1]))) {
+        *result = OBJ_VAL(copyString("reduce() takes an array, a function, and an initial value.", 58));
+        return false;
+    }
+#endif
+
+    ObjArray* array = AS_ARRAY(args[0]);
+    Value fun = args[1];
+    int n = array->size;
+
+    push(args[2]);  // root the accumulator on the stack
+
+    for (int i = 0; i < n; i++) {
+        Value res;
+        push(fun);
+        push(peek(1));                          // accumulator
+        push(AS_ARRAY(args[0])->values[i]);     // current element
+        if (!callBurrito(fun, 2, &res)) {
+            *result = OBJ_VAL(copyString("reduce() function raised an error.", 34));
+            pop();  // accumulator
+            return false;
+        }
+
+        pop();
+        push(res);
+    }
+
+    *result = pop();  // return final accumulator
+    return true;
+}
+
+static bool forEachNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_ARRAY(args[0]) || !(IS_CLOSURE(args[1]) || IS_NATIVE(args[1]))) {
+        *result = OBJ_VAL(copyString("forEach() takes one array and one function argument.", 52));
+        return false;
+    }
+#endif
+
+    ObjArray* array = AS_ARRAY(args[0]);
+    Value fun = args[1];
+    int n = array->size;
+
+    for (int i = 0; i < n; i++) {
+        Value res;
+        push(fun);
+        push(AS_ARRAY(args[0])->values[i]);
+        if (!callBurrito(fun, 1, &res)) {
+            *result = OBJ_VAL(copyString("forEach() function raised an error.", 35));
+            return false;
+        }
+    }
+
+    *result = NULL_VAL;
+    return true;
+}
+
 static void addMethod(const char* name, int length, NativeFn fn) {
     push(OBJ_VAL(newNative(fn)));
     tableSet(&vm.arrayMethods, copyString(name, length), peek(0));
@@ -347,4 +484,8 @@ void buildArrayMethods() {
     addMethod("indexOf",  7,  indexOfNative);
     addMethod("fill",     4,  fillNative);
     addMethod("copy",     4,  copyNative);
+    addMethod("map",      3,  mapNative);
+    addMethod("filter",   6,  filterNative);
+    addMethod("reduce",   6,  reduceNative);
+    addMethod("forEach",  7,  forEachNative);
 }
