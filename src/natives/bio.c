@@ -13,6 +13,7 @@
 
     #include <unistd.h>
     #include <dirent.h>
+    #include <sys/stat.h>
 #endif
 
 #include "bio.h"
@@ -337,6 +338,65 @@ static bool listFilesNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool fileExistsNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_STRING(args[0])) {
+        *result = OBJ_VAL(copyString("fileExists() expects one string argument.", 41));
+        return false;
+    }
+#endif
+
+    FILE* file = fopen(AS_CSTRING(args[0]), "r");
+    if (file != NULL) {
+        fclose(file);
+        *result = BOOL_VAL(true);
+    } else {
+        *result = BOOL_VAL(false);
+    }
+    return true;
+}
+
+static bool makeDirNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_STRING(args[0])) {
+        *result = OBJ_VAL(copyString("makeDir() expects one string argument.", 38));
+        return false;
+    }
+#endif
+
+#ifdef _WIN32
+    int res = _mkdir(AS_CSTRING(args[0]));
+#else
+    int res = mkdir(AS_CSTRING(args[0]), 0755);
+#endif
+
+    if (res == 0) {
+        *result = BOOL_VAL(true);
+        return true;
+    } else {
+        *result = OBJ_VAL(copyString("makeDir() failed to create directory.", 37));
+        return false;
+    }
+}
+
+static bool createFileNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_STRING(args[0])) {
+        *result = OBJ_VAL(copyString("createFile() expects one string argument.", 41));
+        return false;
+    }
+#endif
+
+    FILE* file = fopen(AS_CSTRING(args[0]), "wx");
+    if (file == NULL) {
+        *result = OBJ_VAL(copyString("createFile() failed — file may already exist.", 45));
+        return false;
+    }
+    fclose(file);
+    *result = BOOL_VAL(true);
+    return true;
+}
+
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
     push(OBJ_VAL(newNative(fn)));
     tableSet(&module->table, copyString(name, length), peek(0));
@@ -349,16 +409,19 @@ ObjModule* buildIOModule() {
 
     addNative(module, "getNumber", 9, getNumberNative);
     addNative(module, "getString", 9, getStringNative);
-    addNative(module, "readLine", 8, readLineNative);
-    addNative(module, "flush", 5, flushNative);
+    addNative(module, "readLine",  8, readLineNative);
+    addNative(module, "flush",     5, flushNative);
 
-    addNative(module, "readFile", 8, readFileNative);
-    addNative(module, "writeFile", 9, writeFileNative);
+    addNative(module, "readFile",    8, readFileNative);
+    addNative(module, "writeFile",   9, writeFileNative);
     addNative(module, "appendFile", 10, appendFileNative);
     addNative(module, "currentDir", 10, currentDirNative);
-    addNative(module, "changeDir", 9, chdirNative);
-    addNative(module, "listDir", 7, listDirNative);
-    addNative(module, "listFiles", 9, listFilesNative);
+    addNative(module, "changeDir",   9, chdirNative);
+    addNative(module, "listDir",     7, listDirNative);
+    addNative(module, "listFiles",   9, listFilesNative);
+    addNative(module, "fileExists", 10, fileExistsNative);
+    addNative(module, "makeDir",     7, makeDirNative);
+    addNative(module, "createFile", 10, createFileNative);
 
     pop();
     return module;

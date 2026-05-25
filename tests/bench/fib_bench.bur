@@ -6,7 +6,7 @@ fn fib(n) {
 }
 
 decl start = time.clock();
-print("%d\n", fib(40));
+print("%d\n", fib(35));
 decl elapsed = time.clock() - start;
 
 print("Time: %d\n", elapsed);
