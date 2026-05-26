@@ -4,6 +4,7 @@ decl username = "frank";
 decl devname = "burrito";
 
 fn cmdExit(args) {
+    io.writeFile("config", "${username}\n${devname}");
     exit(0);
 }
 
@@ -21,6 +22,7 @@ fn cmdCd(args) {
         print("Command 'cd' takes one argument.\n");
         return;
     }
+
     io.changeDir(args[0]);
 }
 
@@ -29,14 +31,80 @@ fn cmdCat(args) {
         print("Command 'cat' takes one argument.\n");
         return;
     }
+
     print("\n${io.readFile(args[0])}\n\n");
 }
 
+fn cmdTouch(args) {
+    if (args.length != 1) {
+        print("Command 'touch' takes one argument.\n");
+        return;
+    }
+
+    io.createFile(args[0]);
+}
+
+fn cmdRm(args) {
+    if (args.length != 1) {
+        print("Command 'rm' takes one argument.\n");
+        return;
+    }
+
+    io.removeFile(args[0]);
+}
+
+fn cmdMkdir(args) {
+    if (args.length != 1) {
+        print("Command 'mkdir' takes one argument.\n");
+        return;
+    }
+
+    io.makeDir(args[0]);
+}
+
+fn cmdRmdir(args) {
+    if (args.length != 1) {
+        print("Command 'rmdir' takes one argument.\n");
+        return;
+    }
+
+    io.removeDir(args[0]);
+}
+
+fn cmdWhoami(args) {
+    print("${username}\n");
+}
+
+fn cmdUsermod(args) {
+    if (args.length != 1) {
+        print("Command 'usermod' takes one argument.\n");
+        return;
+    }
+
+    username = args[0];
+}
+
+fn cmdDevmod(args) {
+    if (args.length != 1) {
+        print("Command 'devmod' takes one argument.\n");
+        return;
+    }
+
+    devname = args[0];
+}
+
 decl commands = {
-    {"exit", cmdExit},
-    {"ls",   cmdLs  },
-    {"cd",   cmdCd  },
-    {"cat",  cmdCat }
+    {"exit",    cmdExit   },
+    {"ls",      cmdLs     },
+    {"cd",      cmdCd     },
+    {"cat",     cmdCat    },
+    {"touch",   cmdTouch  },
+    {"rm",      cmdRm     },
+    {"mkdir",   cmdMkdir  },
+    {"rmdir",   cmdRmdir  },
+    {"whoami",  cmdWhoami },
+    {"usermod", cmdUsermod},
+    {"devmod",  cmdDevmod }
 };
 
 fn dispatch(command) {
@@ -70,6 +138,15 @@ fn run() {
     }
 }
 
-while (true) {
-    run();
+fn main() {
+    if (io.fileExists("config")) {
+        username = str.split(io.readFile("config"), "\n")[0];
+        devname = str.split(io.readFile("config"), "\n")[1];
+    }
+
+    while (true) {
+        run();
+    }
 }
+
+main();

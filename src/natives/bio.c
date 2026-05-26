@@ -379,6 +379,29 @@ static bool makeDirNative(int argCount, Value* args, Value* result) {
     }
 }
 
+static bool removeDirNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_STRING(args[0])) {
+        *result = OBJ_VAL(copyString("removeDir() takes one string argument.", 38));
+        return false;
+    }
+#endif
+
+#ifdef _WIN32
+    int res = _rmdir(AS_CSTRING(args[0]));
+#else
+    int res = rmdir(AS_CSTRING(args[0]));
+#endif
+
+    if (res == 0) {
+        *result = BOOL_VAL(true);
+        return true;
+    } else {
+        *result = OBJ_VAL(copyString("removeDir() failed to remove directory. Are there still files there?", 68));
+        return false;
+    }
+}
+
 static bool createFileNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
     if (argCount != 1 || !IS_STRING(args[0])) {
@@ -395,6 +418,23 @@ static bool createFileNative(int argCount, Value* args, Value* result) {
     fclose(file);
     *result = BOOL_VAL(true);
     return true;
+}
+
+static bool removeFileNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_STRING(args[0])) {
+        *result = OBJ_VAL(copyString("removeFile() expects one string argument.", 41));
+        return false;
+    }
+#endif
+
+    if (remove(AS_CSTRING(args[0])) == 0) {
+        *result = BOOL_VAL(true);
+        return true;
+    } else {
+        *result = OBJ_VAL(copyString("removeFile() failed to remove file.", 35));
+        return false;
+    }
 }
 
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
@@ -421,7 +461,9 @@ ObjModule* buildIOModule() {
     addNative(module, "listFiles",   9, listFilesNative);
     addNative(module, "fileExists", 10, fileExistsNative);
     addNative(module, "makeDir",     7, makeDirNative);
+    addNative(module, "removeDir",   9, removeDirNative);
     addNative(module, "createFile", 10, createFileNative);
+    addNative(module, "removeFile", 10, removeFileNative);
 
     pop();
     return module;
