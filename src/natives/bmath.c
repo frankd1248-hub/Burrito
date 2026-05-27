@@ -5,6 +5,8 @@
 #include "bmath.h"
 #include "../vm.h"
 
+#define PI 3.14159265358979323846
+
 /**
  * Successful check returns true.
  */
@@ -14,7 +16,7 @@ static bool checkNumberArguments(char* name, Value* args, Value* result, int cou
         if (!IS_NUMBER(args[i])) {
             char* errorMessage = calloc(30 + strlen(name), sizeof(char));;
             strcat(errorMessage, name);
-            strcat(errorMessage, "() expects number parameters.");
+            strcat(errorMessage, "() expects number arguments.");
             *result = OBJ_VAL(copyString(errorMessage, strlen(errorMessage)));
             free(errorMessage);
             return false;
@@ -278,6 +280,103 @@ static bool absNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+static bool maxNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount < 1) {
+        *result = OBJ_VAL(copyString("max() takes at least one number argument.", 41));
+        return false;
+    } if (!checkNumberArguments("max", args, result, argCount)) {
+        return false;
+    }
+#endif
+
+    double max = AS_NUMBER(args[0]);
+    for (int i = 1; i < argCount; i++) {
+        if (AS_NUMBER(args[i]) > max) {
+            max = AS_NUMBER(args[i]);
+        }
+    }
+
+    *result = NUMBER_VAL(max);
+    return true;
+}
+
+static bool minNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount < 1) {
+        *result = OBJ_VAL(copyString("min() takes at least one number argument.", 41));
+        return false;
+    } if (!checkNumberArguments("min", args, result, argCount)) {
+        return false;
+    }
+#endif
+
+    double min = AS_NUMBER(args[0]);
+    for (int i = 1; i < argCount; i++) {
+        if (AS_NUMBER(args[i]) < min) {
+            min = AS_NUMBER(args[i]);
+        }
+    }
+
+    *result = NUMBER_VAL(min);
+    return true;
+}
+
+static bool degToRadNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_NUMBER(args[0])) {
+        *result = OBJ_VAL(copyString("degToRad() takes one number argument.", 37));
+        return false;
+    }
+#endif
+ 
+    *result = NUMBER_VAL(AS_NUMBER(args[0]) * (PI / 180.0));
+    return true;
+}
+ 
+static bool radToDegNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_NUMBER(args[0])) {
+        *result = OBJ_VAL(copyString("radToDeg() takes one number argument.", 37));
+        return false;
+    }
+#endif
+ 
+    *result = NUMBER_VAL(AS_NUMBER(args[0]) * (180.0 / PI));
+    return true;
+}
+ 
+/**
+ * 2D (x1, y1, x2, y2)
+ */
+static bool distanceNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 4 || !checkNumberArguments("distance", args, result, 4)) {
+        if (argCount != 4)
+            *result = OBJ_VAL(copyString("distance() expects four number arguments.", 41));
+        return false;
+    }
+#endif
+ 
+    double dx = AS_NUMBER(args[2]) - AS_NUMBER(args[0]);
+    double dy = AS_NUMBER(args[3]) - AS_NUMBER(args[1]);
+    *result = NUMBER_VAL(sqrt(dx * dx + dy * dy));
+    return true;
+}
+ 
+static bool hypotNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !checkNumberArguments("hypot", args, result, 2)) {
+        if (argCount != 2)
+            *result = OBJ_VAL(copyString("hypot() expects two number arguments.", 37));
+        return false;
+    }
+#endif
+ 
+    *result = NUMBER_VAL(hypot(AS_NUMBER(args[0]), AS_NUMBER(args[1])));
+    return true;
+}
+
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
     push(OBJ_VAL(newNative(fn)));
     tableSet(&module->table, copyString(name, length), peek(0));
@@ -292,7 +391,7 @@ ObjModule* buildMathModule() {
     ObjModule* module = newModule();
     push(OBJ_VAL(module));
 
-    addConst(module, "pi", 2, 3.14159265358979323846);
+    addConst(module, "pi", 2, PI);
     addConst(module, "e", 1, 2.7182818284590452354);
 
     addNative(module, "power", 5, powerNative);
@@ -314,8 +413,16 @@ ObjModule* buildMathModule() {
 
     addNative(module, "abs", 3, absNative);
 
+    addNative(module, "max", 3, maxNative);
+    addNative(module, "min", 3, minNative);
+
     addNative(module, "rand", 4, randNative);
     addNative(module, "randRange", 9, randRangeNative);
+
+    addNative(module, "degToRad", 8, degToRadNative);
+    addNative(module, "radToDeg", 8, radToDegNative);
+    addNative(module, "distance", 8, distanceNative);
+    addNative(module, "hypot", 5, hypotNative);
 
     pop();
     return module;

@@ -11,6 +11,8 @@ static bool sContainsNative(int, Value*, Value*);
 static bool sReplaceNative(int, Value*, Value*);
 static bool sReplaceAllNative(int, Value*, Value*);
 static bool sRepeatNative(int, Value*, Value*);
+static bool sIsAlphaNative(int argCount, Value* args, Value* result);
+static bool sIsNumericNative(int argCount, Value* args, Value* result);
 
 static bool sLengthNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
@@ -272,6 +274,258 @@ static bool sLowerNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+
+static bool sStartsWithNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_STRING(args[0]) || !IS_STRING(args[1])) {
+        *result = OBJ_VAL(copyString("startsWith() expects two string arguments.", 42));
+        return false;
+    }
+#endif
+
+    ObjString* haystack = AS_STRING(args[0]);
+    ObjString* prefix   = AS_STRING(args[1]);
+
+    if (prefix->length > haystack->length) {
+        *result = BOOL_VAL(false);
+        return true;
+    }
+
+    *result = BOOL_VAL(memcmp(haystack->chars, prefix->chars, prefix->length) == 0);
+    return true;
+}
+
+static bool sEndsWithNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_STRING(args[0]) || !IS_STRING(args[1])) {
+        *result = OBJ_VAL(copyString("endsWith() expects two string arguments.", 40));
+        return false;
+    }
+#endif
+
+    ObjString* haystack = AS_STRING(args[0]);
+    ObjString* suffix   = AS_STRING(args[1]);
+
+    if (suffix->length > haystack->length) {
+        *result = BOOL_VAL(false);
+        return true;
+    }
+
+    int offset = haystack->length - suffix->length;
+    *result = BOOL_VAL(memcmp(haystack->chars + offset, suffix->chars, suffix->length) == 0);
+    return true;
+}
+
+static bool sContainsNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_STRING(args[0]) || !IS_STRING(args[1])) {
+        *result = OBJ_VAL(copyString("contains() expects two string arguments.", 40));
+        return false;
+    }
+#endif
+
+    char* haystack = AS_CSTRING(args[0]);
+    char* needle   = AS_CSTRING(args[1]);
+
+    *result = BOOL_VAL(strstr(haystack, needle) != NULL);
+    return true;
+}
+
+static bool sReplaceNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 3 || !IS_STRING(args[0]) || !IS_STRING(args[1]) || !IS_STRING(args[2])) {
+        *result = OBJ_VAL(copyString("replace() expects three string arguments.", 41));
+        return false;
+    }
+#endif
+
+    char* src        = AS_CSTRING(args[0]);
+    char* needle     = AS_CSTRING(args[1]);
+    char* replacement = AS_CSTRING(args[2]);
+    int needleLen    = (int)strlen(needle);
+    int replacementLen = (int)strlen(replacement);
+
+    if (needleLen == 0) {
+        *result = args[0];
+        return true;
+    }
+
+    char* found = strstr(src, needle);
+    if (found == NULL) {
+        *result = args[0];
+        return true;
+    }
+
+    int prefixLen = (int)(found - src);
+    int suffixLen = (int)strlen(found + needleLen);
+    int totalLen  = prefixLen + replacementLen + suffixLen;
+
+    char* res = malloc(sizeof(char) * (totalLen + 1));
+    if (res == NULL) {
+        *result = OBJ_VAL(copyString("replace() ran out of memory.", 28));
+        return false;
+    }
+
+    memcpy(res, src, prefixLen);
+    memcpy(res + prefixLen, replacement, replacementLen);
+    memcpy(res + prefixLen + replacementLen, found + needleLen, suffixLen);
+    res[totalLen] = '\0';
+
+    *result = OBJ_VAL(copyString(res, totalLen));
+    free(res);
+    return true;
+}
+
+static bool sReplaceAllNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 3 || !IS_STRING(args[0]) || !IS_STRING(args[1]) || !IS_STRING(args[2])) {
+        *result = OBJ_VAL(copyString("replaceAll() expects three string arguments.", 44));
+        return false;
+    }
+#endif
+
+    char* src          = AS_CSTRING(args[0]);
+    char* needle       = AS_CSTRING(args[1]);
+    char* replacement  = AS_CSTRING(args[2]);
+    int needleLen      = (int)strlen(needle);
+    int replacementLen = (int)strlen(replacement);
+
+    if (needleLen == 0) {
+        *result = args[0];
+        return true;
+    }
+
+    /* First pass: count occurrences to pre-size the buffer. */
+    int count = 0;
+    char* cur = src;
+    while ((cur = strstr(cur, needle)) != NULL) { count++; cur += needleLen; }
+
+    if (count == 0) {
+        *result = args[0];
+        return true;
+    }
+
+    int srcLen  = (int)strlen(src);
+    int totalLen = srcLen + count * (replacementLen - needleLen);
+
+    char* res = malloc(sizeof(char) * (totalLen + 1));
+    if (res == NULL) {
+        *result = OBJ_VAL(copyString("replaceAll() ran out of memory.", 31));
+        return false;
+    }
+
+    char* dst = res;
+    cur = src;
+    char* found;
+    while ((found = strstr(cur, needle)) != NULL) {
+        int chunk = (int)(found - cur);
+        memcpy(dst, cur, chunk);
+        dst += chunk;
+        memcpy(dst, replacement, replacementLen);
+        dst += replacementLen;
+        cur = found + needleLen;
+    }
+    /* Copy remainder. */
+    int remaining = (int)strlen(cur);
+    memcpy(dst, cur, remaining);
+    res[totalLen] = '\0';
+
+    *result = OBJ_VAL(copyString(res, totalLen));
+    free(res);
+    return true;
+}
+
+static bool sRepeatNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_STRING(args[0]) || !IS_NUMBER(args[1])) {
+        *result = OBJ_VAL(copyString("repeat() expects a string and a number argument.", 48));
+        return false;
+    }
+#endif
+
+    ObjString* string = AS_STRING(args[0]);
+    int times = (int)AS_NUMBER(args[1]);
+
+    if (times < 0) {
+        *result = OBJ_VAL(copyString("repeat() count must be non-negative.", 36));
+        return false;
+    }
+
+    if (times == 0 || string->length == 0) {
+        *result = OBJ_VAL(copyString("", 0));
+        return true;
+    }
+
+    int totalLen = string->length * times;
+    char* res = malloc(sizeof(char) * (totalLen + 1));
+    if (res == NULL) {
+        *result = OBJ_VAL(copyString("repeat() ran out of memory.", 27));
+        return false;
+    }
+
+    for (int i = 0; i < times; i++)
+        memcpy(res + i * string->length, string->chars, string->length);
+    res[totalLen] = '\0';
+
+    *result = OBJ_VAL(copyString(res, totalLen));
+    free(res);
+    return true;
+}
+
+static bool sIsAlphaNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_STRING(args[0])) {
+        *result = OBJ_VAL(copyString("isAlpha() takes one string argument.", 36));
+        return false;
+    }
+#endif
+
+    ObjString* string = AS_STRING(args[0]);
+
+    if (string->length == 0) {
+        *result = BOOL_VAL(false);
+        return true;
+    }
+
+    for (int i = 0; i < string->length; i++) {
+        char c = string->chars[i];
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) {
+            *result = BOOL_VAL(false);
+            return true;
+        }
+    }
+
+    *result = BOOL_VAL(true);
+    return true;
+}
+
+static bool sIsNumericNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_STRING(args[0])) {
+        *result = OBJ_VAL(copyString("isNumeric() takes one string argument.", 38));
+        return false;
+    }
+#endif
+
+    ObjString* string = AS_STRING(args[0]);
+
+    if (string->length == 0) {
+        *result = BOOL_VAL(false);
+        return true;
+    }
+
+    for (int i = 0; i < string->length; i++) {
+        char c = string->chars[i];
+        if (!(c >= '0' && c <= '9')) {
+            *result = BOOL_VAL(false);
+            return true;
+        }
+    }
+
+    *result = BOOL_VAL(true);
+    return true;
+}
+
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
     push(OBJ_VAL(newNative(fn)));
     tableSet(&module->table, copyString(name, length), peek(0));
@@ -290,6 +544,14 @@ ObjModule* buildStringModule() {
     addNative(module, "trim", 4, sTrimNative);
     addNative(module, "upper", 5, sUpperNative);
     addNative(module, "lower", 5, sLowerNative);
+    addNative(module, "startsWith", 10, sStartsWithNative);
+    addNative(module, "endsWith", 8, sEndsWithNative);
+    addNative(module, "contains", 8, sContainsNative);
+    addNative(module, "replace", 7, sReplaceNative);
+    addNative(module, "replaceAll", 10, sReplaceAllNative);
+    addNative(module, "repeat", 6, sRepeatNative);
+    addNative(module, "isAlpha", 7, sIsAlphaNative);
+    addNative(module, "isNumeric", 9, sIsNumericNative);
 
     pop();
     return module;

@@ -465,6 +465,153 @@ static bool forEachNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
+/**
+ * Returns if every element makes the given function return true
+ */
+static bool everyNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_ARRAY(args[0]) || !(IS_CLOSURE(args[1]) || IS_NATIVE(args[1]))) {
+        *result = OBJ_VAL(copyString("every() takes one array and one function argument.", 50));
+        return false;
+    }
+#endif
+
+    Value fun = args[1];
+    int n = AS_ARRAY(args[0])->size;
+
+    for (int i = 0; i < n; i++) {
+        Value res;
+        push(fun);
+        push(AS_ARRAY(args[0])->values[i]);
+        if (!callBurrito(fun, 1, &res)) {
+            *result = OBJ_VAL(copyString("every() function raised an error.", 33));
+            return false;
+        }
+
+        if (!IS_BOOL(res) || !AS_BOOL(res)) {
+            *result = BOOL_VAL(false);
+            return true;
+        }
+    }
+
+    *result = BOOL_VAL(true);
+    return true;
+}
+
+/**
+ * Returns if one or more element makes the given function return true
+ */
+static bool someNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_ARRAY(args[0]) || !(IS_CLOSURE(args[1]) || IS_NATIVE(args[1]))) {
+        *result = OBJ_VAL(copyString("some() takes one array and one function argument.", 49));
+        return false;
+    }
+#endif
+
+    Value fun = args[1];
+    int n = AS_ARRAY(args[0])->size;
+
+    for (int i = 0; i < n; i++) {
+        Value res;
+        push(fun);
+        push(AS_ARRAY(args[0])->values[i]);
+        if (!callBurrito(fun, 1, &res)) {
+            *result = OBJ_VAL(copyString("some() function raised an error.", 32));
+            return false;
+        }
+
+        if (IS_BOOL(res) && AS_BOOL(res)) {
+            *result = BOOL_VAL(true);
+            return true;
+        }
+    }
+
+    *result = BOOL_VAL(false);
+    return true;
+}
+
+// Recursive helper for flattenNative. Walks `src` and appends all non-array
+// values into `dst`, descending into nested arrays along the way.
+// Both `src` and `dst` must already be rooted on the GC stack by the caller.
+static void flattenInto(ObjArray* src) {
+    for (int i = 0; i < src->size; i++) {
+        Value v = src->values[i];
+        if (IS_ARRAY(v)) {
+            push(v);  // root the nested array while we recurse
+            flattenInto(AS_ARRAY(v));
+            pop();
+        } else {
+            ObjArray* dst = AS_ARRAY(peek(0));  // re-read: prior calls may have triggered GROW_ARRAY
+            ensureCapacity(dst);
+            dst = AS_ARRAY(peek(0));            // re-read after potential realloc in ensureCapacity
+            dst->values[dst->size++] = v;
+        }
+    }
+}
+
+/**
+ * Recursively flatten nested arrays
+ */
+static bool flattenNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_ARRAY(args[0])) {
+        *result = OBJ_VAL(copyString("flatten() expects one array argument.", 37));
+        return false;
+    }
+#endif
+
+    push(args[0]);           // root source
+    ObjArray* dst = newArray(0);
+    push(OBJ_VAL(dst));      // root destination (peek(0) from here on)
+
+    flattenInto(AS_ARRAY(args[0]));
+
+    *result = peek(0);
+    pop(); pop();
+    return true;
+}
+
+/**
+ * Returns sorted copy
+ */
+static bool sortedNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 2 || !IS_ARRAY(args[0]) ||
+            !(IS_CLOSURE(args[1]) || IS_NATIVE(args[1]))) {
+        *result = OBJ_VAL(copyString("sorted() expects an array and a comparator function.", 52));
+        return false;
+    }
+#endif
+
+    // Make a shallow copy, then delegate to the existing in-place sort.
+    push(args[0]);
+    ObjArray* src   = AS_ARRAY(args[0]);
+    ObjArray* clone = newArray(src->size);
+    src = AS_ARRAY(args[0]);   // re-read after potential GC in newArray
+    pop();
+
+    for (int i = 0; i < src->size; i++)
+        clone->values[i] = src->values[i];
+    clone->size = src->size;
+
+    // Build a two-element args array that sortNative expects: [array, comparator].
+    Value sortArgs[2] = { OBJ_VAL(clone), args[1] };
+    Value sortResult;
+
+    push(OBJ_VAL(clone));   // root clone across sortNative's callBurrito calls
+    bool ok = sortNative(2, sortArgs, &sortResult);
+    pop();
+
+    if (!ok) {
+        *result = sortResult;
+        return false;
+    }
+
+    *result = OBJ_VAL(clone);
+    return true;
+}
+
 static void addMethod(const char* name, int length, NativeFn fn) {
     push(OBJ_VAL(newNative(fn)));
     tableSet(&vm.arrayMethods, copyString(name, length), peek(0));
@@ -488,4 +635,8 @@ void buildArrayMethods() {
     addMethod("filter",   6,  filterNative);
     addMethod("reduce",   6,  reduceNative);
     addMethod("forEach",  7,  forEachNative);
+    addMethod("every",    5,  everyNative);
+    addMethod("some",     4,  someNative);
+    addMethod("flatten",  7,  flattenNative);
+    addMethod("sorted",   6,  sortedNative);
 }
