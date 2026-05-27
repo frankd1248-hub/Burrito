@@ -281,8 +281,8 @@ This is one of the most important modules for practical programming.
 
 ## Essential
 
-* [ ] `jsonParse(s)`
-* [ ] `jsonStringify(x)`
+* [x] `loads(s)`
+* [x] `dumps(x)`
 
 JSON + maps immediately unlock:
 

@@ -407,6 +407,10 @@ ObjModule* buildMathModule() {
     addNative(module, "atan", 4, arctangentNative);
     addNative(module, "atan2", 5, atan2Native);
 
+    addNative(module, "ln", 2, logNative);
+    addNative(module, "log10", 5, log10Native);
+    addNative(module, "log2", 4, log2Native);
+
     addNative(module, "floor", 5, floorNative);
     addNative(module, "ceil", 4, ceilNative);
     addNative(module, "round", 5, roundNative);
