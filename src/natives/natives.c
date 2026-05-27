@@ -7,6 +7,7 @@
 #include "bcast.h"
 #include "bgraphics.h"
 #include "bio.h"
+#include "bjson.h"
 #include "bmath.h"
 #include "bmap.h"
 #include "bstring.h"
@@ -88,6 +89,7 @@ static bool mapConstructorNative(int argCount, Value* args, Value* result) {
 void defineAllNatives() {
     defineModule("cast", buildCastModule());
     defineModule("io", buildIOModule());
+    defineModule("json", buildJSONModule());
     defineModule("math", buildMathModule());
     defineModule("str", buildStringModule());
     defineModule("time", buildTimeModule());
