@@ -119,7 +119,7 @@ Value toStringValue(Value arg) {
             : OBJ_VAL(copyString("false", 5));
     } else if (IS_NUMBER(arg)) {
         char str[256];
-        int length = snprintf(str, sizeof(str), "%g", AS_NUMBER(arg));
+        int length = snprintf(str, sizeof(str), "%.4lf", AS_NUMBER(arg));
         return OBJ_VAL(copyString(str, length));
     } else if (IS_OBJ(arg)) {
         switch (AS_OBJ(arg)->type) {
