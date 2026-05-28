@@ -61,6 +61,7 @@ typedef struct {
 
     Table arrayMethods;
     Table mapMethods;
+    Table stringMethods;
 
     Table importedFiles;
 
@@ -71,6 +72,9 @@ typedef struct {
     int grayCount;
     int grayCapacity;
     Obj** grayStack;
+
+    int argc;
+    char** argv;
 } VM;
 
 typedef enum {

@@ -14,4 +14,5 @@ I also wrote some software to help me test the language, see src/testing.cpp.
 Did I mention fast native graphics with Raylib's C bindings?
 
 Here is a link to my [Documentation of the standard library](docs/Natives.md)
+
 Here is a [Language reference](docs/Language.md) if you want to do something with Burrito.

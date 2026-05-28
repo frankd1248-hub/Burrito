@@ -113,8 +113,10 @@ void initVM() {
     initTable(&vm.globals);
     initTable(&vm.consts);
     initTable(&vm.strings);
+
     initTable(&vm.arrayMethods);
     initTable(&vm.mapMethods);
+    initTable(&vm.stringMethods);
 
     initTable(&vm.importedFiles);
 
@@ -128,8 +130,10 @@ void freeVM() {
     freeTable(&vm.globals);
     freeTable(&vm.consts);
     freeTable(&vm.strings);
+
     freeTable(&vm.arrayMethods);
     freeTable(&vm.mapMethods);
+    freeTable(&vm.stringMethods);
 
     freeTable(&vm.importedFiles);
     
@@ -393,6 +397,27 @@ static bool invoke(ObjString* name, int argCount) {
         } else if (IS_MAP(receiver)) {
             Value method;
             if (!tableGet(&vm.mapMethods, name, &method)) {
+                runtimeError("Undefined map method '%s'.", name->chars);
+                if (errorWasHandled) return true;
+                return false;
+            }
+            // Push a new slot for the callee without disturbing the receiver or args.
+            // We can't easily insert below, so instead call the native directly here.
+            NativeFn native = AS_NATIVE(method);
+            Value result = NULL_VAL;
+            bool ok = native(argCount + 1, vm.stackTop - argCount - 1, &result);
+            if (!ok) {
+                runtimeError(AS_STRING(result)->chars);
+                vm.stackTop -= argCount + 1;
+                if (errorWasHandled) return true;
+                return false;
+            }
+            vm.stackTop -= argCount + 1;
+            push(result);
+            return true;
+        } else if (IS_STRING(receiver)) {
+            Value method;
+            if (!tableGet(&vm.stringMethods, name, &method)) {
                 runtimeError("Undefined map method '%s'.", name->chars);
                 if (errorWasHandled) return true;
                 return false;
@@ -834,8 +859,20 @@ static InterpretResult run(int returnDepth) {
             ObjBoundNative* bound = newBoundNative(receiver, AS_NATIVE_OBJ(method));
             pop();
             push(OBJ_VAL(bound));
+        } else if (IS_STRING(peek(0))) {
+            ObjString* name = READ_STRING();
+            Value method;
+            if (!tableGet(&vm.stringMethods, name, &method)) {
+                runtimeError("Undefined string method '%s'.", name->chars);
+                if (errorWasHandled) DISPATCH();
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            Value receiver = peek(0);
+            ObjBoundNative* bound = newBoundNative(receiver, AS_NATIVE_OBJ(method));
+            pop();
+            push(OBJ_VAL(bound));
         } else {
-            runtimeError("Only modules, instances, and arrays have properties.");
+            runtimeError("Only modules, instances, strings, and arrays have properties.");
             if (errorWasHandled) DISPATCH();
             return INTERPRET_RUNTIME_ERROR;
         }
@@ -896,8 +933,19 @@ static InterpretResult run(int returnDepth) {
             ObjBoundNative* bound = newBoundNative(receiver, AS_NATIVE_OBJ(method));
             pop();
             push(OBJ_VAL(bound));
+        } else if (IS_STRING(peek(0))) {
+            ObjString* name = READ_STRING_LONG();
+            Value method;
+            if (!tableGet(&vm.stringMethods, name, &method)) {
+                runtimeError("Undefined string method '%s'.", name->chars);
+                if (errorWasHandled) DISPATCH();
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            Value receiver = peek(0);
+            ObjBoundNative* bound = newBoundNative(receiver, AS_NATIVE_OBJ(method));
+            pop();
+            push(OBJ_VAL(bound));
         } else {
-            
             runtimeError("Only modules, instances, and arrays have properties.");
             if (errorWasHandled) DISPATCH();
             return INTERPRET_RUNTIME_ERROR;
@@ -905,7 +953,6 @@ static InterpretResult run(int returnDepth) {
         DISPATCH();
     } CASE(OP_SET_PROPERTY): {
         if (!IS_INSTANCE(peek(1))) {
-            
             runtimeError("Only instances have settable fields.");
             if (errorWasHandled) DISPATCH();
             return INTERPRET_RUNTIME_ERROR;
@@ -918,7 +965,6 @@ static InterpretResult run(int returnDepth) {
         DISPATCH();
     } CASE(OP_SET_PROPERTY_LONG): {
         if (!IS_INSTANCE(peek(1))) {
-            
             runtimeError("Only instances have settable fields.");
             if (errorWasHandled) DISPATCH();
             return INTERPRET_RUNTIME_ERROR;

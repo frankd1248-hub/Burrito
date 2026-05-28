@@ -11,13 +11,8 @@
 #include "bmath.h"
 #include "bmap.h"
 #include "bstring.h"
+#include "bsys.h"
 #include "btime.h"
-
-static bool exitNative(int argCount, Value* args, Value* result) {
-    if (argCount != 0) {
-        exit(AS_NUMBER(args[0]));
-    } exit (0);
-}
 
 static bool hasFieldNative(int argCount, Value* args, Value* result) {
 #ifdef STRICT_NATIVES
@@ -91,18 +86,18 @@ void defineAllNatives() {
     defineModule("io", buildIOModule());
     defineModule("json", buildJSONModule());
     defineModule("math", buildMathModule());
-    defineModule("str", buildStringModule());
+    defineModule("sys", buildSysModule());
     defineModule("time", buildTimeModule());
 
     buildArrayMethods();
     buildMapMethods();
+    buildStringMethods();
 
     ObjModule** gmodules = buildGraphicsModules();
 
     defineModule("game", gmodules[1]);
     defineModule("graphics", gmodules[0]);
 
-    defineNative("exit", newNative(exitNative));
     defineNative("hasField", newNative(hasFieldNative));
     defineNative("getField", newNative(getFieldNative));
     defineNative("setField", newNative(setFieldNative));

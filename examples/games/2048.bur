@@ -73,7 +73,7 @@ fn drawGrid() {
                     CELL_SIDE - 10,
                     CELL_SIDE - 10
                 );
-                decl length = str.len(cast.ntos(val));
+                decl length = cast.ntos(val).len();
                 decl fontSize = 52 - length * 4;
                 if (fontSize < 8) fontSize = 8;
 

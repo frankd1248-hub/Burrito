@@ -5,7 +5,7 @@ decl devname = "burrito";
 
 fn cmdExit(args) {
     io.writeFile("config", "${username}\n${devname}");
-    exit(0);
+    sys.exit(0);
 }
 
 fn cmdLs(args) {

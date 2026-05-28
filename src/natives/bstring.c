@@ -526,33 +526,27 @@ static bool sIsNumericNative(int argCount, Value* args, Value* result) {
     return true;
 }
 
-static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
+static void addMethod(const char* name, int length, NativeFn fn) {
     push(OBJ_VAL(newNative(fn)));
-    tableSet(&module->table, copyString(name, length), peek(0));
+    tableSet(&vm.stringMethods, copyString(name, length), peek(0));
     pop();
 }
 
-ObjModule* buildStringModule() {
-    ObjModule* module = newModule();
-    push(OBJ_VAL(module));
-
-    addNative(module, "len", 3, sLengthNative);
-    addNative(module, "substr", 6, sSubstrNative);
-    addNative(module, "find", 4, sFindNative);
-    addNative(module, "split", 5, sSplitNative);
-    addNative(module, "join", 4, sJoinNative);
-    addNative(module, "trim", 4, sTrimNative);
-    addNative(module, "upper", 5, sUpperNative);
-    addNative(module, "lower", 5, sLowerNative);
-    addNative(module, "startsWith", 10, sStartsWithNative);
-    addNative(module, "endsWith", 8, sEndsWithNative);
-    addNative(module, "contains", 8, sContainsNative);
-    addNative(module, "replace", 7, sReplaceNative);
-    addNative(module, "replaceAll", 10, sReplaceAllNative);
-    addNative(module, "repeat", 6, sRepeatNative);
-    addNative(module, "isAlpha", 7, sIsAlphaNative);
-    addNative(module, "isNumeric", 9, sIsNumericNative);
-
-    pop();
-    return module;
+void buildStringMethods() {
+    addMethod("len", 3, sLengthNative);
+    addMethod("substr", 6, sSubstrNative);
+    addMethod("find", 4, sFindNative);
+    addMethod("split", 5, sSplitNative);
+    addMethod("join", 4, sJoinNative);
+    addMethod("trim", 4, sTrimNative);
+    addMethod("upper", 5, sUpperNative);
+    addMethod("lower", 5, sLowerNative);
+    addMethod("startsWith", 10, sStartsWithNative);
+    addMethod("endsWith", 8, sEndsWithNative);
+    addMethod("contains", 8, sContainsNative);
+    addMethod("replace", 7, sReplaceNative);
+    addMethod("replaceAll", 10, sReplaceAllNative);
+    addMethod("repeat", 6, sRepeatNative);
+    addMethod("isAlpha", 7, sIsAlphaNative);
+    addMethod("isNumeric", 9, sIsNumericNative);
 }

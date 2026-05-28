@@ -50,6 +50,9 @@ static void runFile(const char* path) {
 int main(int argc, char** argv) {
     initVM();
 
+    vm.argc = argc;
+    vm.argv = argv;
+
     // I would write an actual terminal app but I am too lazy and there's only one flag.
     if (argc == 1) {
         repl();

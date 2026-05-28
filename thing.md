@@ -178,11 +178,11 @@ This should become a first-class practical module.
 
 ## Recommended Core API
 
-* [ ] `mapValues(m)`
+* [x] `mapValues(m)`
 * [ ] `mapEntries(m)`
-* [ ] `mapSize(m)`
-* [ ] `mapCopy(m)`
-* [ ] `mapMerge(a, b)`
+* [x] `mapSize(m)`
+* [x] `mapCopy(m)`
+* [x] `mapMerge(a, b)`
 
 ## Not Recommended
 
@@ -259,7 +259,7 @@ This module has enormous practical value.
 
 ## Platform
 
-* [ ] `platform()`
+* [x] `platform()`
 * [ ] `arch()`
 
 ## Process
