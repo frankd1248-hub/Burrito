@@ -1,4 +1,4 @@
-from command import Command;
+from "examples/shell/command" import Command;
 
 decl username = "frank";
 decl devname = "burrito";
@@ -121,7 +121,7 @@ fn dispatch(command) {
 }
 
 fn getFolderName(path) {
-    decl comps = str.split(path, "/");
+    decl comps = path.split("/");
     return comps[comps.length - 1];
 }
 
@@ -139,9 +139,9 @@ fn run() {
 }
 
 fn main() {
-    if (io.fileExists("config")) {
-        username = str.split(io.readFile("config"), "\n")[0];
-        devname = str.split(io.readFile("config"), "\n")[1];
+    if (io.fileExists("examples/shell/config")) {
+        username = io.readFile("examples/shell/config").split("\n")[0];
+        devname = io.readFile("examples/shell/config").split("\n")[1];
     }
 
     while (true) {

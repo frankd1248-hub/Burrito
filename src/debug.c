@@ -292,12 +292,53 @@ int dissassembleInstruction(Chunk* chunk, int offset, FILE* out) {
 
             return offset;
         }
+        case OP_IMPORT:
+            return constantInstruction("OP_IMPORT", chunk, offset, out);
+        case OP_IMPORT_LONG:
+            return longConstantInstruction("OP_IMPORT_LONG", chunk, offset, out);
+        case OP_IMPORT_FROM: {
+            // Layout: [opcode][path:1][count:1][name:1 × count]
+            uint8_t path  = chunk->code[offset + 1];
+            uint8_t count = chunk->code[offset + 2];
+            fprintf(out, "%-16s %4d '", "OP_IMPORT_FROM", path);
+            printValue(chunk->constants.values[path], out);
+            fprintf(out, "'\n");
+            for (int i = 0; i < count; i++) {
+                uint8_t name = chunk->code[offset + 3 + i];
+                fprintf(out, "      |                       %4d '", name);
+                printValue(chunk->constants.values[name], out);
+                fprintf(out, "'\n");
+            }
+            return offset + 3 + count;
+        }
+        case OP_IMPORT_FROM_LONG: {
+            // Layout: [opcode][path:3][count:1][name:3 × count]
+            uint32_t path =  chunk->code[offset + 1]        |
+                            (chunk->code[offset + 2] << 8)  |
+                            (chunk->code[offset + 3] << 16);
+            uint8_t count = chunk->code[offset + 4];
+            fprintf(out, "%-16s %4d '", "OP_IMPORT_FROM_LONG", path);
+            printValue(chunk->constants.values[path], out);
+            fprintf(out, "'\n");
+            for (int i = 0; i < count; i++) {
+                int base = offset + 5 + i * 3;
+                uint32_t name =  chunk->code[base]          |
+                                (chunk->code[base + 1] << 8)|
+                                (chunk->code[base + 2] << 16);
+                fprintf(out, "      |                       %4d '", name);
+                printValue(chunk->constants.values[name], out);
+                fprintf(out, "'\n");
+            }
+            return offset + 5 + count * 3;
+        }
         case OP_CLOSE_UPVALUE:
             return simpleInstruction("OP_CLOSE_UPVALUE", offset, out);
         case OP_TRY:
             return jumpInstruction("OP_TRY", 1, chunk, offset, out);
         case OP_END_TRY:
             return simpleInstruction("OP_END_TRY", offset, out);
+        case OP_THROW:
+            return simpleInstruction("OP_THROW", offset, out);
         case OP_RETURN:
             return simpleInstruction("OP_RETURN", offset, out);
         case OP_CLASS:

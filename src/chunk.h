@@ -70,12 +70,15 @@ typedef enum {
     OP_SUPER_INVOKE,         // Invoke from superclass
     OP_SUPER_INVOKE_LONG,
     OP_IMPORT,               // import one;           — puts the ObjModule in globals as "one"
+    OP_IMPORT_LONG,
     OP_IMPORT_FROM,          // from one import foo;  — puts specific names into globals
+    OP_IMPORT_FROM_LONG,
     OP_CLOSURE,              // Create a closure
     OP_CLOSURE_LONG,
     OP_CLOSE_UPVALUE,
     OP_TRY,                  // Start try block (push handler)
     OP_END_TRY,              // Pop handler
+    OP_THROW,
     OP_RETURN,
     OP_CLASS,                // Create class
     OP_CLASS_LONG,

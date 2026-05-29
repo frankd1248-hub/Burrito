@@ -6,16 +6,16 @@
 
 [Map methods](natives/map.md)
 
+[String methods](natives/string.md)
+
 [Casting/Reflection module](natives/cast.md)
 
-[Graphics module]
+[Graphics module](natives/graphics.md)
 
 [I/O module]
 
 [JSON module]
 
 [Math module](natives/math.md)
-
-[String module]
 
 [Time module](natives/time.md)

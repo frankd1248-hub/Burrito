@@ -247,25 +247,25 @@ This module has enormous practical value.
 
 ## Environment
 
-* [ ] `args()`
-* [ ] `env(name)`
-* [ ] `setEnv(name, value)`
-* [ ] `homeDir()`
-* [ ] `tempDir()`
+* [x] `args()`
+* [x] `env(name)`
+* [x] `setEnv(name, value)`
+* [x] `homeDir()`
+* [x] `tempDir()`
 
 ## Execution
 
-* [ ] `run(cmd)`
+* [x] `run(cmd)`
 
 ## Platform
 
 * [x] `platform()`
-* [ ] `arch()`
+* [x] `arch()`
 
 ## Process
 
-* [ ] `pid()`
-* [ ] `exit(code)`
+* [x] `pid()`
+* [x] `exit(code)`
 
 ## Terminal
 

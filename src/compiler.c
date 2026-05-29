@@ -45,7 +45,7 @@ typedef enum {
     PREC_TERM,          // + -
     PREC_FACTOR,        // * /
     PREC_UNARY,         // ! - ~
-    PREC_CALL,          // . ()
+    PREC_CALL,          // . () []
     PREC_PRIMARY
 } Precedence;
 
@@ -1855,35 +1855,75 @@ static void forStatement() {
 }
 
 static void fromImportStatement() {
-    consume(TOKEN_IDENTIFIER, "Expect module name after 'from'.");
+    if (match(TOKEN_IDENTIFIER)) {
+    } else if (match(TOKEN_STRING)) {
+    } else {
+        error("Expect module name after 'import'.");
+    }
+
     char path[256];
     snprintf(path, sizeof(path), "%.*s.bur", parser.previous.length, parser.previous.start);
-    uint8_t pathConst = makeConstant(OBJ_VAL(copyString(path, strlen(path))));
+    uint32_t pathConst = makeConstant(OBJ_VAL(copyString(path, strlen(path))));
 
     consume(TOKEN_IMPORT, "Expect 'import' after module name.");
 
-    uint8_t names[256];
+    uint32_t names[256];
+    bool longArgs = false;
     int count = 0;
     do {
+        if (count == 256) {
+            errorAtCurrent("Can only import up to 255 names simultaneously.");
+        }
+
         consume(TOKEN_IDENTIFIER, "Expect name to import.");
-        names[count++] = makeConstant(OBJ_VAL(copyString(parser.previous.start, parser.previous.length)));
+        names[count] = makeConstant(OBJ_VAL(copyString(parser.previous.start, parser.previous.length)));
+        if (names[count] >= 256) longArgs = true;
+        count++;
     } while (match(TOKEN_COMMA));
 
     consume(TOKEN_SEMICOLON, "Expect ';' after import list.");
 
-    emitWord(OP_IMPORT_FROM, pathConst);
-    emitByte((uint8_t)count);
-    for (int i = 0; i < count; i++) emitByte(names[i]);
+    if (!longArgs) {
+        emitWord(OP_IMPORT_FROM, (uint8_t) pathConst);
+        emitByte((uint8_t) count);
+        for (int i = 0; i < count; i++) emitByte((uint8_t) names[i]);
+    } else {
+        emitDoubleWord(OP_IMPORT_FROM_LONG,
+            (uint8_t) (pathConst & 0xff),
+            (uint8_t) ((pathConst >> 8) & 0xff),
+            (uint8_t) ((pathConst >> 16) & 0xff)
+        );
+        emitByte((uint8_t) count);
+        for (int i = 0; i < count; i++) {
+            emitByte((uint8_t) ((names[i]) & 0xff));
+            emitByte((uint8_t) ((names[i] >> 8) & 0xff));
+            emitByte((uint8_t) ((names[i] >> 16) & 0xff));
+        }
+    }
 }
 
 static void importStatement() {
-    consume(TOKEN_IDENTIFIER, "Expect module name after 'import'.");
+    if (match(TOKEN_IDENTIFIER)) {
+    } else if (match(TOKEN_STRING)) {
+    } else {
+        error("Expect module name after 'import'.");
+    }
+
     // build path: name + ".bur"
     char path[256];
     snprintf(path, sizeof(path), "%.*s.bur", parser.previous.length, parser.previous.start);
-    uint8_t pathConst = makeConstant(OBJ_VAL(copyString(path, strlen(path))));
+    uint32_t pathConst = makeConstant(OBJ_VAL(copyString(path, strlen(path))));
     consume(TOKEN_SEMICOLON, "Expect ';' after import.");
-    emitWord(OP_IMPORT, pathConst);
+
+    if (pathConst < 256) {
+        emitWord(OP_IMPORT, (uint8_t) pathConst);
+    } else {
+        emitDoubleWord(OP_IMPORT_LONG,
+            (uint8_t) (pathConst & 0xff),
+            (uint8_t) ((pathConst >> 8) & 0xff),
+            (uint8_t) ((pathConst >> 16) & 0xff)
+        );
+    }
 }
 
 static void ifStatement() {
@@ -2012,6 +2052,12 @@ static void switchStatement() {
     emitByte(OP_POP);
 }
 
+static void throwStatement() {
+    expression();
+    emitByte(OP_THROW);
+    consume(TOKEN_SEMICOLON, "Expect ';' after throw value.");
+}
+
 static void tryStatement() {
     int errorJump = emitJump(OP_TRY);
     currentTryDepth++;
@@ -2127,6 +2173,8 @@ static void statement() {
         returnStatement();
     } else if (match(TOKEN_SWITCH)) {
         switchStatement();
+    } else if (match(TOKEN_THROW)) {
+        throwStatement();
     } else if (match(TOKEN_TRY)) {
         tryStatement();
     } else if (match(TOKEN_WHILE)) {

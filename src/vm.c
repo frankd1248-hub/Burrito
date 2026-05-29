@@ -214,7 +214,7 @@ static bool callValue(Value callee, int argCount) {
                 Value result = NULL_VAL;
                 bool ok = native(argCount + 1, vm.stackTop - argCount - 1, &result);
                 if (!ok) {
-                    runtimeError(AS_STRING(result)->chars);
+                    runtimeError("%s", AS_STRING(result)->chars);
                     vm.stackTop -= argCount + 2;
                     if (errorWasHandled) return true;
                     return false;
@@ -246,7 +246,7 @@ static bool callValue(Value callee, int argCount) {
                     push(result);
                     return true;
                 } else {
-                    runtimeError(AS_STRING(result)->chars);
+                    runtimeError("%s", AS_STRING(result)->chars);
                     if (errorWasHandled) return true;
                     return false;
                 }
@@ -386,7 +386,7 @@ static bool invoke(ObjString* name, int argCount) {
             Value result = NULL_VAL;
             bool ok = native(argCount + 1, vm.stackTop - argCount - 1, &result);
             if (!ok) {
-                runtimeError(AS_STRING(result)->chars);
+                runtimeError("%s", AS_STRING(result)->chars);
                 vm.stackTop -= argCount + 1;
                 if (errorWasHandled) return true;
                 return false;
@@ -407,7 +407,7 @@ static bool invoke(ObjString* name, int argCount) {
             Value result = NULL_VAL;
             bool ok = native(argCount + 1, vm.stackTop - argCount - 1, &result);
             if (!ok) {
-                runtimeError(AS_STRING(result)->chars);
+                runtimeError("%s", AS_STRING(result)->chars);
                 vm.stackTop -= argCount + 1;
                 if (errorWasHandled) return true;
                 return false;
@@ -418,7 +418,7 @@ static bool invoke(ObjString* name, int argCount) {
         } else if (IS_STRING(receiver)) {
             Value method;
             if (!tableGet(&vm.stringMethods, name, &method)) {
-                runtimeError("Undefined map method '%s'.", name->chars);
+                runtimeError("Undefined string method '%s'.", name->chars);
                 if (errorWasHandled) return true;
                 return false;
             }
@@ -428,7 +428,7 @@ static bool invoke(ObjString* name, int argCount) {
             Value result = NULL_VAL;
             bool ok = native(argCount + 1, vm.stackTop - argCount - 1, &result);
             if (!ok) {
-                runtimeError(AS_STRING(result)->chars);
+                runtimeError("%s", AS_STRING(result)->chars);
                 vm.stackTop -= argCount + 1;
                 if (errorWasHandled) return true;
                 return false;
@@ -642,12 +642,15 @@ static InterpretResult run(int returnDepth) {
         [OP_SUPER_INVOKE]      = &&op_OP_SUPER_INVOKE,
         [OP_SUPER_INVOKE_LONG] = &&op_OP_SUPER_INVOKE_LONG,
         [OP_IMPORT]            = &&op_OP_IMPORT,
+        [OP_IMPORT_LONG]       = &&op_OP_IMPORT_LONG,
         [OP_IMPORT_FROM]       = &&op_OP_IMPORT_FROM,
+        [OP_IMPORT_FROM_LONG]  = &&op_OP_IMPORT_FROM_LONG,
         [OP_CLOSURE]           = &&op_OP_CLOSURE,
         [OP_CLOSURE_LONG]      = &&op_OP_CLOSURE_LONG,
         [OP_CLOSE_UPVALUE]     = &&op_OP_CLOSE_UPVALUE,
         [OP_TRY]               = &&op_OP_TRY,
         [OP_END_TRY]           = &&op_OP_END_TRY,
+        [OP_THROW]             = &&op_OP_THROW,
         [OP_RETURN]            = &&op_OP_RETURN,
         [OP_CLASS]             = &&op_OP_CLASS,
         [OP_CLASS_LONG]        = &&op_OP_CLASS_LONG,
@@ -1191,9 +1194,16 @@ static InterpretResult run(int returnDepth) {
                     }
                     Value v = args[argIndex++];
                     switch (spec) {
+                        case 'b':
+                            if (!IS_BOOL(v)) {
+                                runtimeError("%%b expects boolean.");
+                                printError = true;
+                                break;
+                            }
+                            printValue(v, NULL);
+                            break;
                         case 'd':
                             if (!IS_NUMBER(v)) {
-                                
                                 runtimeError("%%d expects number.");
                                 printError = true;
                                 break;
@@ -1202,7 +1212,6 @@ static InterpretResult run(int returnDepth) {
                             break;
                         case 's':
                             if (!IS_STRING(v)) {
-                                
                                 runtimeError("%%s expects string.");
                                 printError = true;
                                 break;
@@ -1213,7 +1222,6 @@ static InterpretResult run(int returnDepth) {
                             printValue(v, NULL);
                             break;
                         default:
-                            
                             runtimeError("Unknown format specifier '%%%c'.", spec);
                             printError = true;
                             break;
@@ -1301,7 +1309,7 @@ print_end:
         
         DISPATCH();
     } CASE(OP_IMPORT): {
-        ObjString* path = AS_STRING(READ_CONSTANT());
+        ObjString* path = READ_STRING();
         ObjModule* module = importFile(path->chars);
         if (module == NULL) {
             runtimeError("Could not import '%s'.", path->chars);
@@ -1312,11 +1320,30 @@ print_end:
         // Derive the module name from the path ("one.bur" → "one")
         const char* dot = strrchr(path->chars, '.');
         int nameLen = dot ? (int)(dot - path->chars) : (int)path->length;
+        push(OBJ_VAL(module));
         ObjString* name = copyString(path->chars, nameLen);
-        tableSet(&vm.globals, name, OBJ_VAL(module));
+        tableSet(&vm.globals, name, peek(0));
+        pop();
+        DISPATCH();
+    } CASE(OP_IMPORT_LONG): {
+        ObjString* path = READ_STRING_LONG();
+        ObjModule* module = importFile(path->chars);
+        if (module == NULL) {
+            runtimeError("Could not import '%s'.", path->chars);
+            if (errorWasHandled) return INTERPRET_OK;
+            return INTERPRET_RUNTIME_ERROR;
+        }
+
+        // Derive the module name from the path ("one.bur" → "one")
+        const char* dot = strrchr(path->chars, '.');
+        int nameLen = dot ? (int)(dot - path->chars) : (int)path->length;
+        push(OBJ_VAL(module)); // Root module across copyString possible GC
+        ObjString* name = copyString(path->chars, nameLen);
+        tableSet(&vm.globals, name, peek(0));
+        pop();
         DISPATCH();
     } CASE(OP_IMPORT_FROM): {
-        ObjString* path = AS_STRING(READ_CONSTANT());
+        ObjString* path = READ_STRING();
         uint8_t count = READ_BYTE();
         ObjModule* module = importFile(path->chars);
         if (module == NULL) {
@@ -1326,7 +1353,28 @@ print_end:
         }
 
         for (int i = 0; i < count; i++) {
-            ObjString* name = AS_STRING(READ_CONSTANT());
+            ObjString* name = READ_STRING();
+            Value val;
+            if (!tableGet(&module->table, name, &val)) {
+                runtimeError("'%s' not found in module '%s'.", name->chars, path->chars);
+                if (errorWasHandled) return INTERPRET_OK;
+                return INTERPRET_RUNTIME_ERROR;
+            }
+            tableSet(&vm.globals, name, val);
+        }
+        DISPATCH();
+    } CASE(OP_IMPORT_FROM_LONG): {
+        ObjString* path = READ_STRING_LONG();
+        uint8_t count = READ_BYTE();
+        ObjModule* module = importFile(path->chars);
+        if (module == NULL) {
+            runtimeError("Could not import '%s'.", path->chars);
+            if (errorWasHandled) return INTERPRET_OK;
+            return INTERPRET_RUNTIME_ERROR;
+        }
+
+        for (int i = 0; i < count; i++) {
+            ObjString* name = READ_STRING_LONG();
             Value val;
             if (!tableGet(&module->table, name, &val)) {
                 runtimeError("'%s' not found in module '%s'.", name->chars, path->chars);
@@ -1382,6 +1430,16 @@ print_end:
     CASE(OP_END_TRY):
         vm.handlerCount--;
         DISPATCH();
+    CASE(OP_THROW): {
+        Value error = peek(0);
+        Value str = toStringValue(error);
+        pop();
+        runtimeError("%s", AS_CSTRING(str));
+        if (errorWasHandled) {
+            DISPATCH();
+        }
+        return INTERPRET_RUNTIME_ERROR;
+    }
     CASE(OP_RETURN): {
         Value result = pop();
         closeUpvalues(frame->slots);

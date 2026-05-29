@@ -8,7 +8,7 @@ class Command {
 
     parseCommand() {
         decl i = 0;
-        decl len = str.len(this.literal);
+        decl len = this.literal.len();
         decl tokens = {};
 
         while (i < len) {

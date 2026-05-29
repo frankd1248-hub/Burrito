@@ -30,8 +30,8 @@
     - [ ] (*) Lambda expressions
     - [ ] (**) For-each loops
 
-Note: *'s mark amount of effort estimated for task.
+Note: *'s mark amount of effort estimated for each series of unit tests.
 
 ### Lowest Concern
 
-1. Write better benchmarks
+1. Write better benchmarks and/or profile the thing to make peephole optimizations
