@@ -475,6 +475,8 @@ if (score >= 90) {
 
 ### Ternary expression
 
+Hearkening to C, this is an if/then-else operator.
+
 ```js
 decl age = 20;
 decl label = age >= 18 ? "adult" : "minor";
@@ -527,11 +529,12 @@ for (decl i = 0; i < 5; i++) {
 ### for-in loop
 
 Iterates over each element in an array.
+Parentheses are not expected around the expression.
 
 ```js
 decl fruits = { "apple", "banana", "pear" };
 
-for (decl fruit in fruits) {
+for fruit in fruits {
     print("%s\n", fruit);
 }
 ```
@@ -571,6 +574,8 @@ for (decl i = 0; i < 10; i++) {
 [↑ Back to top](#burrito-language-reference)
 
 Functions are declared with the `fn` keyword.
+
+No, I am not a "Rustacean". I just think `fn` is neat.
 
 ```js
 fn add(a, b) {
@@ -676,6 +681,7 @@ class Person {
 ```
 
 The `init` method is the constructor. It runs automatically when you create an instance.
+In its absence, nothing is done instead.
 
 ### Creating instances
 
@@ -687,7 +693,9 @@ alice.greet();
 
 ### Instance fields
 
-Fields are created by assigning to `this.fieldName` inside any method. They can be read and written from outside the instance too.
+Fields are created by assigning to `this.fieldName` inside any method, or
+setting it on a variable holding an instance.
+They can be read and written from outside the instance too.
 
 ```js
 class Counter {
@@ -731,6 +739,8 @@ logFn("Hello from a bound method");  // LOG: Hello from a bound method
 [↑ Back to top](#burrito-language-reference)
 
 A class can inherit from another using `:`.
+
+Can you tell my first language was C++?
 
 ```js
 class Animal {
@@ -853,6 +863,13 @@ Use `from ... import ...` to import specific names only.
 from utils import formatDate, formatTime;
 ```
 
+If you have to navigate through the filesystem with slashes, you can import
+from a string like this:
+
+```js
+import "/usr/include/library.bur";
+```
+
 > **Note:** Burrito detects circular imports and raises an error if a file tries to import itself — directly or transitively.
 
 ---
@@ -865,7 +882,7 @@ Full reference: [Natives.md](Natives.md)
 
 ### Built-in globals
 
-These functions are available everywhere without importing.
+These functions are available everywhere.
 
 | Function                          | Description                                              |
 | --------------------------------- | -------------------------------------------------------- |

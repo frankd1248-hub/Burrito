@@ -145,7 +145,7 @@ Converts any value into its string representation.
 
 - `null` becomes `"null"`.
 - Booleans become `"true"` or `"false"`.
-- Numbers are formatted with 4 decimal places.
+- Numbers are formatted with decimal places unless exceedingly close to an integer.
 - Arrays and maps are recursively formatted.
 - Strings are returned unchanged.
 
@@ -169,7 +169,7 @@ Converts any value into its string representation.
 ```js
 decl a = cast.toString(42);
 
-// a = "42.0000";
+// a = "42";
 ```
 
 ```js
@@ -181,7 +181,7 @@ decl b = cast.toString(true);
 ```js
 decl c = cast.toString({1, 2, 3});
 
-// c = "{ 1.0000, 2.0000, 3.0000 }";
+// c = "{ 1, 2, 3 }";
 ```
 
 ---

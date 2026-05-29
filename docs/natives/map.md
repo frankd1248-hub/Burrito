@@ -18,11 +18,12 @@ Name: N/A (Bound to map objects)
 ---
 
 ## Mutation Methods
-
-| Function                 | Description                              |
-| ------------------------ | ---------------------------------------- |
-| `map.set(key, value)`    | Stores a value under the given key.      |
-| `map.delete(key)`        | Removes a key from the map.              |
+    
+| Function                 | Description                                                 |
+| ------------------------ | ----------------------------------------------------------- |
+| `map.set(key, value)`    | Stores a value under the given key.                         |
+| `map.delete(key)`        | Removes a key from the map.                                 |
+| `map.merge(other)`       | Returns a new map combining both; `other` wins on collision |
 
 ---
 
@@ -33,6 +34,9 @@ Name: N/A (Bound to map objects)
 | `map.get(key)`        | Returns the value associated with a key.         |
 | `map.has(key)`        | Returns whether a key exists in the map.         |
 | `map.keys()`          | Returns an array containing all keys.            |
+| `map.values()`        | Returns an array of all values                   |
+| `map.size()`          | Returns the number of entries                    |
+| `map.copy()`          | Returns a shallow copy of the map                |
 
 ---
 
