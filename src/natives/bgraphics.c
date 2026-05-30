@@ -1,4 +1,10 @@
+
+#ifdef _WIN32
+#include "C:\raylib\w64devkit\include\raylib.h"
+#else
 #include <raylib.h>
+#endif
+
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>

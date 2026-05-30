@@ -1,6 +1,6 @@
 
 fn println(string) {
-    decl length = str.len(string);
+    decl length = string.len();
 
     for (decl i = 0; i < length; i++) {
         print("%s", string[i]);
