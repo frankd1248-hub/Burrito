@@ -259,16 +259,16 @@ while(!graphics.windowShouldClose()) {
     decl moved = false;
 
     if (!inCooldown) {
-        if (game.isKeyDown(game.KEY_W) or game.isKeyDown(game.KEY_UP)) {
+        if (game.isKeyPressed(game.KEY_W) or game.isKeyPressed(game.KEY_UP)) {
             moved = moveUp();
             startCooldown();
-        } else if (game.isKeyDown(game.KEY_A) or game.isKeyDown(game.KEY_LEFT)) {
+        } else if (game.isKeyPressed(game.KEY_A) or game.isKeyPressed(game.KEY_LEFT)) {
             moved = moveLeft();
             startCooldown();
-        } else if (game.isKeyDown(game.KEY_S) or game.isKeyDown(game.KEY_DOWN)) {
+        } else if (game.isKeyPressed(game.KEY_S) or game.isKeyPressed(game.KEY_DOWN)) {
             moved = moveDown(); 
             startCooldown();
-        } else if (game.isKeyDown(game.KEY_D) or game.isKeyDown(game.KEY_RIGHT)) {
+        } else if (game.isKeyPressed(game.KEY_D) or game.isKeyPressed(game.KEY_RIGHT)) {
             moved = moveRight();
             startCooldown();
         }
