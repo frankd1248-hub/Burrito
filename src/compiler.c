@@ -1610,7 +1610,7 @@ static void varDeclaration() {
     int global = parseVariable("Expect variable name.");
 
     if (match(TOKEN_LEFT_BRACKET)) {
-        expression();        // parse the size — this is what was missing
+        expression();
         hasArraySize = true;
         consume(TOKEN_RIGHT_BRACKET, "Expect ']' after size.");
     }
@@ -1620,7 +1620,7 @@ static void varDeclaration() {
         expression();
     } else {
         if (hasArraySize) {
-            emitByte(OP_ARRAY_NEW);  // size already on stack, ARRAY_NEW consumes it
+            emitByte(OP_ARRAY_NEW);
         } else {
             emitByte(OP_NULL);
         }
@@ -1638,7 +1638,7 @@ static void constDefinition() {
     int global = parseVariable("Expect variable name.");
 
 #ifdef CONSTANT_OPTIMIZATIONS
-    Token nameTok = parser.previous; // capture here — consume() below will overwrite previous
+    Token nameTok = parser.previous;
 #endif
 
     consume(TOKEN_EQUAL, "Constants must be defined at declaration.");
@@ -1658,7 +1658,7 @@ static void constDefinition() {
     }
 #endif
 
-    defineConst(global); // still emit OP_DEFINE_CONST for runtime mutation checks
+    defineConst(global);
 }
 
 static void expressionStatement() {
@@ -1799,7 +1799,7 @@ static void forStatement() {
         return;
     }
 
-    // Original C-style for loop.
+    // C-style for loop.
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
 
     if (match(TOKEN_SEMICOLON)) {
