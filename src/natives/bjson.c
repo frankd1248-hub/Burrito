@@ -3,7 +3,11 @@
 #include "../vm.h"
 #include "../memory.h"
 
+#ifdef _WIN32
+#include "C:/yyjson/yyjson.h"
+#else
 #include <yyjson.h>
+#endif
 
 static void ensureCapacity(ObjArray* array) {
     if (array->size == array->capacity) {

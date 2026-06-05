@@ -1,4 +1,10 @@
+
+#ifdef _WIN32
+#include "C:\raylib\w64devkit\include\raylib.h"
+#else
 #include <raylib.h>
+#endif
+
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -189,6 +195,18 @@ static bool gIsKeyDownNative(int argCount, Value* args, Value* result) {
 #endif
 
     *result = BOOL_VAL(IsKeyDown((int) round(AS_NUMBER(args[0]))));
+    return true;
+}
+
+static bool gIsKeyPressedNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_NUMBER(args[0])) {
+        *result = OBJ_VAL(copyString("isKeyPressed() expects one number argument; key code.", 53));
+        return false;
+    }
+#endif
+
+    *result = BOOL_VAL(IsKeyPressed((int) round(AS_NUMBER(args[0]))));
     return true;
 }
 
@@ -472,6 +490,7 @@ ObjModule** buildGraphicsModules() {
     addNative(gamodule, "pollEvents", 10, gPollEventsNative);
     addNative(gamodule, "getEvents", 9, getEventsNative);
     addNative(gamodule, "isKeyDown", 9, gIsKeyDownNative);
+    addNative(gamodule, "isKeyPressed", 12, gIsKeyPressedNative);
     addKeys(gamodule);
     addButtons(gamodule);
 

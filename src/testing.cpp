@@ -8,9 +8,19 @@
 #include <algorithm>
 #include <string>
 
-#ifndef _WIN32
-#include <sys/ioctl.h>
-#include <unistd.h>
+#ifdef _WIN32
+    #include <windows.h>
+
+    #define popen  _popen
+    #define pclose _pclose
+
+    #ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+    #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+    #endif
+#else
+    #include <sys/ioctl.h>
+    #include <sys/wait.h>
+    #include <unistd.h>
 #endif
 
 using namespace std;
@@ -231,7 +241,7 @@ enum class TestStatus {
     FAIL_OUTPUT,  // ran OK but output differed
     FAIL_EXIT,    // non-zero exit code
     NO_EXPECTED,  // no .bur.expected file — exit-code-only check
-    ERROR,        // could not launch
+    L_ERROR,        // could not launch
 };
 
 struct TestResult {
@@ -267,11 +277,22 @@ static TestResult runTest(const fs::path& path, const fs::path& root, bool verbo
     bool hasExpected = readFile(expectedPath, expectedOutput);
 
     // Run the test.
-    string cmd = "./dist/burrito_linuxx86_64 " + path.string() + " 2>&1";
+#ifdef _WIN32
+    std::string cmd =
+        ".\\dist\\burrito_winx86_64.exe \"" +
+        path.string() +
+        "\" 2>&1";
+#else
+    std::string cmd =
+        "./dist/burrito_linuxx86_64 \"" +
+        path.string() +
+        "\" 2>&1";
+#endif
+
     FILE* pipe = popen(cmd.c_str(), "r");
     if (!pipe) {
         printf(CLR_RED "  ERROR (could not launch)\n" CLR_RESET);
-        return { path, TestStatus::ERROR, "", "", -1 };
+        return { path, TestStatus::L_ERROR, "", "", -1 };
     }
 
     ostringstream output;
@@ -280,7 +301,13 @@ static TestResult runTest(const fs::path& path, const fs::path& root, bool verbo
         output << buf;
 
     int status   = pclose(pipe);
-    int exitCode = WEXITSTATUS(status);
+
+#ifdef _WIN32
+    int exitCode = status;
+#else
+    int exitCode = WIFEXITED(status) ? WEXITSTATUS(status) : status;
+#endif
+
     string actual = output.str();
 
     // Evaluate result.
@@ -450,9 +477,24 @@ static vector<fs::path> parseSelection(const string& input,
     return matches;
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+#ifdef _WIN32
+static void enableVirtualTerminal() {
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE) return;
+
+    DWORD mode = 0;
+    if (!GetConsoleMode(hOut, &mode)) return;
+
+    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(hOut, mode);
+}
+#endif
 
 int main(int argc, char** argv) {
+
+#ifdef _WIN32
+    enableVirtualTerminal();
+#endif
 
     // --all / --ci  : run every test non-interactively and exit with a status code.
     // --verbose     : print output for passing tests too (can combine with --all).

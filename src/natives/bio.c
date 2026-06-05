@@ -226,6 +226,12 @@ static bool listDirNative(int argCount, Value* args, Value* result) {
     }
 #endif
 
+#ifdef _WIN32
+
+    // TEMPORARY STUB
+    *result = BOOL_VAL(true);
+    return true;
+#else
     struct dirent *entry;
     DIR *dp = opendir("."); // Open current directory
 
@@ -276,6 +282,7 @@ static bool listDirNative(int argCount, Value* args, Value* result) {
     closedir(dp);
 
     return true;
+#endif
 }
 
 static bool listFilesNative(int argCount, Value* args, Value* result) {
@@ -286,6 +293,12 @@ static bool listFilesNative(int argCount, Value* args, Value* result) {
     }
 #endif
 
+#ifdef _WIN32
+
+    // TEMPORARY STUB
+    *result = BOOL_VAL(true);
+    return true;
+#else
     struct dirent *entry;
     DIR *dp = opendir("."); // Open current directory
 
@@ -336,6 +349,7 @@ static bool listFilesNative(int argCount, Value* args, Value* result) {
     closedir(dp);
 
     return true;
+#endif
 }
 
 static bool fileExistsNative(int argCount, Value* args, Value* result) {
