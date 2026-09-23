@@ -117,6 +117,7 @@ fn generate() {
 
 fn moveLeft() {
     decl flag = true;
+    decl result = false;
     while (flag) {
         flag = false;
         for (decl y = 0; y < 4; y++) {
@@ -126,16 +127,18 @@ fn moveLeft() {
                     setAt(x-1, y, getAt(x, y));
                     setAt(x, y, 0);
                     flag = true;
+                    result = true;
                 } else if (getAt(x-1, y) == getAt(x, y)) {
                     setAt(x-1, y, getAt(x-1, y) * 2);
                     score += getAt(x-1, y);
                     setAt(x, y, 0);
                     flag = true;
+                    result = true;
                 }
             }
         }
     }
-    return flag;
+    return result;
 }
 
 fn moveRight() {

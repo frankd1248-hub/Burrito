@@ -1010,7 +1010,7 @@ static InterpretResult run(int returnDepth) {
         } else {
             ObjArray* arr = AS_ARRAY(val);
             int index = (int)AS_NUMBER(indexVal);
-            if (index < 0 || index >= arr->capacity) {
+            if (index < 0 || index >= arr->size) {
                 runtimeError("Array index out of bounds.");
                 if (errorWasHandled) DISPATCH();
                 return INTERPRET_RUNTIME_ERROR;

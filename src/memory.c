@@ -260,6 +260,7 @@ static void markRoots() {
     markTable(&vm.consts);
     markTable(&vm.arrayMethods);
     markTable(&vm.mapMethods);
+    markTable(&vm.stringMethods);
     markTable(&vm.importedFiles);
     
     markCompilerRoots();

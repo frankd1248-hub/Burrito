@@ -1,0 +1,6 @@
+decl i1 = 1;
+decl i2 = 2;
+
+decl i3 = i1 | i2; // 3
+
+print("%d\n", i3);

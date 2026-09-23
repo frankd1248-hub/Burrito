@@ -118,7 +118,7 @@ fn scoreForEnemy(idx, wasDiving) {
 decl lives    = 3;
 decl score    = 0;
 decl wave     = 1;
-decl highScore = cast.ston(io.readFile("./examples/galagasave"));
+decl highScore = cast.ston(io.readFile("./examples/games/galagasave"));
 decl gameOver = false;
 
 // --- per-wave state (initialised by initWave) ---

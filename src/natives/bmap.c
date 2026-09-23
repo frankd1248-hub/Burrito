@@ -59,6 +59,7 @@ static bool mapKeysNative(int argCount, Value* args, Value* result) {
                 keys->values = GROW_ARRAY(Value, keys->values, oldCap, keys->capacity);
             }
 
+            keys = AS_ARRAY(peek(0));
             keys->values[keys->size++] = OBJ_VAL(t->entries[i].key);
         }
     }

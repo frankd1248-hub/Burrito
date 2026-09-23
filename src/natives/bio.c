@@ -451,6 +451,20 @@ static bool removeFileNative(int argCount, Value* args, Value* result) {
     }
 }
 
+static bool writeErrNative(int argCount, Value* args, Value* result) {
+#ifdef STRICT_NATIVES
+    if (argCount != 1 || !IS_STRING(args[0])) {
+        *result = OBJ_VAL(copyString("writeErr() expects one string argument.", 40));
+        return false;
+    }
+#endif
+
+    fprintf(stderr, AS_CSTRING(args[0]));
+    fflush(stderr);
+    *result = NUMBER_VAL(0);
+    return true;
+}
+
 static void addNative(ObjModule* module, const char* name, int length, NativeFn fn) {
     push(OBJ_VAL(newNative(fn)));
     tableSet(&module->table, copyString(name, length), peek(0));
@@ -464,6 +478,7 @@ ObjModule* buildIOModule() {
     addNative(module, "getNumber", 9, getNumberNative);
     addNative(module, "getString", 9, getStringNative);
     addNative(module, "readLine",  8, readLineNative);
+    addNative(module, "writeErr",  8, writeErrNative);
     addNative(module, "flush",     5, flushNative);
 
     addNative(module, "readFile",    8, readFileNative);
